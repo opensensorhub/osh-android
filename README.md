@@ -1,4 +1,4 @@
-# OpenSensorHub for Android
+### OpenSensorHub for Android
 
 This repo contains modules specific to Android, including:
 
