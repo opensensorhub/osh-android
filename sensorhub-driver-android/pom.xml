@@ -3,10 +3,10 @@
    <parent>
       <groupId>org.sensorhub</groupId>
       <artifactId>sensorhub-all</artifactId>
-      <version>1.0</version>
-      <relativePath>../sensorhub-all/pom.xml</relativePath>
+      <version>1.1-SNAPSHOT</version>
    </parent>
    <artifactId>sensorhub-driver-android</artifactId>
+   <version>0.1-SNAPSHOT</version>
    <name>SensorHub Android Driver</name>
    <description>Example driver for sensors accessible through Android API</description>
    <packaging>bundle</packaging>
@@ -23,5 +23,4 @@
          <version>0.1-SNAPSHOT</version>
       </dependency>
    </dependencies>
-   <version>0.1-SNAPSHOT</version>
 </project>

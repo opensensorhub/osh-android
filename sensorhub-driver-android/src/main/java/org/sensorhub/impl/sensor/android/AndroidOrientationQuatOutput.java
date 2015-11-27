@@ -19,8 +19,8 @@ import net.opengis.swe.v20.DataType;
 import net.opengis.swe.v20.Quantity;
 import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
+import org.sensorhub.algo.vecmath.Quat4d;
 import org.sensorhub.api.sensor.SensorDataEvent;
-import org.sensorhub.vecmath.Quat4d;
 import org.vast.data.SWEFactory;
 import org.vast.swe.SWEConstants;
 import android.hardware.Sensor;
@@ -121,7 +121,7 @@ public class AndroidOrientationQuatOutput extends AndroidSensorOutput implements
         att.x = e.values[0];
         att.y = e.values[1];
         att.z = e.values[2];
-        att.w =  e.values[3];
+        att.s =  e.values[3];
         att.normalize();
         
         // build and populate datablock
@@ -130,7 +130,7 @@ public class AndroidOrientationQuatOutput extends AndroidSensorOutput implements
         dataBlock.setFloatValue(1, (float)att.x);
         dataBlock.setFloatValue(2, (float)att.y);
         dataBlock.setFloatValue(3, (float)att.z);
-        dataBlock.setFloatValue(4, (float)att.w); 
+        dataBlock.setFloatValue(4, (float)att.s); 
         
         // TODO since this sensor is high rate,we could package several records in a single event
         // update latest record and send event

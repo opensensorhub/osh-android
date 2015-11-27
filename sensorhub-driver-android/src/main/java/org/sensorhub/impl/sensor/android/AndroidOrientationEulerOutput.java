@@ -20,9 +20,9 @@ import net.opengis.swe.v20.DataType;
 import net.opengis.swe.v20.Quantity;
 import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
+import org.sensorhub.algo.vecmath.Quat4d;
+import org.sensorhub.algo.vecmath.Vect3d;
 import org.sensorhub.api.sensor.SensorDataEvent;
-import org.sensorhub.vecmath.Quat4d;
-import org.sensorhub.vecmath.Vect3d;
 import org.vast.data.SWEFactory;
 import org.vast.swe.SWEConstants;
 import android.hardware.Sensor;
@@ -133,7 +133,7 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
         att.x = e.values[0];
         att.y = e.values[1];
         att.z = e.values[2];
-        att.w =  e.values[3];
+        att.s =  e.values[3];
         att.normalize();
         
         // Y direction in phone ref frame
