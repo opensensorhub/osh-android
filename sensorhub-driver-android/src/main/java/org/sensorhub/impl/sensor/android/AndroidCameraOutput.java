@@ -98,14 +98,23 @@ public class AndroidCameraOutput extends AbstractSensorOutput<AndroidSensorsDriv
     {
         try
         {
-            // TODO get closest values from camera characteristics
-            imgWidth = 800;
-            imgHeight = 600;
-            frameRate = 1;
-            
-            // open camera and set parameters
+            // open camera and get parameters
             camera = Camera.open(cameraId);
             Parameters camParams = camera.getParameters();
+            
+            // get supported preview sizes
+            for (Camera.Size imgSize: camParams.getSupportedPreviewSizes())
+            {
+                if (imgSize.width >= 600 && imgSize.width <= 800)
+                {
+                    imgWidth = imgSize.width;
+                    imgHeight = imgSize.height;
+                    break;
+                }
+            }
+            frameRate = 1;
+            
+            // set parameters
             camParams.setPreviewSize(imgWidth, imgHeight);
             camParams.setPreviewFormat(ImageFormat.NV21);
             camera.setParameters(camParams);
