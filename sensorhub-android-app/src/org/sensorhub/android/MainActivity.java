@@ -29,6 +29,7 @@ import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
 import org.sensorhub.impl.comm.BluetoothConfig;
+import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.trupulse.SimulatedTruPulseDataStream;
@@ -60,7 +61,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
 {
     private final static String ANDROID_SENSORS_ID = "ANDROID_SENSORS";
     private final static String ANDROID_SENSORS_SOST_ID = "SOST_CLIENT1";
-    private final static String TRUPULSE_SENSORS_SOST_ID = "SOST_CLIENT2";
+    private final static String TRUPULSE_SOST_ID = "SOST_CLIENT2";
+    private final static String FLIRONE_SOST_ID = "SOST_CLIENT3";
     
     TextView textArea;
     SensorHubService boundService;
@@ -142,27 +144,53 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         sensorhubConfig.add(sosConfig1);
         
         // TruPulse sensor stuff
-        TruPulseConfig trupulseConfig = new TruPulseConfig();
-        trupulseConfig.id = "TruPulse";
-        trupulseConfig.name = "TruPulse Range Finder";
-        trupulseConfig.enabled = prefs.getBoolean("trupulse_enabled", false);
-        BluetoothConfig btConf = new BluetoothConfig();
-        btConf.deviceName = "TP360RB.*";
-        if (prefs.getBoolean("trupulse_simu", false))
-            btConf.moduleClass = SimulatedTruPulseDataStream.class.getCanonicalName();
-        else
-            btConf.moduleClass = BluetoothCommProvider.class.getCanonicalName();
-        trupulseConfig.commSettings = btConf;
-        sensorhubConfig.add(trupulseConfig);
+        boolean enabled = prefs.getBoolean("trupulse_enabled", false);
+        if (enabled)
+        {
+            TruPulseConfig trupulseConfig = new TruPulseConfig();
+            trupulseConfig.id = "TruPulse";
+            trupulseConfig.name = "TruPulse Range Finder";
+            trupulseConfig.enabled = true;
+            BluetoothConfig btConf = new BluetoothConfig();
+            btConf.deviceName = "TP360RB.*";
+            if (prefs.getBoolean("trupulse_simu", false))
+                btConf.moduleClass = SimulatedTruPulseDataStream.class.getCanonicalName();
+            else
+                btConf.moduleClass = BluetoothCommProvider.class.getCanonicalName();
+            trupulseConfig.commSettings = btConf;
+            sensorhubConfig.add(trupulseConfig);
         
-        SOSTClientConfig sosConfig2 = new SOSTClientConfig();
-        sosConfig2.id = TRUPULSE_SENSORS_SOST_ID;
-        sosConfig2.name = "SOS-T Client for TruPulse Sensor";
-        sosConfig2.enabled = prefs.getBoolean("trupulse_enabled", false);
-        sosConfig2.sensorID = trupulseConfig.id;
-        sosConfig2.sosEndpointUrl = prefs.getString("sos_uri", "");
-        sosConfig2.usePersistentConnection = false;
-        sensorhubConfig.add(sosConfig2);
+            SOSTClientConfig sosConfig2 = new SOSTClientConfig();
+            sosConfig2.id = TRUPULSE_SOST_ID;
+            sosConfig2.name = "SOS-T Client for TruPulse Sensor";
+            sosConfig2.enabled = true;
+            sosConfig2.sensorID = trupulseConfig.id;
+            sosConfig2.sosEndpointUrl = prefs.getString("sos_uri", "");
+            sosConfig2.usePersistentConnection = false;
+            sensorhubConfig.add(sosConfig2);
+        }
+        
+        // FLIR One sensor stuff
+        enabled = prefs.getBoolean("flirone_enabled", false);
+        if (enabled)
+        {
+            FlirOneCameraConfig flironeConfig = new FlirOneCameraConfig();
+            flironeConfig.id = "FlirOne";
+            flironeConfig.name = "FLIR One Thermal Camera";
+            flironeConfig.enabled = true;
+            flironeConfig.androidContext = this.getApplicationContext();
+            flironeConfig.camPreviewSurfaceHolder = this.camPreviewSurfaceHolder;            
+            sensorhubConfig.add(flironeConfig);
+            
+            SOSTClientConfig sosConfig3 = new SOSTClientConfig();
+            sosConfig3.id = FLIRONE_SOST_ID;
+            sosConfig3.name = "SOS-T Client for FLIR One Sensor";
+            sosConfig3.enabled = true;
+            sosConfig3.sensorID = flironeConfig.id;
+            sosConfig3.sosEndpointUrl = prefs.getString("sos_uri", "");
+            sosConfig3.usePersistentConnection = true;
+            sensorhubConfig.add(sosConfig3);
+        }
     }
 
 
