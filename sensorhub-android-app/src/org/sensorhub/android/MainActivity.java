@@ -120,7 +120,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         if (deviceName == null || deviceName.length() < 2)
             deviceName = "Android";
         sensorsConfig.name = deviceName + " Sensors";
-        sensorsConfig.enabled = true;
+        sensorsConfig.autoStart = true;
         sensorsConfig.activateAccelerometer = prefs.getBoolean("accel_enabled", false);
         sensorsConfig.activateGyrometer = prefs.getBoolean("gyro_enabled", false);
         sensorsConfig.activateMagnetometer = prefs.getBoolean("mag_enabled", false);
@@ -137,7 +137,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         SOSTClientConfig sosConfig1 = new SOSTClientConfig();
         sosConfig1.id = ANDROID_SENSORS_SOST_ID;
         sosConfig1.name = "SOS-T Client for Android Sensors";
-        sosConfig1.enabled = true;
+        sosConfig1.autoStart = true;
         sosConfig1.sensorID = sensorsConfig.id;
         sosConfig1.sosEndpointUrl = prefs.getString("sos_uri", "");
         sosConfig1.usePersistentConnection = true;
@@ -150,7 +150,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
             TruPulseConfig trupulseConfig = new TruPulseConfig();
             trupulseConfig.id = "TruPulse";
             trupulseConfig.name = "TruPulse Range Finder";
-            trupulseConfig.enabled = true;
+            trupulseConfig.autoStart = true;
             BluetoothConfig btConf = new BluetoothConfig();
             btConf.deviceName = "TP360RB.*";
             if (prefs.getBoolean("trupulse_simu", false))
@@ -163,7 +163,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
             SOSTClientConfig sosConfig2 = new SOSTClientConfig();
             sosConfig2.id = TRUPULSE_SOST_ID;
             sosConfig2.name = "SOS-T Client for TruPulse Sensor";
-            sosConfig2.enabled = true;
+            sosConfig2.autoStart = true;
             sosConfig2.sensorID = trupulseConfig.id;
             sosConfig2.sosEndpointUrl = prefs.getString("sos_uri", "");
             sosConfig2.usePersistentConnection = false;
@@ -177,7 +177,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
             FlirOneCameraConfig flironeConfig = new FlirOneCameraConfig();
             flironeConfig.id = "FlirOne";
             flironeConfig.name = "FLIR One Thermal Camera";
-            flironeConfig.enabled = true;
+            flironeConfig.autoStart = true;
             flironeConfig.androidContext = this.getApplicationContext();
             flironeConfig.camPreviewSurfaceHolder = this.camPreviewSurfaceHolder;            
             sensorhubConfig.add(flironeConfig);
@@ -185,7 +185,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
             SOSTClientConfig sosConfig3 = new SOSTClientConfig();
             sosConfig3.id = FLIRONE_SOST_ID;
             sosConfig3.name = "SOS-T Client for FLIR One Sensor";
-            sosConfig3.enabled = true;
+            sosConfig3.autoStart = true;
             sosConfig3.sensorID = flironeConfig.id;
             sosConfig3.sosEndpointUrl = prefs.getString("sos_uri", "");
             sosConfig3.usePersistentConnection = true;
