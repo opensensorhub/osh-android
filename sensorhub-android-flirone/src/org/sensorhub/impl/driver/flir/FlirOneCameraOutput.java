@@ -48,7 +48,6 @@ import com.flir.flironesdk.RenderedImage.ImageType;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
-import android.os.SystemClock;
 import android.view.SurfaceHolder;
 
 
@@ -68,7 +67,7 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
     
     Device device;
     FrameProcessor frameProcessor;
-    long timeStamp;
+    long samplingTime;
     
     int imgHeight, imgWidth, frameRate;
     ByteArrayOutputStream jpegBuf = new ByteArrayOutputStream();
@@ -77,8 +76,6 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
     String name;
     DataComponent dataStruct;
     BinaryEncoding dataEncoding;
-    int samplingPeriod;
-    long systemTimeOffset = -1L;
     
     
     protected FlirOneCameraOutput(FlirOneCameraDriver parentModule, SurfaceHolder previewSurfaceHolder)
@@ -87,8 +84,8 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
         this.name = "flirone_camera_data";
         this.previewSurfaceHolder = previewSurfaceHolder;
         
-        imgWidth = 160;
-        imgHeight = 120;
+        imgWidth = 480;
+        imgHeight = 640;
         frameRate = 9;
     }
     
@@ -170,8 +167,8 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
     @Override
     public void onFrameReceived(Frame frame)
     {
-        log.debug("Frame received");
-        timeStamp = SystemClock.elapsedRealtimeNanos();
+        log.trace("Frame received");
+        samplingTime = System.currentTimeMillis();
         frameProcessor.processFrame(frame);
     }
     
@@ -179,12 +176,11 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
     @Override
     public void onFrameProcessed(RenderedImage img)
     {
-        log.debug("Frame processed");
+        log.trace("Frame processed");
         
         // compress as JPEG
         jpegBuf.reset();
         Bitmap bitmap = img.getBitmap();
-        System.out.println(bitmap.getWidth() + " x " + bitmap.getHeight());
         bitmap.compress(CompressFormat.JPEG, 90, jpegBuf);
         
         // generate new data record
@@ -195,8 +191,7 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
             newRecord = latestRecord.renew();
         
         // set time stamp
-        double samplingTime = getJulianTimeStamp(timeStamp);
-        newRecord.setDoubleValue(0, samplingTime);
+        newRecord.setDoubleValue(0, samplingTime/1000.0);
         
         // set encoded data
         AbstractDataBlock frameData = ((DataBlockMixed)newRecord).getUnderlyingObject()[1];
@@ -252,16 +247,5 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
     public long getLatestRecordTime()
     {
         return latestRecordTime;
-    }
-    
-    
-    protected final double getJulianTimeStamp(long sensorTimeStampNanos)
-    {
-        long sensorTimeMillis = sensorTimeStampNanos / 1000000;
-        
-        if (systemTimeOffset < 0)
-            systemTimeOffset = System.currentTimeMillis() - sensorTimeMillis;
-            
-        return (systemTimeOffset + sensorTimeMillis) / 1000.;
     }
 }

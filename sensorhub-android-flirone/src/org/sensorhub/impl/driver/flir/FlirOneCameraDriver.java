@@ -8,15 +8,12 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
  
-Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
+Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
  
 ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.driver.flir;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.util.EnumSet;
 import javax.xml.namespace.QName;
 import net.opengis.gml.v32.AbstractFeature;
@@ -39,6 +36,14 @@ import android.os.Build;
 import android.provider.Settings.Secure;
 
 
+/**
+ * <p>
+ * Main driver class for Android FLIR One Thermal Camera 
+ * </p>
+ *
+ * @author Alex Robin
+ * @since Apr 13, 2016
+ */
 public class FlirOneCameraDriver extends AbstractSensorModule<FlirOneCameraConfig> implements Device.Delegate
 {
     // keep logger name short because in LogCat it's max 23 chars
@@ -164,7 +169,6 @@ public class FlirOneCameraDriver extends AbstractSensorModule<FlirOneCameraConfi
     @Override
     public void onAutomaticTuningChanged(boolean arg0)
     {
-        // TODO Auto-generated method stub
         
     }
 
@@ -172,7 +176,6 @@ public class FlirOneCameraDriver extends AbstractSensorModule<FlirOneCameraConfi
     @Override
     public void onTuningStateChanged(TuningState state)
     {
-        // TODO Auto-generated method stub
         
     }
 }
