@@ -15,29 +15,19 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.driver.flir;
 
 import java.io.ByteArrayOutputStream;
-import java.nio.ByteOrder;
 import java.util.EnumSet;
-import net.opengis.swe.v20.BinaryBlock;
-import net.opengis.swe.v20.BinaryComponent;
-import net.opengis.swe.v20.BinaryEncoding;
-import net.opengis.swe.v20.ByteEncoding;
-import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import net.opengis.swe.v20.DataRecord;
-import net.opengis.swe.v20.DataType;
-import net.opengis.swe.v20.Time;
+import net.opengis.swe.v20.DataStream;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
+import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vast.cdm.common.CDMException;
 import org.vast.data.AbstractDataBlock;
 import org.vast.data.DataBlockMixed;
-import org.vast.data.SWEFactory;
-import org.vast.swe.SWEConstants;
 import org.vast.swe.SWEHelper;
 import com.flir.flironesdk.Device;
 import com.flir.flironesdk.Device.StreamDelegate;
@@ -75,7 +65,7 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
     
     String name;
     DataComponent dataStruct;
-    BinaryEncoding dataEncoding;
+    DataEncoding dataEncoding;
     
     
     protected FlirOneCameraOutput(FlirOneCameraDriver parentModule, SurfaceHolder previewSurfaceHolder)
@@ -101,54 +91,11 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
     protected void init() throws SensorException
     {
         // create SWE Common data structure            
-        SWEFactory fac = new SWEFactory();            
-        dataStruct = fac.newDataRecord(2);
-        dataStruct.setName(getName());
-        
-        Time time = fac.newTime();
-        time.getUom().setHref(Time.ISO_TIME_UNIT);
-        time.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
-        time.setReferenceFrame(TIME_REF);
-        dataStruct.addComponent("time", time);
-                
-        DataArray img = fac.newDataArray(imgHeight);
-        img.setDefinition("http://sensorml.com/ont/swe/property/VideoFrame");
-        dataStruct.addComponent("videoFrame", img);
-        
-        DataArray imgRow = fac.newDataArray(imgWidth);
-        img.addComponent("row", imgRow);
-        
-        DataRecord imgPixel = fac.newDataRecord(3);
-        imgPixel.addComponent("red", fac.newCount(DataType.BYTE));
-        imgPixel.addComponent("green", fac.newCount(DataType.BYTE));
-        imgPixel.addComponent("blue", fac.newCount(DataType.BYTE));
-        imgRow.addComponent("pixel", imgPixel);
-        
-        // SWE Common encoding
-        dataEncoding = fac.newBinaryEncoding();
-        dataEncoding.setByteEncoding(ByteEncoding.RAW);
-        dataEncoding.setByteOrder(ByteOrder.BIG_ENDIAN);
-        BinaryComponent timeEnc = fac.newBinaryComponent();
-        timeEnc.setRef("/" + time.getName());
-        timeEnc.setCdmDataType(DataType.DOUBLE);
-        dataEncoding.addMemberAsComponent(timeEnc);
-        //BinaryBlock compressedBlock = fac.newBinaryBlock();
-        //compressedBlock.setRef("/" + img.getName());
-        //compressedBlock.setCompression("H264");
-        BinaryBlock compressedBlock = fac.newBinaryBlock();
-        compressedBlock.setRef("/" + img.getName());
-        compressedBlock.setCompression("JPEG");
-        dataEncoding.addMemberAsBlock(compressedBlock);
-        
-        // resolve encoding so compressed blocks can be properly generated
-        try
-        {
-            SWEHelper.assignBinaryEncoding(dataStruct, dataEncoding);
-        }
-        catch (CDMException e)
-        {
-            throw new RuntimeException("Cannot create camera output definition");
-        }        
+        VideoCamHelper fac = new VideoCamHelper();
+        DataStream videoStream = fac.newVideoOutputMJPEG(getName(), imgWidth, imgHeight);
+        dataStruct = videoStream.getElementType();
+        dataEncoding = videoStream.getEncoding();
+        dataStruct.getComponent(1).setDefinition(SWEHelper.getPropertyUri("ThermalImage"));
     }
     
     
