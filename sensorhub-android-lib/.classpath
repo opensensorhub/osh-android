@@ -15,6 +15,7 @@
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/swe-common-om"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-driver-trupulse"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-process-vecmath"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/sensorhub-comm-ble"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-comm-ble"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-driver-videocam"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
