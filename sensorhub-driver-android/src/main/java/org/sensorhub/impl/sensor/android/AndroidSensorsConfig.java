@@ -29,6 +29,9 @@ import android.view.SurfaceHolder;
  */
 public class AndroidSensorsConfig extends SensorConfig
 {     
+    public final static String JPEG_CODEC = "JPEG";
+    public final static String H264_CODEC = "H264";    
+    
     public boolean activateAccelerometer = false;
     public boolean activateGyrometer = false;
     public boolean activateMagnetometer = false;
@@ -38,6 +41,7 @@ public class AndroidSensorsConfig extends SensorConfig
     public boolean activateNetworkLocation = false;
     public boolean activateBackCamera = false;
     public boolean activateFrontCamera = false;
+    public String videoCodec = JPEG_CODEC; 
     
     public String runName;
     public String runDescription; 

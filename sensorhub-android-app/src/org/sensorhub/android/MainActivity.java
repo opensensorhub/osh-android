@@ -129,6 +129,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         sensorsConfig.activateGpsLocation = prefs.getBoolean("gps_enabled", false);
         sensorsConfig.activateNetworkLocation = prefs.getBoolean("netloc_enabled", false);
         sensorsConfig.activateBackCamera = prefs.getBoolean("cam_enabled", false);
+        sensorsConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
         sensorsConfig.androidContext = this.getApplicationContext();
         sensorsConfig.camPreviewSurfaceHolder = this.camPreviewSurfaceHolder;
         sensorsConfig.runName = runName;

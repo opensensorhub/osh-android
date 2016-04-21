@@ -55,10 +55,10 @@ import android.view.SurfaceHolder;
  * @since June 11, 2015
  */
 @SuppressWarnings("deprecation")
-public class AndroidCameraOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, Camera.PreviewCallback
+public class AndroidCameraOutputMJPEG extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, Camera.PreviewCallback
 {
     // keep logger name short because in LogCat it's max 23 chars
-    static final Logger log = LoggerFactory.getLogger(AndroidCameraOutput.class.getSimpleName());
+    static final Logger log = LoggerFactory.getLogger(AndroidCameraOutputMJPEG.class.getSimpleName());
     protected static final String TIME_REF = "http://www.opengis.net/def/trs/BIPM/0/UTC";
     
     int cameraId;
@@ -77,7 +77,7 @@ public class AndroidCameraOutput extends AbstractSensorOutput<AndroidSensorsDriv
     long systemTimeOffset = -1L;
     
     
-    protected AndroidCameraOutput(AndroidSensorsDriver parentModule, int cameraId, SurfaceHolder previewSurfaceHolder)
+    protected AndroidCameraOutputMJPEG(AndroidSensorsDriver parentModule, int cameraId, SurfaceHolder previewSurfaceHolder)
     {
         super(parentModule);
         this.cameraId = cameraId;
@@ -219,7 +219,7 @@ public class AndroidCameraOutput extends AbstractSensorOutput<AndroidSensorsDriv
         // send event
         latestRecord = newRecord;
         latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, AndroidCameraOutput.this, latestRecord));          
+        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, AndroidCameraOutputMJPEG.this, latestRecord));          
     }
     
     

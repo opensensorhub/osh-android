@@ -2,7 +2,7 @@
 
     <EditTextPreference
         android:capitalize="words"
-        android:defaultValue=""
+        android:defaultValue="MyDevice"
         android:inputType="text"
         android:key="device_name"
         android:maxLines="1"
@@ -11,7 +11,6 @@
         android:title="Device Name" />
     
     <EditTextPreference
-        android:capitalize="words"
         android:defaultValue="http://192.168.0.10:8181/sensorhub/sos"
         android:inputType="textUri"
         android:key="sos_uri"
@@ -19,32 +18,5 @@
         android:selectAllOnFocus="true"
         android:singleLine="true"
         android:title="SOS Endpoint URL" />
-    
-    <!--
-    <CheckBoxPreference
-        android:defaultValue="true"
-        android:key="example_checkbox"
-        android:summary="@string/pref_description_social_recommendations"
-        android:title="@string/pref_title_social_recommendations" />
-
-    <EditTextPreference
-        android:capitalize="words"
-        android:defaultValue="@string/pref_default_display_name"
-        android:inputType="textCapWords"
-        android:key="example_text"
-        android:maxLines="1"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:title="@string/pref_title_display_name" />
-
-    <ListPreference
-        android:defaultValue="-1"
-        android:entries="@array/pref_example_list_titles"
-        android:entryValues="@array/pref_example_list_values"
-        android:key="example_list"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:title="@string/pref_title_add_friends_to_messages" />
-    -->
 
 </PreferenceScreen>

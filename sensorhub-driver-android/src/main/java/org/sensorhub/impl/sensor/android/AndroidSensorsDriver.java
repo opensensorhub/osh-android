@@ -168,7 +168,12 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
                 if ( (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_BACK && config.activateBackCamera) ||
                      (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT && config.activateFrontCamera))
                 {
-                    useCamera(new AndroidCameraOutput(this, cameraId, config.camPreviewSurfaceHolder), cameraId);
+                    if (AndroidSensorsConfig.JPEG_CODEC.equals(config.videoCodec))
+                        useCamera(new AndroidCameraOutputMJPEG(this, cameraId, config.camPreviewSurfaceHolder), cameraId);
+                    else if (AndroidSensorsConfig.H264_CODEC.equals(config.videoCodec))
+                        useCamera(new AndroidCameraOutputH264(this, cameraId, config.camPreviewSurfaceHolder), cameraId);
+                    else
+                        throw new SensorException("Unsupported codec " + config.videoCodec);
                 }
             }
         }

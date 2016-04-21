@@ -48,6 +48,16 @@
         android:summary="Enable streaming of video data"
         android:title="Video Data" />
     
+    <ListPreference
+        android:defaultValue="JPEG"
+        android:entries="@array/video_codec_list"
+        android:entryValues="@array/video_codec_list"
+        android:key="video_codec"
+        android:summary="%s"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="Video Codec" />
+    
     <CheckBoxPreference
         android:defaultValue="false"
         android:key="trupulse_enabled"
