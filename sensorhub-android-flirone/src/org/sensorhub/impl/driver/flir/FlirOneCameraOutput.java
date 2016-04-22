@@ -87,7 +87,6 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
     }
     
     
-    @Override
     protected void init() throws SensorException
     {
         // create SWE Common data structure            
