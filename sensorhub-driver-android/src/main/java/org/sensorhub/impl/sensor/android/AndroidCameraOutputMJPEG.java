@@ -72,7 +72,7 @@ public class AndroidCameraOutputMJPEG extends AbstractSensorOutput<AndroidSensor
     {
         super(parentModule);
         this.cameraId = cameraId;
-        this.name = "camera" + cameraId + "_data";
+        this.name = "camera" + cameraId + "_MJPEG";
         this.previewSurfaceHolder = previewSurfaceHolder;
     }
     

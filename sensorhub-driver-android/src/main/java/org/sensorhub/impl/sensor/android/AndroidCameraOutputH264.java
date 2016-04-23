@@ -74,7 +74,7 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
     {
         super(parentModule);
         this.cameraId = cameraId;
-        this.name = "camera" + cameraId + "_data";
+        this.name = "camera" + cameraId + "_H264";
         this.previewSurfaceHolder = previewSurfaceHolder;
     }
 
