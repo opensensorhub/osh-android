@@ -15,13 +15,10 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor.android;
 
 import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.DataType;
-import net.opengis.swe.v20.Quantity;
 import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
 import org.sensorhub.api.sensor.SensorDataEvent;
-import org.vast.data.SWEFactory;
-import org.vast.swe.SWEConstants;
+import org.vast.swe.helper.GeoPosHelper;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -38,8 +35,6 @@ import android.hardware.SensorManager;
  */
 public class AndroidAcceleroOutput extends AndroidSensorOutput implements SensorEventListener
 {
-    private static final String ACCEL_DEF = "http://sensorml.com/ont/swe/property/Acceleration";
-    private static final String ACCEL_CRS = "#" + AndroidSensorsDriver.LOCAL_REF_FRAME;
     private static final String ACCEL_UOM = "m/s2";
     
     
@@ -53,39 +48,17 @@ public class AndroidAcceleroOutput extends AndroidSensorOutput implements Sensor
     public void init()
     {
         // SWE Common data structure
-        SWEFactory fac = new SWEFactory();
+        GeoPosHelper fac = new GeoPosHelper();
         dataStruct = fac.newDataRecord(2);
         dataStruct.setName(getName());
         
-        Time c1 = fac.newTime();
-        c1.getUom().setHref(Time.ISO_TIME_UNIT);
-        c1.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
-        c1.setReferenceFrame(TIME_REF);
-        dataStruct.addComponent("time", c1);
+        // time stamp
+        Time time = fac.newTimeStampIsoUTC();
+        dataStruct.addComponent("time", time);
 
-        Vector vec = fac.newVector();        
-        vec.setDefinition(ACCEL_DEF);
-        ((Vector)vec).setReferenceFrame(ACCEL_CRS);
+        // acceleration vector
+        Vector vec = fac.newAccelerationVector(null, parentSensor.localFrameURI, ACCEL_UOM);    
         dataStruct.addComponent("accel", vec);
-        
-        Quantity c;
-        c = fac.newQuantity(DataType.FLOAT);
-        c.getUom().setCode(ACCEL_UOM);
-        c.setDefinition(ACCEL_DEF);
-        c.setAxisID("x");
-        vec.addComponent("ax",c);
-
-        c = fac.newQuantity(DataType.FLOAT);
-        c.getUom().setCode(ACCEL_UOM);
-        c.setDefinition(ACCEL_DEF);
-        c.setAxisID("y");
-        vec.addComponent("ay", c);
-
-        c = fac.newQuantity(DataType.FLOAT);
-        c.getUom().setCode(ACCEL_UOM);
-        c.setDefinition(ACCEL_DEF);
-        c.setAxisID("z");
-        vec.addComponent("az", c);        
         
         super.init();
     }

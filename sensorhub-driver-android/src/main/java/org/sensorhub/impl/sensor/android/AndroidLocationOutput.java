@@ -17,14 +17,12 @@ package org.sensorhub.impl.sensor.android;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import net.opengis.swe.v20.Quantity;
 import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
-import org.vast.data.SWEFactory;
 import org.vast.data.TextEncodingImpl;
-import org.vast.swe.SWEConstants;
+import org.vast.swe.helper.GeoPosHelper;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -45,10 +43,6 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
     // keep logger name short because in LogCat it's max 23 chars
     //private static final Logger log = LoggerFactory.getLogger(AndroidLocationOutput.class.getSimpleName());
             
-    private static final String LOC_DEF = "http://sensorml.com/ont/swe/property/Location";
-    private static final String LOC_CRS = "http://www.opengis.net/def/crs/EPSG/0/4979";
-    //private static final String TIME_REF = "http://www.opengis.net/def/trs/USNO/0/GPS";
-    private static final String TIME_REF = "http://www.opengis.net/def/trs/BIPM/0/UTC";
     //private static final long GPS_TO_UTC_OFFSET = -16000L;
     
     LocationManager locManager;
@@ -78,40 +72,18 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
     public void init()
     {
         // SWE Common data structure
-        SWEFactory fac = new SWEFactory();
+        GeoPosHelper fac = new GeoPosHelper();
         posDataStruct = fac.newDataRecord(2);
         posDataStruct.setName(getName());
         
-        Time c1 = fac.newTime();
-        c1.getUom().setHref(Time.ISO_TIME_UNIT);
-        c1.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
-        c1.setReferenceFrame(TIME_REF);
-        posDataStruct.addComponent("time", c1);
+        // time stamp
+        Time time = fac.newTimeStampIsoUTC();
+        posDataStruct.addComponent("time", time);
 
-        Vector vec = fac.newVector();        
-        vec.setDefinition(LOC_DEF);
-        ((Vector)vec).setReferenceFrame(LOC_CRS);
-        ((Vector)vec).setLocalFrame("#" + AndroidSensorsDriver.LOCAL_REF_FRAME);
+        // LLA location
+        Vector vec = fac.newLocationVectorLLA(null);  
+        ((Vector)vec).setLocalFrame(parentSensor.localFrameURI);
         posDataStruct.addComponent("location", vec);
-        
-        Quantity c;
-        c = fac.newQuantity();
-        c.getUom().setCode("deg");
-        c.setDefinition("http://sensorml.com/ont/swe/property/Latitude");
-        c.setAxisID("Lat");
-        vec.addComponent("lat",c);
-
-        c = fac.newQuantity();
-        c.getUom().setCode("deg");
-        c.setDefinition("http://sensorml.com/ont/swe/property/Longitude");
-        c.setAxisID("Long");
-        vec.addComponent("lon", c);
-
-        c = fac.newQuantity();
-        c.getUom().setCode("m");
-        c.setDefinition("http://sensorml.com/ont/swe/property/Altitude");
-        c.setAxisID("h");
-        vec.addComponent("alt", c);
         
         // request location data
         locManager.requestLocationUpdates(locProvider.getName(), 100, 0.0f, this);

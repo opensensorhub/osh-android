@@ -15,13 +15,10 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor.android;
 
 import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.DataType;
-import net.opengis.swe.v20.Quantity;
 import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
 import org.sensorhub.api.sensor.SensorDataEvent;
-import org.vast.data.SWEFactory;
-import org.vast.swe.SWEConstants;
+import org.vast.swe.helper.GeoPosHelper;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -39,7 +36,6 @@ import android.hardware.SensorManager;
 public class AndroidMagnetoOutput extends AndroidSensorOutput implements SensorEventListener
 {
     private static final String MAG_FIELD_DEF = "http://sensorml.com/ont/swe/property/MagneticField";
-    private static final String MAG_FIELD_CRS = "#" + AndroidSensorsDriver.LOCAL_REF_FRAME;
     private static final String MAG_FIELD_UOM = "uT";
     
     
@@ -52,41 +48,26 @@ public class AndroidMagnetoOutput extends AndroidSensorOutput implements SensorE
     @Override
     public void init()
     {
-        SWEFactory fac = new SWEFactory();
+        GeoPosHelper fac = new GeoPosHelper();
         
         // SWE Common data structure
         dataStruct = fac.newDataRecord(2);
         dataStruct.setName(getName());
         
-        Time c1 = fac.newTime();
-        c1.getUom().setHref(Time.ISO_TIME_UNIT);
-        c1.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
-        c1.setReferenceFrame(TIME_REF);
-        dataStruct.addComponent("time", c1);
+        // time stamp
+        Time time = fac.newTimeStampIsoUTC();
+        dataStruct.addComponent("time", time);
 
-        Vector vec = fac.newVector();        
-        vec.setDefinition(MAG_FIELD_DEF);
-        ((Vector)vec).setReferenceFrame(MAG_FIELD_CRS);
-        dataStruct.addComponent("mag", vec);
-        
-        Quantity c;
-        c = fac.newQuantity(DataType.FLOAT);
-        c.getUom().setCode(MAG_FIELD_UOM);
-        c.setDefinition(MAG_FIELD_DEF);
-        c.setAxisID("x");
-        vec.addComponent("mx",c);
-
-        c = fac.newQuantity(DataType.FLOAT);
-        c.getUom().setCode(MAG_FIELD_UOM);
-        c.setDefinition(MAG_FIELD_DEF);
-        c.setAxisID("y");
-        vec.addComponent("my", c);
-
-        c = fac.newQuantity(DataType.FLOAT);
-        c.getUom().setCode(MAG_FIELD_UOM);
-        c.setDefinition(MAG_FIELD_DEF);
-        c.setAxisID("z");
-        vec.addComponent("mz", c);        
+        // magentic field vector
+        Vector vec = fac.newVector(
+                MAG_FIELD_DEF,
+                parentSensor.localFrameURI,
+                new String[] {"mx", "my", "mz"},
+                null,
+                new String[] {MAG_FIELD_UOM, MAG_FIELD_UOM, MAG_FIELD_UOM},
+                new String[] {"X", "Y", "Z"}
+        );   
+        dataStruct.addComponent("mag", vec);   
         
         super.init();
     }

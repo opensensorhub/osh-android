@@ -49,6 +49,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     private static final Logger log = LoggerFactory.getLogger(AndroidSensorsDriver.class.getSimpleName());
     public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
     
+    String localFrameURI;
     SensorManager sensorManager;
     LocationManager locationManager;
     SensorMLBuilder smlBuilder;
@@ -62,6 +63,19 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     }
     
     
+    @Override
+    public synchronized void init(AndroidSensorsConfig config) throws SensorHubException
+    {
+        super.init(config);
+        
+        // generate identifiers
+        String deviceID = Secure.getString(config.androidContext.getContentResolver(), Secure.ANDROID_ID);
+        this.xmlID = "ANDROID_SENSORS_" + Build.SERIAL;
+        this.uniqueID = "urn:android:device:" + deviceID;
+        this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
+    }
+
+
     @Override
     public void start() throws SensorException
     {
@@ -230,11 +244,6 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         synchronized (sensorDescription)
         {
             super.updateSensorDescription();
-            
-            String deviceID = Secure.getString(config.androidContext.getContentResolver(), Secure.ANDROID_ID);
-            sensorDescription.setId("ANDROID_SENSORS_" + Build.SERIAL);
-            sensorDescription.setUniqueIdentifier("urn:android:device:" + deviceID);
-            sensorDescription.setName(config.name);
             
             SpatialFrame localRefFrame = new SpatialFrameImpl();
             localRefFrame.setId("LOCAL_FRAME");

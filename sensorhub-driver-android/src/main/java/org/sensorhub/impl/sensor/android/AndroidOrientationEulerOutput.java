@@ -16,15 +16,13 @@ package org.sensorhub.impl.sensor.android;
 
 import net.opengis.swe.v20.AllowedValues;
 import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.DataType;
 import net.opengis.swe.v20.Quantity;
 import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
 import org.sensorhub.algo.vecmath.Quat4d;
 import org.sensorhub.algo.vecmath.Vect3d;
 import org.sensorhub.api.sensor.SensorDataEvent;
-import org.vast.data.SWEFactory;
-import org.vast.swe.SWEConstants;
+import org.vast.swe.helper.GeoPosHelper;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -44,12 +42,7 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
     // keep logger name short because in LogCat it's max 23 chars
     //private static final Logger log = LoggerFactory.getLogger(AndroidOrientationEulerOutput.class.getSimpleName());
     
-    private static final String ORIENT_VEC_DEF = "http://sensorml.com/ont/swe/property/Orientation";
     private static final String HEADING_DEF = "http://sensorml.com/ont/swe/property/AngleToNorth";
-    private static final String PITCH_DEF = "http://sensorml.com/ont/swe/property/Pitch";
-    private static final String ROLL_DEF = "http://sensorml.com/ont/swe/property/Roll";
-    private static final String ORIENT_CRS = "http://www.opengis.net/def/crs/OGC/0/ENU";
-    private static final String ORIENT_UOM = "deg";
     
     // for euler computation
     Quat4d att = new Quat4d();
@@ -67,52 +60,38 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
     @Override
     public void init()
     {
-        SWEFactory fac = new SWEFactory();
+        GeoPosHelper fac = new GeoPosHelper();
         
         // SWE Common data structure
         dataStruct = fac.newDataRecord(2);
         dataStruct.setName(getName());
         
-        Time c1 = fac.newTime();
-        c1.getUom().setHref(Time.ISO_TIME_UNIT);
-        c1.setDefinition(SWEConstants.DEF_SAMPLING_TIME);
-        c1.setReferenceFrame(TIME_REF);
-        dataStruct.addComponent("time", c1);
+        // time stamp
+        Time time = fac.newTimeStampIsoUTC();
+        dataStruct.addComponent("time", time);
 
-        Vector vec = fac.newVector();        
-        vec.setDefinition(ORIENT_VEC_DEF);
-        ((Vector)vec).setReferenceFrame(ORIENT_CRS);
-        ((Vector)vec).setLocalFrame("#" + AndroidSensorsDriver.LOCAL_REF_FRAME);
+        // euler angles vector
+        Vector vec = fac.newEulerOrientationENU(null);
+        vec.setLocalFrame(parentSensor.localFrameURI);
         dataStruct.addComponent("orient", vec);
         
-        Quantity c;
+        // add constraints
         AllowedValues constraint;
-        c = fac.newQuantity(DataType.FLOAT);
-        c.getUom().setCode(ORIENT_UOM);
+        Quantity c = (Quantity)vec.getComponent(0);
         c.setDefinition(HEADING_DEF);
         constraint = fac.newAllowedValues();
         constraint.addInterval(new double[] {-180.0, 180.0});
         c.setConstraint(constraint);
-        c.setAxisID("z");
-        vec.addComponent("heading",c);
 
-        c = fac.newQuantity(DataType.FLOAT);
-        c.getUom().setCode(ORIENT_UOM);
-        c.setDefinition(PITCH_DEF);
+        c = (Quantity)vec.getComponent(1);
         constraint = fac.newAllowedValues();
         constraint.addInterval(new double[] {-90.0, 90.0});
         c.setConstraint(constraint);
-        c.setAxisID("y");
-        vec.addComponent("pitch", c);
 
-        c = fac.newQuantity(DataType.FLOAT);
-        c.getUom().setCode(ORIENT_UOM);
-        c.setDefinition(ROLL_DEF);
+        c = (Quantity)vec.getComponent(2);
         constraint = fac.newAllowedValues();
         constraint.addInterval(new double[] {-180.0, 180.0});
         c.setConstraint(constraint);
-        c.setAxisID("x");
-        vec.addComponent("roll", c);
         
         super.init();
     }
