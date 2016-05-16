@@ -22,6 +22,8 @@ import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.sensorhub.android.comm.BluetoothCommProvider;
+import org.sensorhub.android.comm.ble.BleConfig;
+import org.sensorhub.android.comm.ble.BleNetwork;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.sensor.ISensorDataInterface;
@@ -32,6 +34,7 @@ import org.sensorhub.impl.comm.BluetoothConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
+import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.SimulatedTruPulseDataStream;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import android.annotation.SuppressLint;
@@ -62,7 +65,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
     private final static String ANDROID_SENSORS_ID = "ANDROID_SENSORS";
     private final static String ANDROID_SENSORS_SOST_ID = "SOST_CLIENT1";
     private final static String TRUPULSE_SOST_ID = "SOST_CLIENT2";
-    private final static String FLIRONE_SOST_ID = "SOST_CLIENT3";
+    private final static String ANGEL_SOST_ID = "SOST_CLIENT3";
+    private final static String FLIRONE_SOST_ID = "SOST_CLIENT4";
     
     TextView textArea;
     SensorHubService boundService;
@@ -171,6 +175,36 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
             sensorhubConfig.add(sosConfig2);
         }
         
+        // AngelSensor stuff
+        enabled = prefs.getBoolean("angel_enabled", false);
+        if (enabled)
+        {
+            BleConfig bleConf = new BleConfig();
+            bleConf.id = "BLE";
+            bleConf.moduleClass = BleNetwork.class.getCanonicalName();
+            bleConf.androidContext = this.getApplicationContext();
+            bleConf.autoStart = true;
+            sensorhubConfig.add(bleConf);
+            
+            AngelSensorConfig angelConfig = new AngelSensorConfig();
+            angelConfig.id = "Angel Sensor";
+            angelConfig.name = "Angel Sensor Wrist Band";
+            angelConfig.autoStart = true;
+            angelConfig.networkID = bleConf.id;
+            //angelConfig.btAddress = "00:07:80:79:04:AF";
+            angelConfig.btAddress = "00:07:80:03:0E:0A";
+            sensorhubConfig.add(angelConfig);
+        
+            SOSTClientConfig sosConfig2 = new SOSTClientConfig();
+            sosConfig2.id = ANGEL_SOST_ID;
+            sosConfig2.name = "SOS-T Client for Angel Sensor";
+            sosConfig2.autoStart = true;
+            sosConfig2.sensorID = angelConfig.id;
+            sosConfig2.sosEndpointUrl = prefs.getString("sos_uri", "");
+            sosConfig2.usePersistentConnection = false;
+            sensorhubConfig.add(sosConfig2);
+        }
+        
         // FLIR One sensor stuff
         enabled = prefs.getBoolean("flirone_enabled", false);
         if (enabled)
@@ -183,14 +217,14 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
             flironeConfig.camPreviewSurfaceHolder = this.camPreviewSurfaceHolder;            
             sensorhubConfig.add(flironeConfig);
             
-            SOSTClientConfig sosConfig3 = new SOSTClientConfig();
-            sosConfig3.id = FLIRONE_SOST_ID;
-            sosConfig3.name = "SOS-T Client for FLIR One Sensor";
-            sosConfig3.autoStart = true;
-            sosConfig3.sensorID = flironeConfig.id;
-            sosConfig3.sosEndpointUrl = prefs.getString("sos_uri", "");
-            sosConfig3.usePersistentConnection = true;
-            sensorhubConfig.add(sosConfig3);
+            SOSTClientConfig sosConfig2 = new SOSTClientConfig();
+            sosConfig2.id = FLIRONE_SOST_ID;
+            sosConfig2.name = "SOS-T Client for FLIR One Sensor";
+            sosConfig2.autoStart = true;
+            sosConfig2.sensorID = flironeConfig.id;
+            sosConfig2.sosEndpointUrl = prefs.getString("sos_uri", "");
+            sosConfig2.usePersistentConnection = true;
+            sensorhubConfig.add(sosConfig2);
         }
     }
 

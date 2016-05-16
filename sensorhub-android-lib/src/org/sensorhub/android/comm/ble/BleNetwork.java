@@ -21,17 +21,29 @@ import org.sensorhub.api.comm.ble.GattCallback;
 import org.sensorhub.api.comm.ble.IBleNetwork;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.impl.module.AbstractModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
+import android.content.Context;
 
 
 public class BleNetwork extends AbstractModule<BleConfig> implements IBleNetwork<BleConfig>
 {
-
+    static final Logger log = LoggerFactory.getLogger(BleNetwork.class.getSimpleName());
+    
+    Context aContext;
+    BluetoothAdapter aBleAdapter;
+    
+    
     @Override
     public String getInterfaceName()
     {
         // TODO Auto-generated method stub
         return null;
     }
+
 
     @Override
     public org.sensorhub.api.comm.ICommNetwork.NetworkType getNetworkType()
@@ -40,12 +52,14 @@ public class BleNetwork extends AbstractModule<BleConfig> implements IBleNetwork
         return null;
     }
 
+
     @Override
     public IDeviceScanner getDeviceScanner()
     {
         // TODO Auto-generated method stub
         return null;
     }
+
 
     @Override
     public Collection<? extends INetworkInfo> getAvailableNetworks()
@@ -54,26 +68,31 @@ public class BleNetwork extends AbstractModule<BleConfig> implements IBleNetwork
         return null;
     }
 
+
     @Override
     public void start() throws SensorHubException
     {
-        // TODO Auto-generated method stub
-        
+        this.aContext = config.androidContext;
+        BluetoothManager bluetoothManager = (BluetoothManager) aContext.getSystemService(Context.BLUETOOTH_SERVICE);
+        aBleAdapter = bluetoothManager.getAdapter();
     }
+
 
     @Override
     public void stop() throws SensorHubException
     {
         // TODO Auto-generated method stub
-        
+
     }
+
 
     @Override
     public void cleanup() throws SensorHubException
     {
         // TODO Auto-generated method stub
-        
+
     }
+
 
     @Override
     public boolean startPairing(String address)
@@ -82,11 +101,14 @@ public class BleNetwork extends AbstractModule<BleConfig> implements IBleNetwork
         return false;
     }
 
+
     @Override
     public void connectGatt(String address, GattCallback callback)
     {
-        // TODO Auto-generated method stub
-        
+        BluetoothDevice btDevice = aBleAdapter.getRemoteDevice(address);
+        GattClientImpl client = new GattClientImpl(aContext, btDevice, callback);
+        client.connect();
+        log.info("Connecting to BT device " + address + "...");
     }
 
 }

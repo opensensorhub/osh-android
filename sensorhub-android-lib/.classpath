@@ -17,5 +17,6 @@
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-process-vecmath"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-comm-ble"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-driver-videocam"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sensorhub-driver-angelsensor"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

@@ -72,6 +72,12 @@
     
     <CheckBoxPreference
         android:defaultValue="false"
+        android:key="angel_enabled"
+        android:summary="Enable streaming of Angel Sensor health data (sensor must be connected via Bluetooth LE on startup)"
+        android:title="Angel Sensor Health Data" />
+    
+    <CheckBoxPreference
+        android:defaultValue="false"
         android:key="flirone_enabled"
         android:summary="Enable streaming of FLIR One thermal camera data when connected on USB port"
         android:title="FLIR One Thermal Camera Data" />

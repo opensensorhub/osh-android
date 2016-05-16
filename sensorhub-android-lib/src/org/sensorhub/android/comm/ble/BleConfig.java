@@ -15,9 +15,11 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.android.comm.ble;
 
 import org.sensorhub.api.comm.NetworkConfig;
+import android.content.Context;
 
 
 public class BleConfig extends NetworkConfig
 {
 
+    public transient Context androidContext;
 }
