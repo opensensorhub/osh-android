@@ -46,10 +46,16 @@ public class BleNetwork extends AbstractModule<BleConfig> implements IBleNetwork
 
 
     @Override
-    public org.sensorhub.api.comm.ICommNetwork.NetworkType getNetworkType()
+    public NetworkType getNetworkType()
     {
-        // TODO Auto-generated method stub
-        return null;
+        return NetworkType.BLUETOOTH_LE;
+    }
+    
+    
+    @Override
+    public boolean isOfType(NetworkType type)
+    {
+        return (type == getNetworkType());
     }
 
 

@@ -102,7 +102,7 @@ public class AndroidCamera2Output extends AbstractSensorOutput<AndroidSensorsDri
     
     
     @Override
-    public void init() throws SensorException
+    public void start() throws SensorException
     {
         final Object camLock = new Object();
         

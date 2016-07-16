@@ -45,7 +45,7 @@ public class AndroidGyroOutput extends AndroidSensorOutput implements SensorEven
 
 
     @Override
-    public void init()
+    public void start()
     {
         // SWE Common data structure
         GeoPosHelper fac = new GeoPosHelper();
@@ -60,7 +60,7 @@ public class AndroidGyroOutput extends AndroidSensorOutput implements SensorEven
         Vector vec = fac.newAngularVelocityVector(null, parentSensor.localFrameURI, ANG_RATE_UOM);    
         dataStruct.addComponent("omega", vec);
         
-        super.init();
+        super.start();
     }
 
 

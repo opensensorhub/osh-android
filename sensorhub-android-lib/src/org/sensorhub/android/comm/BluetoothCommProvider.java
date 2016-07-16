@@ -19,7 +19,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import org.sensorhub.api.comm.ICommProvider;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.impl.comm.BluetoothConfig;
 import org.sensorhub.impl.module.AbstractModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +34,7 @@ import android.bluetooth.BluetoothSocket;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Jun 18, 2015
  */
-public class BluetoothCommProvider extends AbstractModule<BluetoothConfig> implements ICommProvider<BluetoothConfig>
+public class BluetoothCommProvider extends AbstractModule<BluetoothCommProviderConfig> implements ICommProvider<BluetoothCommProviderConfig>
 {
     static final Logger log = LoggerFactory.getLogger(BluetoothCommProvider.class.getSimpleName());
     BluetoothSocket btSocket;
@@ -66,7 +65,7 @@ public class BluetoothCommProvider extends AbstractModule<BluetoothConfig> imple
         try
         {
             BluetoothManager btManager = new BluetoothManager();
-            btSocket = btManager.connectToSerialDevice(config.deviceName);
+            btSocket = btManager.connectToSerialDevice(config.protocol.deviceName);
             btSocket.connect();
             log.info("Connected to Bluetooth SPP device {}", btSocket.getRemoteDevice().getName());
         }

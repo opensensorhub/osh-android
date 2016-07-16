@@ -45,7 +45,7 @@ public class AndroidAcceleroOutput extends AndroidSensorOutput implements Sensor
 
 
     @Override
-    public void init()
+    public void start()
     {
         // SWE Common data structure
         GeoPosHelper fac = new GeoPosHelper();
@@ -60,7 +60,7 @@ public class AndroidAcceleroOutput extends AndroidSensorOutput implements Sensor
         Vector vec = fac.newAccelerationVector(null, parentSensor.localFrameURI, ACCEL_UOM);    
         dataStruct.addComponent("accel", vec);
         
-        super.init();
+        super.start();
     }
 
 

@@ -7,13 +7,4 @@
         android:fragment="org.sensorhub.android.UserSettingsActivity$SensorPreferenceFragment"
         android:title="@string/pref_header_sensors" />
     
-    <!--
-    <header
-        android:fragment="org.sensorhub.android.UserSettingsActivity$NotificationPreferenceFragment"
-        android:title="@string/pref_header_notifications" />
-    <header
-        android:fragment="org.sensorhub.android.UserSettingsActivity$DataSyncPreferenceFragment"
-        android:title="@string/pref_header_data_sync" />
-    -->
-    
 </preference-headers>

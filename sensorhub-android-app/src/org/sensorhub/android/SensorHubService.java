@@ -17,14 +17,14 @@ package org.sensorhub.android;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.SensorHubConfig;
+import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.impl.module.ModuleRegistry;
 import org.vast.xml.XMLImplFinder;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.os.Looper;
-import android.util.Log;
 
 
 /**
@@ -39,7 +39,6 @@ public class SensorHubService extends Service
 {
     final IBinder binder = new LocalBinder();
     private Thread bgThread;
-    Looper bgLooper;
     SensorHub sensorhub;
     
     
@@ -74,7 +73,7 @@ public class SensorHubService extends Service
     }
     
     
-    public void startSensorHub(final IModuleConfigRepository config)
+    public synchronized void startSensorHub(final IModuleConfigRepository config)
     {
         if (bgThread == null)
         {
@@ -82,35 +81,44 @@ public class SensorHubService extends Service
                 
                 public void run() 
                 {
-                    // prepare for processing sensor messages
-                    Looper.prepare();
-                    bgLooper = Looper.myLooper();
+                    // create sensorhub instance
+                    EventBus eventBus = new EventBus();
+                    ModuleRegistry reg = new ModuleRegistry(config, eventBus);
+                    sensorhub = SensorHub.createInstance(new SensorHubConfig(), reg, eventBus);
                     
-                    // start sensorhub
-                    SensorHub.createInstance(null, new ModuleRegistry(config)).start();
-                    Log.i("SensorHub", "SensorHub started...");     
-                    sensorhub = SensorHub.getInstance();
+                    // notify waithing thread that sensorhub instance is available
+                    synchronized (SensorHubService.this)
+                    {
+                        SensorHubService.this.notify();
+                    }
                     
-                    Looper.loop();
+                    // start sensorhub    
+                    sensorhub.start();
                 }        
             };
             
             bgThread.start();
         }
+        
+        try
+        {
+            while (sensorhub == null)
+                wait();
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
     }
     
     
-    public void stopSensorHub()
+    public synchronized void stopSensorHub()
     {
         if (bgThread != null)
         {
             sensorhub.stop();
             SensorHub.clearInstance();
-            Log.i("SensorHub", "SensorHub stopped...");
             sensorhub = null;
-            
-            bgLooper.quit();
-            bgLooper = null;
             bgThread = null;
         }
     }    
@@ -124,7 +132,8 @@ public class SensorHubService extends Service
     
 
     @Override
-    public void onDestroy() {
+    public void onDestroy()
+    {
         stopSensorHub();
     }
 
@@ -136,6 +145,9 @@ public class SensorHubService extends Service
     }
 
 
+    /**
+     * @return the SensorHub instance
+     */
     public SensorHub getSensorHub()
     {
         return sensorhub;

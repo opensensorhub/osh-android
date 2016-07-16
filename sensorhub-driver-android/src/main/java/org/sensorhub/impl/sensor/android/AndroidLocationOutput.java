@@ -69,7 +69,7 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
     
     
     @Override
-    public void init()
+    public void start()
     {
         // SWE Common data structure
         GeoPosHelper fac = new GeoPosHelper();

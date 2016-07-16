@@ -43,6 +43,7 @@ public class AndroidSensorsConfig extends SensorConfig
     public boolean activateFrontCamera = false;
     public String videoCodec = JPEG_CODEC; 
     
+    public String deviceName;
     public String runName;
     public String runDescription; 
     

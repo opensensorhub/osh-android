@@ -19,6 +19,6 @@ import org.sensorhub.api.sensor.SensorException;
 
 public interface IAndroidOutput
 {
-    public void init() throws SensorException;
+    public void start() throws SensorException;
     public void stop();
 }

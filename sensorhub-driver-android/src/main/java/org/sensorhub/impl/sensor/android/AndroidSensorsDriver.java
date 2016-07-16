@@ -40,6 +40,7 @@ import android.hardware.camera2.CameraManager;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Build;
+import android.os.Looper;
 import android.provider.Settings.Secure;
 
 
@@ -64,10 +65,8 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     
     
     @Override
-    public synchronized void init(AndroidSensorsConfig config) throws SensorHubException
+    public synchronized void init() throws SensorHubException
     {
-        super.init(config);
-        
         // generate identifiers
         String deviceID = Secure.getString(config.androidContext.getContentResolver(), Secure.ANDROID_ID);
         this.xmlID = "ANDROID_SENSORS_" + Build.SERIAL;
@@ -82,7 +81,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         // we call stop() to cleanup just in case we weren't properly stopped
         stop();        
         Context androidContext = config.androidContext;
-        
+                
         // create data interfaces for sensors
         this.sensorManager = (SensorManager)androidContext.getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
@@ -138,9 +137,27 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         if (androidContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA))
             createCameraOutputs(androidContext);
         
-        // init all outputs
-        for (ISensorDataInterface o: this.getAllOutputs().values())
-            ((IAndroidOutput)o).init();
+        // start all outputs in a background thread
+        // we need an Android looper to process sensor and camera messages
+        Thread bgThread = new Thread() {
+            public void run()
+            {
+                Looper.prepare();
+                
+                try
+                {
+                    for (ISensorDataInterface o: getAllOutputs().values())
+                        ((IAndroidOutput)o).start();
+                }
+                catch (SensorException e)
+                {
+                    reportError("Error while starting outputs", e);
+                }
+                
+                Looper.loop();
+            }
+        };
+        bgThread.start();
         
         // update sensorml description
         updateSensorDescription();
@@ -245,6 +262,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         {
             super.updateSensorDescription();
             
+            // ref frame
             SpatialFrame localRefFrame = new SpatialFrameImpl();
             localRefFrame.setId("LOCAL_FRAME");
             localRefFrame.setOrigin("Center of the device screen");

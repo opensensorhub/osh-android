@@ -58,7 +58,7 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
 
 
     @Override
-    public void init()
+    public void start()
     {
         GeoPosHelper fac = new GeoPosHelper();
         
@@ -93,7 +93,7 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
         constraint.addInterval(new double[] {-180.0, 180.0});
         c.setConstraint(constraint);
         
-        super.init();
+        super.start();
     }
 
 

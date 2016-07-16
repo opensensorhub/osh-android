@@ -46,7 +46,7 @@ public class AndroidMagnetoOutput extends AndroidSensorOutput implements SensorE
 
 
     @Override
-    public void init()
+    public void start()
     {
         GeoPosHelper fac = new GeoPosHelper();
         
@@ -69,7 +69,7 @@ public class AndroidMagnetoOutput extends AndroidSensorOutput implements SensorE
         );   
         dataStruct.addComponent("mag", vec);   
         
-        super.init();
+        super.start();
     }
 
 

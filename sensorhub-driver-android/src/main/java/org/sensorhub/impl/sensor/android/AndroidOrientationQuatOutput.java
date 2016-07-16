@@ -50,7 +50,7 @@ public class AndroidOrientationQuatOutput extends AndroidSensorOutput implements
 
 
     @Override
-    public void init()
+    public void start()
     {
         GeoPosHelper fac = new GeoPosHelper();
         
@@ -67,7 +67,7 @@ public class AndroidOrientationQuatOutput extends AndroidSensorOutput implements
         quat.setLocalFrame(parentSensor.localFrameURI);
         dataStruct.addComponent("orient", quat);
         
-        super.init();
+        super.start();
     }
 
 

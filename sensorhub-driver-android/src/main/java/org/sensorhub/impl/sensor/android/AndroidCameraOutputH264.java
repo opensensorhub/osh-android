@@ -87,7 +87,7 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
 
 
     @Override
-    public void init() throws SensorException
+    public void start() throws SensorException
     {        
         // init camera hardware and H264 codec
         initCam();

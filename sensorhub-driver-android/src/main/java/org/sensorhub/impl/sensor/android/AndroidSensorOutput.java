@@ -67,7 +67,7 @@ public abstract class AndroidSensorOutput extends AbstractSensorOutput<AndroidSe
     
     
     @Override
-    public void init()
+    public void start()
     {
         // start event handling thread
         eventThread = new HandlerThread("SensorThread");

@@ -85,7 +85,7 @@ public class AndroidCameraOutputMJPEG extends AbstractSensorOutput<AndroidSensor
     
     
     @Override
-    public void init() throws SensorException
+    public void start() throws SensorException
     {
         try
         {
@@ -144,6 +144,7 @@ public class AndroidCameraOutputMJPEG extends AbstractSensorOutput<AndroidSensor
     public void onPreviewFrame(byte[] data, Camera camera)
     {
         long timeStamp = SystemClock.elapsedRealtimeNanos();
+        System.out.println("New frame @" + timeStamp);
         
         // select current buffer
         YuvImage yuvImg = (data == imgBuf1) ? yuvImg1 : yuvImg2;
