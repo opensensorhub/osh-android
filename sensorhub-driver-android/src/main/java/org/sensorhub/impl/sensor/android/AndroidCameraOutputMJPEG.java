@@ -32,6 +32,7 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.view.SurfaceHolder;
 
@@ -52,6 +53,7 @@ public class AndroidCameraOutputMJPEG extends AbstractSensorOutput<AndroidSensor
     static final Logger log = LoggerFactory.getLogger(AndroidCameraOutputMJPEG.class.getSimpleName());
     protected static final String TIME_REF = "http://www.opengis.net/def/trs/BIPM/0/UTC";
     
+    Looper bgLooper;
     int cameraId;
     Camera camera;
     int imgHeight, imgWidth, frameRate;
@@ -87,56 +89,78 @@ public class AndroidCameraOutputMJPEG extends AbstractSensorOutput<AndroidSensor
     @Override
     public void start() throws SensorException
     {
-        try
-        {
-            // open camera and get parameters
-            camera = Camera.open(cameraId);
-            Parameters camParams = camera.getParameters();
-            
-            // get supported preview sizes
-            for (Camera.Size imgSize: camParams.getSupportedPreviewSizes())
+        // handle camera in its own thread        
+        Thread bgThread = new Thread() {
+            public void run()
             {
-                if (imgSize.width >= 600 && imgSize.width <= 800)
+                // we need an Android looper to process camera messages
+                Looper.prepare();
+                bgLooper = Looper.myLooper();
+                
+                try
                 {
-                    imgWidth = imgSize.width;
-                    imgHeight = imgSize.height;
-                    break;
+                    // open camera and get parameters
+                    camera = Camera.open(cameraId);
+                    Parameters camParams = camera.getParameters();
+                    
+                    // get supported preview sizes
+                    for (Camera.Size imgSize: camParams.getSupportedPreviewSizes())
+                    {
+                        if (imgSize.width >= 600 && imgSize.width <= 800)
+                        {
+                            imgWidth = imgSize.width;
+                            imgHeight = imgSize.height;
+                            break;
+                        }
+                    }
+                    frameRate = 1;
+                    
+                    // set parameters
+                    camParams.setPreviewSize(imgWidth, imgHeight);
+                    camParams.setPreviewFormat(ImageFormat.NV21);
+                    camera.setParameters(camParams);
                 }
+                catch (Exception e)
+                {
+                    parentSensor.reportError("Cannot access camera " + cameraId, e);
+                    return;
+                }
+                
+                try
+                {
+                    // setup buffers and callback
+                    imgArea = new Rect(0, 0, imgWidth, imgHeight);
+                    int bufSize = imgWidth*imgHeight*ImageFormat.getBitsPerPixel(ImageFormat.NV21)/8;
+                    imgBuf1 = new byte[bufSize];
+                    yuvImg1 = new YuvImage(imgBuf1, ImageFormat.NV21, imgWidth, imgHeight, null);
+                    imgBuf2 = new byte[bufSize];
+                    yuvImg2 = new YuvImage(imgBuf2, ImageFormat.NV21, imgWidth, imgHeight, null);
+                    camera.addCallbackBuffer(imgBuf1);
+                    camera.addCallbackBuffer(imgBuf2);
+                    camera.setPreviewCallbackWithBuffer(AndroidCameraOutputMJPEG.this);
+                    camera.setDisplayOrientation(90);
+                                
+                    // create SWE Common data structure            
+                    VideoCamHelper fac = new VideoCamHelper();
+                    DataStream videoStream = fac.newVideoOutputMJPEG(getName(), imgWidth, imgHeight);
+                    dataStruct = videoStream.getElementType();
+                    dataEncoding = videoStream.getEncoding();
+                    
+                    // start streaming video
+                    if (previewSurfaceHolder != null)
+                        camera.setPreviewDisplay(previewSurfaceHolder);
+                    camera.startPreview();
+                }
+                catch (Exception e)
+                {
+                    parentSensor.reportError("Cannot start camera capture", e);
+                }
+                
+                // start processing messages
+                Looper.loop();
             }
-            frameRate = 1;
-            
-            // set parameters
-            camParams.setPreviewSize(imgWidth, imgHeight);
-            camParams.setPreviewFormat(ImageFormat.NV21);
-            camera.setParameters(camParams);
-            
-            // setup buffers and callback
-            imgArea = new Rect(0, 0, imgWidth, imgHeight);
-            int bufSize = imgWidth*imgHeight*ImageFormat.getBitsPerPixel(ImageFormat.NV21)/8;
-            imgBuf1 = new byte[bufSize];
-            yuvImg1 = new YuvImage(imgBuf1, ImageFormat.NV21, imgWidth, imgHeight, null);
-            imgBuf2 = new byte[bufSize];
-            yuvImg2 = new YuvImage(imgBuf2, ImageFormat.NV21, imgWidth, imgHeight, null);
-            camera.addCallbackBuffer(imgBuf1);
-            camera.addCallbackBuffer(imgBuf2);
-            camera.setPreviewCallbackWithBuffer(this);
-            camera.setDisplayOrientation(90);
-                        
-            // create SWE Common data structure            
-            VideoCamHelper fac = new VideoCamHelper();
-            DataStream videoStream = fac.newVideoOutputMJPEG(getName(), imgWidth, imgHeight);
-            dataStruct = videoStream.getElementType();
-            dataEncoding = videoStream.getEncoding();
-            
-            // start streaming video
-            if (previewSurfaceHolder != null)
-                camera.setPreviewDisplay(previewSurfaceHolder);
-            camera.startPreview();
-        }
-        catch (Exception e)
-        {
-            throw new SensorException("Cannot access camera " + cameraId, e);
-        }
+        };
+        bgThread.start();
     }
     
     
@@ -185,6 +209,12 @@ public class AndroidCameraOutputMJPEG extends AbstractSensorOutput<AndroidSensor
         {
             camera.release();
             camera = null;
+        }
+        
+        if (bgLooper != null)
+        {
+            bgLooper.quit();
+            bgLooper = null;            
         }
     }
 

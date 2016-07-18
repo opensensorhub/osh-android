@@ -50,6 +50,8 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     private static final Logger log = LoggerFactory.getLogger(AndroidSensorsDriver.class.getSimpleName());
     public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
     
+    Thread bgThread;
+    Looper bgLooper;
     String localFrameURI;
     SensorManager sensorManager;
     LocationManager locationManager;
@@ -139,10 +141,11 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         
         // start all outputs in a background thread
         // we need an Android looper to process sensor and camera messages
-        Thread bgThread = new Thread() {
+        bgThread = new Thread() {
             public void run()
             {
                 Looper.prepare();
+                bgLooper = Looper.myLooper();
                 
                 try
                 {
@@ -249,6 +252,13 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         // stop all outputs
         for (ISensorDataInterface o: this.getAllOutputs().values())
             ((IAndroidOutput)o).stop();
+        
+        // stop background thread looper
+        if (bgLooper != null)
+        {
+            bgLooper.quit();
+            bgLooper = null;
+        }
         
         this.removeAllOutputs();
         this.removeAllControlInputs();

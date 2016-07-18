@@ -34,6 +34,7 @@ import android.media.MediaCodec;
 import android.media.MediaCodec.BufferInfo;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.view.SurfaceHolder;
 
@@ -54,6 +55,7 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
     static final Logger log = LoggerFactory.getLogger(AndroidCameraOutputH264.class.getSimpleName());
     protected static final String TIME_REF = "http://www.opengis.net/def/trs/BIPM/0/UTC";
 
+    Looper bgLooper;
     int cameraId;
     Camera camera;
     int imgHeight, imgWidth, frameRate;
@@ -89,18 +91,46 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
     @Override
     public void start() throws SensorException
     {        
-        // init camera hardware and H264 codec
-        initCam();
-        initCodec();
-
-        // create SWE Common data structure            
-        VideoCamHelper fac = new VideoCamHelper();
-        DataStream videoStream = fac.newVideoOutputMJPEG(getName(), imgWidth, imgHeight);
-        dataStruct = videoStream.getElementType();
-        dataEncoding = videoStream.getEncoding();
-
-        // start streaming video            
-        camera.startPreview();        
+        // handle camera in its own thread        
+        Thread bgThread = new Thread() {
+            public void run()
+            {
+                // we need an Android looper to process camera messages
+                Looper.prepare();
+                bgLooper = Looper.myLooper();
+                    
+                // init camera hardware and H264 codec
+                try
+                {    
+                    initCam();
+                    initCodec();
+                }
+                catch (SensorException e)
+                {
+                    parentSensor.reportError("Cannot init camera", e);
+                }
+                
+                try
+                {
+                    // create SWE Common data structure            
+                    VideoCamHelper fac = new VideoCamHelper();
+                    DataStream videoStream = fac.newVideoOutputMJPEG(getName(), imgWidth, imgHeight);
+                    dataStruct = videoStream.getElementType();
+                    dataEncoding = videoStream.getEncoding();
+      
+                    // start streaming video            
+                    camera.startPreview();
+                }
+                catch (Exception e)
+                {
+                    parentSensor.reportError("Cannot start camera capture", e);
+                }
+                
+                // start processing messages
+                Looper.loop();
+            }
+        };
+        bgThread.start();
     }
     
     
@@ -165,7 +195,7 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
         }
         catch (Exception e)
         {
-            throw new SensorException("Error while initializing codec " + mCodec.getName(), e);
+            throw new SensorException("Cannot initialize H264 codec " + mCodec.getName(), e);
         }
     }
 
@@ -270,6 +300,12 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
         {
             mCodec.stop();
             mCodec.release();
+        }
+        
+        if (bgLooper != null)
+        {
+            bgLooper.quit();
+            bgLooper = null;            
         }
     }
 

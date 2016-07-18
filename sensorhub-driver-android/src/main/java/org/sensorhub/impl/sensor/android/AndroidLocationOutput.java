@@ -40,11 +40,6 @@ import android.os.Bundle;
  */
 public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, LocationListener
 {
-    // keep logger name short because in LogCat it's max 23 chars
-    //private static final Logger log = LoggerFactory.getLogger(AndroidLocationOutput.class.getSimpleName());
-            
-    //private static final long GPS_TO_UTC_OFFSET = -16000L;
-    
     LocationManager locManager;
     LocationProvider locProvider;
     String name;

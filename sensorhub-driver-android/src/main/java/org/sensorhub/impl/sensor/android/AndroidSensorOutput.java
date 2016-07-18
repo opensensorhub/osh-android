@@ -23,8 +23,6 @@ import org.vast.data.TextEncodingImpl;
 import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Handler;
-import android.os.HandlerThread;
 
 
 /**
@@ -40,7 +38,6 @@ public abstract class AndroidSensorOutput extends AbstractSensorOutput<AndroidSe
     // keep logger name short because in LogCat it's max 23 chars
     protected static final Logger log = LoggerFactory.getLogger(AndroidSensorOutput.class.getSimpleName());
     
-    HandlerThread eventThread;
     SensorManager sensorManager;
     Sensor sensor;
     String name;
@@ -69,15 +66,10 @@ public abstract class AndroidSensorOutput extends AbstractSensorOutput<AndroidSe
     @Override
     public void start()
     {
-        // start event handling thread
-        eventThread = new HandlerThread("SensorThread");
-        eventThread.start();
-        Handler eventHandler = new Handler(eventThread.getLooper());
-        
         // max 10Hz events
         int rateUs = Math.max(sensor.getMinDelay(), 100000);
         samplingPeriod = rateUs / 1e6;
-        sensorManager.registerListener(this, sensor, rateUs, eventHandler);
+        sensorManager.registerListener(this, sensor, rateUs);
     }
     
     
@@ -85,12 +77,6 @@ public abstract class AndroidSensorOutput extends AbstractSensorOutput<AndroidSe
     public void stop()
     {
         sensorManager.unregisterListener(this);
-        
-        if (eventThread != null)
-        {
-            eventThread.quitSafely();
-            eventThread = null;
-        }
     }
 
 
