@@ -110,6 +110,7 @@ public class UserSettingsActivity extends PreferenceActivity
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_sensors);
             bindPreferenceSummaryToValue(findPreference("video_codec"));
+            bindPreferenceSummaryToValue(findPreference("angel_address"));
         }
     }
 

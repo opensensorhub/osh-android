@@ -24,8 +24,6 @@ import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vast.data.AbstractDataBlock;
 import org.vast.data.DataBlockMixed;
 import android.graphics.ImageFormat;
@@ -57,8 +55,6 @@ import android.view.SurfaceHolder;
  */
 public class AndroidCamera2Output extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput
 {
-    // keep logger name short because in LogCat it's max 23 chars
-    private static final Logger log = LoggerFactory.getLogger(AndroidCamera2Output.class.getSimpleName());
     protected static final String TIME_REF = "http://www.opengis.net/def/trs/BIPM/0/UTC";
     
     CameraManager camManager;

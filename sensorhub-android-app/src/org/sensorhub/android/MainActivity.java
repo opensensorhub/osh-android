@@ -22,6 +22,8 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Timer;
+import java.util.TimerTask;
 import org.sensorhub.android.comm.BluetoothCommProvider;
 import org.sensorhub.android.comm.BluetoothCommProviderConfig;
 import org.sensorhub.android.comm.ble.BleConfig;
@@ -74,10 +76,12 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
     SensorHubService boundService;
     IModuleConfigRepository sensorhubConfig;
     Handler displayHandler;
+    Timer refreshTimer;
     StringBuffer displayText = new StringBuffer();
     SurfaceHolder camPreviewSurfaceHolder;    
     ArrayList<SOSTClient> sostClients = new ArrayList<SOSTClient>();
     URL sosUrl = null;
+    boolean showVideo;
     
     
     private ServiceConnection sConn = new ServiceConnection()
@@ -163,6 +167,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         sensorsConfig.activateGpsLocation = prefs.getBoolean("gps_enabled", false);
         sensorsConfig.activateNetworkLocation = prefs.getBoolean("netloc_enabled", false);
         sensorsConfig.activateBackCamera = prefs.getBoolean("cam_enabled", false);
+        if (sensorsConfig.activateBackCamera || sensorsConfig.activateFrontCamera)
+            showVideo = true;
         sensorsConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
         sensorsConfig.androidContext = this.getApplicationContext();
         sensorsConfig.camPreviewSurfaceHolder = this.camPreviewSurfaceHolder;
@@ -205,8 +211,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             angelConfig.name = "Angel Sensor [" + deviceName + "]";
             angelConfig.autoStart = true;
             angelConfig.networkID = bleConf.id;
-            //angelConfig.btAddress = "00:07:80:79:04:AF";
-            angelConfig.btAddress = "00:07:80:03:0E:0A";
+            //angelConfig.btAddress = "00:07:80:79:04:AF"; // mike's
+            //angelConfig.btAddress = "00:07:80:03:0E:0A"; // mine
+            angelConfig.btAddress = prefs.getString("angel_address", null);
             sensorhubConfig.add(angelConfig);
             addSosTConfig(angelConfig);
         }
@@ -233,8 +240,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             return;
         
         SOSTClientConfig sosConfig = new SOSTClientConfig();
-        sosConfig.id = sensorConf.id.replace("SENSOR", "SOST");
-        sosConfig.name = sensorConf.name.replaceAll("\\[.*\\]", "") + "SOS-T Client";
+        sosConfig.id = sensorConf.id + "_SOST";
+        sosConfig.name = sensorConf.name.replaceAll("\\[.*\\]", "");// + "SOS-T Client";
         sosConfig.autoStart = true;
         sosConfig.sensorID = sensorConf.id;
         sosConfig.sos.remoteHost = sosUrl.getHost();
@@ -278,9 +285,11 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         }
         else if (id == R.id.action_stop)
         {
+            stopRefreshingStatus();
             sostClients.clear();
             if (boundService != null)
                 boundService.stopSensorHub();
+            textArea.setBackgroundColor(0xFFFFFFFF);
             newStatusMessage("SensorHub Stopped");
             return true;
         }
@@ -311,7 +320,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
                 updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
                 newStatusMessage("Waiting for SensorHub service to start...");
                 sostClients.clear();
-                boundService.startSensorHub(sensorhubConfig);
+                boundService.startSensorHub(sensorhubConfig);                
+                if (showVideo)
+                    textArea.setBackgroundColor(0x80FFFFFF);
                 startListeningForEvents();                
             }
         });
@@ -325,43 +336,75 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
     }
     
     
-    protected void newStatusMessage(String msg)
+    protected void startRefreshingStatus()
     {
-        displayText.setLength(0);
-        appendStatusMessage(msg);
+        if (refreshTimer != null)
+            return;
+        
+        TimerTask task = new TimerTask()
+        {
+            public void run()
+            {
+                displayStatus();        
+            }            
+        };
+        
+        refreshTimer = new Timer();
+        refreshTimer.schedule(task, 0, 500);
     }
     
     
-    protected void appendStatusMessage(String msg)
+    protected void stopRefreshingStatus()
     {
-        displayText.append(msg);
-        displayHandler.obtainMessage(1, displayText.toString()).sendToTarget();
+        if (refreshTimer != null)
+        {
+            refreshTimer.cancel();
+            refreshTimer = null;
+        }
     }
     
     
-    protected void displaySosStatus()
+    protected synchronized void displayStatus()
     {
         displayText.setLength(0);
         
+        // first display error messages if any
         for (SOSTClient client: sostClients)
         {
-            displayText.append("<p>" + client.getName() + ":<br/>");
-            
             Map<ISensorDataInterface, StreamInfo> dataStreams = client.getDataStreams();
-            if (dataStreams.size() == 0 && client.getStatusMessage() != null)
-                displayText.append(client.getStatusMessage() + "<br/>");
-            if (client.getCurrentError() != null)
-                displayText.append("<font color='red'>" + client.getCurrentError().getMessage() + "</font><br/>");
-                        
-            long now = System.currentTimeMillis();            
+            boolean showError = (client.getCurrentError() != null);
+            boolean showMsg = (dataStreams.size() == 0) && (client.getStatusMessage() != null);
+            
+            if (showError || showMsg)
+            {
+                displayText.append("<p>" + client.getName() + ":<br/>");
+                if (showMsg)
+                    displayText.append(client.getStatusMessage() + "<br/>");
+                if (showError)
+                    displayText.append("<font color='red'>" + client.getCurrentError().getMessage() + "</font>");                
+                displayText.append("</p>");
+            }
+        }
+        
+        // then display streams status
+        displayText.append("<p>");
+        for (SOSTClient client: sostClients)
+        {
+            Map<ISensorDataInterface, StreamInfo> dataStreams = client.getDataStreams();            
+            long now = System.currentTimeMillis();
+            
             for (Entry<ISensorDataInterface, StreamInfo> stream : dataStreams.entrySet())
             {
                 displayText.append("<b>" + stream.getKey().getName() + " : </b>");
 
-                if (now - stream.getValue().lastEventTime > 2000)
-                    displayText.append("<font color='red'>NOK</font>");
+                long lastEventTime = stream.getValue().lastEventTime;
+                long dt = now - lastEventTime;
+                if (lastEventTime == Long.MIN_VALUE)
+                    displayText.append("<font color='red'>NO OBS</font>");
+                else if (dt > stream.getValue().measPeriodMs)
+                    displayText.append("<font color='red'>NOK (" + dt + "ms ago)</font>");
                 else
-                    displayText.append("<font color='green'>OK</font>");
+                    displayText.append("<font color='green'>OK (" + dt + "ms ago)</font>");
 
                 if (stream.getValue().errorCount > 0)
                 {
@@ -369,13 +412,28 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
                     displayText.append(stream.getValue().errorCount);
                     displayText.append(")</font>");
                 }
-
+                
                 displayText.append("<br/>");
             }
-            
-            displayText.append("</p>");
         }
         
+        displayText.setLength(displayText.length()-5); // remove last </br>
+        displayText.append("</p>");
+        
+        displayHandler.obtainMessage(1, displayText.toString()).sendToTarget();
+    }
+    
+    
+    protected synchronized void newStatusMessage(String msg)
+    {
+        displayText.setLength(0);
+        appendStatusMessage(msg);
+    }
+    
+    
+    protected synchronized void appendStatusMessage(String msg)
+    {
+        displayText.append(msg);
         displayHandler.obtainMessage(1, displayText.toString()).sendToTarget();
     }
     
@@ -399,8 +457,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
                             sostClients.add(client);
                             break;
                             
-                        case STARTED:                            
-                            displaySosStatus();
+                        case STARTED:
+                            displayStatus();
+                            startRefreshingStatus(); // start refreshing as soon as first SOS is connected
                             break;
                             
                         default:
@@ -410,7 +469,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
                 
                 else if (((ModuleEvent)e).getType() == ModuleEvent.Type.ERROR)
                 {
-                    displaySosStatus();
+                    displayStatus();
                 }
             }
         }        
@@ -443,7 +502,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
     protected void onResume()
     {
         super.onResume();        
-        startListeningForEvents();       
+        startListeningForEvents();
+        if (!sostClients.isEmpty())
+            startRefreshingStatus();
     }
 
 
@@ -451,6 +512,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
     protected void onPause()
     {
         stopListeningForEvents();
+        stopRefreshingStatus();
         super.onPause();
     }
 
@@ -468,12 +530,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
     public void surfaceCreated(SurfaceHolder holder)
     {
         this.camPreviewSurfaceHolder = holder;
-
-        /*SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.clear();
-        editor.commit();
-        PreferenceManager.setDefaultValues(this, R.xml.pref_general, true);*/
     }
 
 

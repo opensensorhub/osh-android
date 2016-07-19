@@ -17,8 +17,6 @@ package org.sensorhub.impl.sensor.android;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vast.data.TextEncodingImpl;
 import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
@@ -35,9 +33,6 @@ import android.hardware.SensorManager;
  */
 public abstract class AndroidSensorOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, SensorEventListener
 {
-    // keep logger name short because in LogCat it's max 23 chars
-    protected static final Logger log = LoggerFactory.getLogger(AndroidSensorOutput.class.getSimpleName());
-    
     SensorManager sensorManager;
     Sensor sensor;
     String name;

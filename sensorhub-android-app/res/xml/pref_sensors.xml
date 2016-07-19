@@ -76,6 +76,13 @@
         android:summary="Enable streaming of Angel Sensor health data (sensor must be connected via Bluetooth LE on startup)"
         android:title="Angel Sensor Health Data" />
     
+    <EditTextPreference
+        android:key="angel_address"
+        android:inputType="text"
+        android:singleLine="true"
+        android:defaultValue="00:07:80:03:0E:0A"
+        android:title="Angel Sensor Bluetooth Address" />
+    
     <CheckBoxPreference
         android:defaultValue="false"
         android:key="flirone_enabled"

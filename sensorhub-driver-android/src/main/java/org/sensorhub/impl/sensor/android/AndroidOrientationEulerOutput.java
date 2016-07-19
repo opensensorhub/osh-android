@@ -39,9 +39,6 @@ import android.hardware.SensorManager;
  */
 public class AndroidOrientationEulerOutput extends AndroidSensorOutput implements SensorEventListener
 {
-    // keep logger name short because in LogCat it's max 23 chars
-    //private static final Logger log = LoggerFactory.getLogger(AndroidOrientationEulerOutput.class.getSimpleName());
-    
     private static final String HEADING_DEF = "http://sensorml.com/ont/swe/property/AngleToNorth";
     
     // for euler computation

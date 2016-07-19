@@ -325,4 +325,11 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     public void cleanup() throws SensorHubException
     {     
     }
+
+
+    @Override
+    public Logger getLogger()
+    {
+        return log;
+    }
 }

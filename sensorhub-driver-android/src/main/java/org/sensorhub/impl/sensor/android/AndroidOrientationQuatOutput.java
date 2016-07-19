@@ -36,9 +36,6 @@ import android.hardware.SensorManager;
  */
 public class AndroidOrientationQuatOutput extends AndroidSensorOutput implements SensorEventListener
 {
-    // keep logger name short because in LogCat it's max 23 chars
-    //private static final Logger log = LoggerFactory.getLogger(AndroidOrientationQuatOutput.class.getSimpleName());
-    
     Quat4d att = new Quat4d();
     
     

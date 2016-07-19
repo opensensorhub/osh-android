@@ -23,8 +23,6 @@ import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vast.data.AbstractDataBlock;
 import org.vast.data.DataBlockMixed;
 import android.graphics.ImageFormat;
@@ -49,8 +47,6 @@ import android.view.SurfaceHolder;
 @SuppressWarnings("deprecation")
 public class AndroidCameraOutputMJPEG extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, Camera.PreviewCallback
 {
-    // keep logger name short because in LogCat it's max 23 chars
-    static final Logger log = LoggerFactory.getLogger(AndroidCameraOutputMJPEG.class.getSimpleName());
     protected static final String TIME_REF = "http://www.opengis.net/def/trs/BIPM/0/UTC";
     
     Looper bgLooper;
@@ -168,7 +164,6 @@ public class AndroidCameraOutputMJPEG extends AbstractSensorOutput<AndroidSensor
     public void onPreviewFrame(byte[] data, Camera camera)
     {
         long timeStamp = SystemClock.elapsedRealtimeNanos();
-        System.out.println("New frame @" + timeStamp);
         
         // select current buffer
         YuvImage yuvImg = (data == imgBuf1) ? yuvImg1 : yuvImg2;
