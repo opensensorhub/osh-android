@@ -60,10 +60,16 @@ public class FlirOneCameraDriver extends AbstractSensorModule<FlirOneCameraConfi
     
     
     @Override
-    public void init(FlirOneCameraConfig config) throws SensorHubException
+    public void init() throws SensorHubException
     {
-        super.init(config);
+        super.init();
         
+        // generate identifiers
+        String deviceID = Secure.getString(config.androidContext.getContentResolver(), Secure.ANDROID_ID);
+        this.uniqueID = "urn:flir:cam:flirone:android:" + deviceID;
+        this.xmlID = "FLIRONE_CAMERA_" + Build.SERIAL;
+        
+        // create output
         camOutput = new FlirOneCameraOutput(this, config.camPreviewSurfaceHolder);
         camOutput.init();
         this.addOutput(camOutput, false);
@@ -97,11 +103,6 @@ public class FlirOneCameraDriver extends AbstractSensorModule<FlirOneCameraConfi
         synchronized (sensorDescription)
         {
             super.updateSensorDescription();
-            
-            String deviceID = Secure.getString(config.androidContext.getContentResolver(), Secure.ANDROID_ID);
-            sensorDescription.setId("ANDROID_SENSORS_" + Build.SERIAL);
-            sensorDescription.setUniqueIdentifier("urn:android:device:" + deviceID + ":flirone");
-            sensorDescription.setName(config.name);
             
             SpatialFrame localRefFrame = new SpatialFrameImpl();
             localRefFrame.setId("LOCAL_FRAME");
