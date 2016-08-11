@@ -114,7 +114,7 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
                 {
                     // create SWE Common data structure            
                     VideoCamHelper fac = new VideoCamHelper();
-                    DataStream videoStream = fac.newVideoOutputMJPEG(getName(), imgWidth, imgHeight);
+                    DataStream videoStream = fac.newVideoOutputH264(getName(), imgWidth, imgHeight);
                     dataStruct = videoStream.getElementType();
                     dataEncoding = videoStream.getEncoding();
       
