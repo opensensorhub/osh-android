@@ -54,13 +54,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.provider.Settings.Secure;
 import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -150,9 +150,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         }
         
         // get device name
+        String deviceID = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
         String deviceName = prefs.getString("device_name", null);
         if (deviceName == null || deviceName.length() < 2)
-            deviceName = Build.SERIAL;
+            deviceName = deviceID;
         
         // Android sensors
         AndroidSensorsConfig sensorsConfig = new AndroidSensorsConfig();
@@ -184,6 +185,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             trupulseConfig.id = "TRUPULSE_SENSOR";
             trupulseConfig.name = "TruPulse Range Finder [" + deviceName + "]";
             trupulseConfig.autoStart = true;
+            trupulseConfig.serialNumber = deviceID;
             BluetoothCommProviderConfig btConf = new BluetoothCommProviderConfig();
             btConf.protocol.deviceName = "TP360RB.*";
             if (prefs.getBoolean("trupulse_simu", false))

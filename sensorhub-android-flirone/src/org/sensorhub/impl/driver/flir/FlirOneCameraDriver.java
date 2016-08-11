@@ -32,7 +32,6 @@ import com.flir.flironesdk.Device.TuningState;
 import com.flir.flironesdk.FrameProcessor;
 import com.flir.flironesdk.RenderedImage.ImageType;
 import android.content.Context;
-import android.os.Build;
 import android.provider.Settings.Secure;
 
 
@@ -67,7 +66,7 @@ public class FlirOneCameraDriver extends AbstractSensorModule<FlirOneCameraConfi
         // generate identifiers
         String deviceID = Secure.getString(config.androidContext.getContentResolver(), Secure.ANDROID_ID);
         this.uniqueID = "urn:flir:cam:flirone:android:" + deviceID;
-        this.xmlID = "FLIRONE_CAMERA_" + Build.SERIAL;
+        this.xmlID = "FLIRONE_CAMERA_" + deviceID;
         
         // create output
         camOutput = new FlirOneCameraOutput(this, config.camPreviewSurfaceHolder);
