@@ -161,9 +161,6 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
             }
         };
         bgThread.start();
-        
-        // update sensorml description
-        updateSensorDescription();
     }
     
     
@@ -268,9 +265,12 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     @Override
     protected void updateSensorDescription()
     {
-        synchronized (sensorDescription)
+        synchronized (sensorDescLock)
         {
             super.updateSensorDescription();
+            
+            System.out.println("num outputs=" + sensorDescription.getNumOutputs());
+            System.out.println("state=" + this.state);
             
             // ref frame
             SpatialFrame localRefFrame = new SpatialFrameImpl();

@@ -99,7 +99,7 @@ public class FlirOneCameraDriver extends AbstractSensorModule<FlirOneCameraConfi
     @Override
     protected void updateSensorDescription()
     {
-        synchronized (sensorDescription)
+        synchronized (sensorDescLock)
         {
             super.updateSensorDescription();
             
