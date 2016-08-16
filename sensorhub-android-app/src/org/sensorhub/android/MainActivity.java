@@ -383,7 +383,15 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
                 if (showMsg)
                     displayText.append(client.getStatusMessage() + "<br/>");
                 if (showError)
-                    displayText.append("<font color='red'>" + client.getCurrentError().getMessage() + "</font>");                
+                {
+                    Throwable errorObj = client.getCurrentError();
+                    String errorMsg = errorObj.getMessage().trim();
+                    if (!errorMsg.endsWith("."))
+                        errorMsg += ". ";
+                    if (errorObj.getCause() != null && errorObj.getCause().getMessage() != null)
+                        errorMsg += errorObj.getCause().getMessage();
+                    displayText.append("<font color='red'>" + errorMsg + "</font>");
+                }
                 displayText.append("</p>");
             }
         }
