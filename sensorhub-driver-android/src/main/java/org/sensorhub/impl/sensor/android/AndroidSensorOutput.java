@@ -38,6 +38,7 @@ public abstract class AndroidSensorOutput extends AbstractSensorOutput<AndroidSe
     String name;
     boolean enabled;
     DataComponent dataStruct;
+    DataEncoding dataEncoding;
     double samplingPeriod;
     long systemTimeOffset = -1L;
     
@@ -48,6 +49,8 @@ public abstract class AndroidSensorOutput extends AbstractSensorOutput<AndroidSe
         this.sensorManager = aSensorManager;
         this.sensor = aSensor;
         this.name = sensor.getName().replaceAll(" ", "_") + "_data";
+        
+        this.dataEncoding = new TextEncodingImpl(",", "\n");
     }
     
     
@@ -92,7 +95,7 @@ public abstract class AndroidSensorOutput extends AbstractSensorOutput<AndroidSe
     @Override
     public DataEncoding getRecommendedEncoding()
     {
-        return new TextEncodingImpl(",", "\n");
+        return dataEncoding;
     }
     
     

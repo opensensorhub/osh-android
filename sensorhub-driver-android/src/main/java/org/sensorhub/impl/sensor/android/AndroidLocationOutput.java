@@ -21,7 +21,6 @@ import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
-import org.vast.data.TextEncodingImpl;
 import org.vast.swe.helper.GeoPosHelper;
 import android.location.Location;
 import android.location.LocationListener;
@@ -45,6 +44,7 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
     String name;
     boolean enabled;
     DataComponent posDataStruct;
+    DataEncoding posEncoding;
     
     
     protected AndroidLocationOutput(AndroidSensorsDriver parentModule, LocationManager locManager, LocationProvider locProvider)
@@ -53,6 +53,19 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
         this.locManager = locManager;
         this.locProvider = locProvider;        
         this.name = locProvider.getName().replaceAll(" ", "_") + "_data";
+        
+        // output structure (time + location)
+        GeoPosHelper fac = new GeoPosHelper();
+        posDataStruct = fac.newDataRecord(2);
+        posDataStruct.setName(getName());
+        Time time = fac.newTimeStampIsoUTC();
+        posDataStruct.addComponent("time", time);
+        Vector vec = fac.newLocationVectorLLA(null);  
+        ((Vector)vec).setLocalFrame(parentSensor.localFrameURI);
+        posDataStruct.addComponent("location", vec);
+        
+        // output encoding
+        posEncoding = fac.newTextEncoding(",", "\n");
     }
     
     
@@ -66,20 +79,6 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
     @Override
     public void start()
     {
-        // SWE Common data structure
-        GeoPosHelper fac = new GeoPosHelper();
-        posDataStruct = fac.newDataRecord(2);
-        posDataStruct.setName(getName());
-        
-        // time stamp
-        Time time = fac.newTimeStampIsoUTC();
-        posDataStruct.addComponent("time", time);
-
-        // LLA location
-        Vector vec = fac.newLocationVectorLLA(null);  
-        ((Vector)vec).setLocalFrame(parentSensor.localFrameURI);
-        posDataStruct.addComponent("location", vec);
-        
         // request location data
         locManager.requestLocationUpdates(locProvider.getName(), 100, 0.0f, this);
     }
@@ -116,7 +115,7 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
     @Override
     public DataEncoding getRecommendedEncoding()
     {
-        return new TextEncodingImpl(",", "\n");
+        return posEncoding;
     }
 
     

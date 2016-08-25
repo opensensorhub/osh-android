@@ -17,7 +17,6 @@ package org.sensorhub.impl.sensor.android;
 import net.opengis.swe.v20.AllowedValues;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.Quantity;
-import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
 import org.sensorhub.algo.vecmath.Quat4d;
 import org.sensorhub.algo.vecmath.Vect3d;
@@ -51,21 +50,14 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
     {
         super(parentModule, aSensorManager, aSensor);
         this.name = "euler_orientation_data";
-    }
-
-
-    @Override
-    public void start()
-    {
-        GeoPosHelper fac = new GeoPosHelper();
         
-        // SWE Common data structure
+        // create output structure
+        GeoPosHelper fac = new GeoPosHelper();
         dataStruct = fac.newDataRecord(2);
         dataStruct.setName(getName());
         
         // time stamp
-        Time time = fac.newTimeStampIsoUTC();
-        dataStruct.addComponent("time", time);
+        dataStruct.addComponent("time", fac.newTimeStampIsoUTC());
 
         // euler angles vector
         Vector vec = fac.newEulerOrientationENU(null);
@@ -89,8 +81,6 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
         constraint = fac.newAllowedValues();
         constraint.addInterval(new double[] {-180.0, 180.0});
         c.setConstraint(constraint);
-        
-        super.start();
     }
 
 

@@ -15,8 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor.android;
 
 import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.Time;
-import net.opengis.swe.v20.Vector;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.vast.swe.helper.GeoPosHelper;
 import android.hardware.Sensor;
@@ -41,26 +39,13 @@ public class AndroidAcceleroOutput extends AndroidSensorOutput implements Sensor
     protected AndroidAcceleroOutput(AndroidSensorsDriver parentModule, SensorManager aSensorManager, Sensor aSensor)
     {
         super(parentModule, aSensorManager, aSensor);
-    }
-
-
-    @Override
-    public void start()
-    {
-        // SWE Common data structure
+        
+        // create output structure
         GeoPosHelper fac = new GeoPosHelper();
         dataStruct = fac.newDataRecord(2);
         dataStruct.setName(getName());
-        
-        // time stamp
-        Time time = fac.newTimeStampIsoUTC();
-        dataStruct.addComponent("time", time);
-
-        // acceleration vector
-        Vector vec = fac.newAccelerationVector(null, parentSensor.localFrameURI, ACCEL_UOM);    
-        dataStruct.addComponent("accel", vec);
-        
-        super.start();
+        dataStruct.addComponent("time", fac.newTimeStampIsoUTC());
+        dataStruct.addComponent("accel", fac.newAccelerationVector(null, parentSensor.localFrameURI, ACCEL_UOM));
     }
 
 

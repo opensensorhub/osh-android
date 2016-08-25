@@ -15,7 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor.android;
 
 import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
 import org.sensorhub.algo.vecmath.Quat4d;
 import org.sensorhub.api.sensor.SensorDataEvent;
@@ -43,28 +42,17 @@ public class AndroidOrientationQuatOutput extends AndroidSensorOutput implements
     {
         super(parentModule, aSensorManager, aSensor);
         this.name = "quat_orientation_data";
-    }
-
-
-    @Override
-    public void start()
-    {
+                
+        // create output structure
         GeoPosHelper fac = new GeoPosHelper();
-        
-        // SWE Common data structure
         dataStruct = fac.newDataRecord(2);
         dataStruct.setName(getName());
-        
-        // time stamp
-        Time time = fac.newTimeStampIsoUTC();
-        dataStruct.addComponent("time", time);
+        dataStruct.addComponent("time", fac.newTimeStampIsoUTC());
 
         // attitude quaternion
         Vector quat = fac.newQuatOrientationENU(null);
         quat.setLocalFrame(parentSensor.localFrameURI);
         dataStruct.addComponent("orient", quat);
-        
-        super.start();
     }
 
 

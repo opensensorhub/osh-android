@@ -69,21 +69,14 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     @Override
     public synchronized void init() throws SensorHubException
     {
+        Context androidContext = config.androidContext;
+        
         // generate identifiers
-        String deviceID = Secure.getString(config.androidContext.getContentResolver(), Secure.ANDROID_ID);
+        String deviceID = Secure.getString(androidContext.getContentResolver(), Secure.ANDROID_ID);
         this.xmlID = "ANDROID_SENSORS_" + Build.SERIAL;
         this.uniqueID = "urn:android:device:" + deviceID;
         this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
-    }
-
-
-    @Override
-    public void start() throws SensorException
-    {
-        // we call stop() to cleanup just in case we weren't properly stopped
-        stop();        
-        Context androidContext = config.androidContext;
-                
+        
         // create data interfaces for sensors
         this.sensorManager = (SensorManager)androidContext.getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
@@ -138,7 +131,12 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         // create data interfaces for cameras
         if (androidContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA))
             createCameraOutputs(androidContext);
-        
+    }
+
+
+    @Override
+    public void start() throws SensorException
+    {
         // start all outputs in a background thread
         // we need an Android looper to process sensor and camera messages
         bgThread = new Thread() {

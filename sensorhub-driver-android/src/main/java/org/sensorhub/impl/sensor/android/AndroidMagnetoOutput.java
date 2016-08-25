@@ -15,8 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor.android;
 
 import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.Time;
-import net.opengis.swe.v20.Vector;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.vast.swe.helper.GeoPosHelper;
 import android.hardware.Sensor;
@@ -42,34 +40,22 @@ public class AndroidMagnetoOutput extends AndroidSensorOutput implements SensorE
     protected AndroidMagnetoOutput(AndroidSensorsDriver parentModule, SensorManager aSensorManager, Sensor aSensor)
     {
         super(parentModule, aSensorManager, aSensor);
-    }
-
-
-    @Override
-    public void start()
-    {
-        GeoPosHelper fac = new GeoPosHelper();
         
-        // SWE Common data structure
+        // create output structure
+        GeoPosHelper fac = new GeoPosHelper();
         dataStruct = fac.newDataRecord(2);
         dataStruct.setName(getName());
-        
-        // time stamp
-        Time time = fac.newTimeStampIsoUTC();
-        dataStruct.addComponent("time", time);
+        dataStruct.addComponent("time", fac.newTimeStampIsoUTC());
 
-        // magentic field vector
-        Vector vec = fac.newVector(
+        // magnetic field vector
+        dataStruct.addComponent("mag", fac.newVector(
                 MAG_FIELD_DEF,
                 parentSensor.localFrameURI,
                 new String[] {"mx", "my", "mz"},
                 null,
                 new String[] {MAG_FIELD_UOM, MAG_FIELD_UOM, MAG_FIELD_UOM},
                 new String[] {"X", "Y", "Z"}
-        );   
-        dataStruct.addComponent("mag", vec);   
-        
-        super.start();
+        ));
     }
 
 

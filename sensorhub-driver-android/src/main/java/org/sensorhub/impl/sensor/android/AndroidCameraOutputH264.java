@@ -72,109 +72,110 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
     long systemTimeOffset = -1L;
 
 
-    protected AndroidCameraOutputH264(AndroidSensorsDriver parentModule, int cameraId, SurfaceHolder previewSurfaceHolder)
+    protected AndroidCameraOutputH264(AndroidSensorsDriver parentModule, int cameraId, SurfaceHolder previewSurfaceHolder) throws SensorException
     {
         super(parentModule);
         this.cameraId = cameraId;
         this.name = "camera" + cameraId + "_H264";
         this.previewSurfaceHolder = previewSurfaceHolder;
+        
+        // init camera hardware and H264 codec
+        initCam();
+        initCodec();
+        
+        // create SWE Common data structure and encoding          
+        VideoCamHelper fac = new VideoCamHelper();
+        DataStream videoStream = fac.newVideoOutputH264(getName(), imgWidth, imgHeight);
+        dataStruct = videoStream.getElementType();
+        dataEncoding = videoStream.getEncoding();
     }
 
 
-    @Override
-    public String getName()
+    protected void initCam() throws SensorException
     {
-        return name;
-    }
-
-
-    @Override
-    public void start() throws SensorException
-    {        
-        // handle camera in its own thread        
+        // handle camera in its own thread
+        // this is to avoid running in the same thread as other sensors
         Thread bgThread = new Thread() {
             public void run()
             {
-                // we need an Android looper to process camera messages
-                Looper.prepare();
-                bgLooper = Looper.myLooper();
+                try
+                {
+                    // we need an Android looper to process camera messages
+                    Looper.prepare();
+                    bgLooper = Looper.myLooper();
                     
-                // init camera hardware and H264 codec
-                try
-                {    
-                    initCam();
-                    initCodec();
-                }
-                catch (SensorException e)
-                {
-                    parentSensor.reportError("Cannot init camera", e);
-                }
-                
-                try
-                {
-                    // create SWE Common data structure            
-                    VideoCamHelper fac = new VideoCamHelper();
-                    DataStream videoStream = fac.newVideoOutputH264(getName(), imgWidth, imgHeight);
-                    dataStruct = videoStream.getElementType();
-                    dataEncoding = videoStream.getEncoding();
-      
-                    // start streaming video            
-                    camera.startPreview();
+                    // open camera and get parameters
+                    camera = Camera.open(cameraId);
+                    
+                    // start processing messages
+                    Looper.loop();
                 }
                 catch (Exception e)
                 {
-                    parentSensor.reportError("Cannot start camera capture", e);
+                    e.printStackTrace();
                 }
                 
-                // start processing messages
-                Looper.loop();
-            }
-        };
-        bgThread.start();
-    }
-    
-    
-    protected void initCam() throws SensorException
-    {
-        try
-        {
-            // open camera and get parameters
-            camera = Camera.open(cameraId);
-            Parameters camParams = camera.getParameters();
-    
-            // get supported preview sizes
-            for (Camera.Size imgSize : camParams.getSupportedPreviewSizes())
-            {
-                if (imgSize.width >= 600 && imgSize.width <= 800)
+                synchronized (this)
                 {
-                    imgWidth = imgSize.width;
-                    imgHeight = imgSize.height;
-                    break;
+                    notify();
                 }
             }
-            frameRate = 1;
-    
-            // set parameters
-            camParams.setPreviewSize(imgWidth, imgHeight);
-            camParams.setPreviewFormat(ImageFormat.NV21);
-            camera.setParameters(camParams);
-    
-            // setup buffers and callback
-            int bufSize = imgWidth * imgHeight * ImageFormat.getBitsPerPixel(ImageFormat.NV21) / 8;
-            imgBuf1 = new byte[bufSize];
-            imgBuf2 = new byte[bufSize];
-            camera.addCallbackBuffer(imgBuf1);
-            camera.addCallbackBuffer(imgBuf2);
-            camera.setPreviewCallbackWithBuffer(this);
-            camera.setDisplayOrientation(90);
-            
-            // connect to UI preview surface
-            if (previewSurfaceHolder != null)
-                camera.setPreviewDisplay(previewSurfaceHolder);
-        }
-        catch (Exception e)
+        };      
+        bgThread.start();
+        
+        // wait until camera is opened
+        synchronized (bgThread)
         {
-            throw new SensorException("Cannot access camera " + cameraId, e);
+            try
+            {
+                bgThread.wait(1000);
+            }
+            catch (InterruptedException e)
+            {
+            }
+        }
+        
+        // if camera was successfully opened, prepare for video capture
+        if (camera != null)
+        {
+            try
+            {
+                Parameters camParams = camera.getParameters();
+                
+                // get supported preview sizes
+                for (Camera.Size imgSize : camParams.getSupportedPreviewSizes())
+                {
+                    if (imgSize.width >= 600 && imgSize.width <= 800)
+                    {
+                        imgWidth = imgSize.width;
+                        imgHeight = imgSize.height;
+                        break;
+                    }
+                }
+                frameRate = 1;
+        
+                // set parameters
+                camParams.setPreviewSize(imgWidth, imgHeight);
+                camParams.setPreviewFormat(ImageFormat.NV21);
+                camera.setParameters(camParams);
+        
+                // setup buffers and callback
+                int bufSize = imgWidth * imgHeight * ImageFormat.getBitsPerPixel(ImageFormat.NV21) / 8;
+                imgBuf1 = new byte[bufSize];
+                imgBuf2 = new byte[bufSize];
+                camera.addCallbackBuffer(imgBuf1);
+                camera.addCallbackBuffer(imgBuf2);
+                camera.setPreviewCallbackWithBuffer(AndroidCameraOutputH264.this);
+                camera.setDisplayOrientation(90);
+            }
+            catch (Exception e)
+            {
+                throw new SensorException("Cannot initialize camera " + cameraId, e);
+            }
+        }
+        else
+        {
+            throw new SensorException("Cannot open camera " + cameraId);
         }
     }
 
@@ -189,22 +190,58 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
             mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate);
             mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
             mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 5);
-            mCodec.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-            mCodec.start();
+            mCodec.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);            
             log.debug("MediaCodec initialized");
         }
         catch (Exception e)
         {
-            throw new SensorException("Cannot initialize H264 codec " + mCodec.getName(), e);
+            throw new SensorException("Cannot initialize codec " + mCodec.getName(), e);
         }
     }
 
 
     @Override
+    public void start() throws SensorException
+    {        
+        try
+        {
+            // start codec
+            if (mCodec != null)
+                mCodec.start();
+        }
+        catch (Exception e)
+        {
+            throw new SensorException("Cannot start codec " + mCodec.getName(), e);
+        }
+        
+        try
+        {
+            // start streaming video        
+            if (previewSurfaceHolder != null)
+                camera.setPreviewDisplay(previewSurfaceHolder);
+            camera.startPreview();
+        }
+        catch (Exception e)
+        {
+            throw new SensorException("Cannot start capture on camera " + cameraId, e);
+        }
+    }
+    
+    
+    @Override
     public void onPreviewFrame(byte[] data, Camera camera)
     {
         long timeStamp = SystemClock.elapsedRealtimeNanos() / 1000;
 
+        // convert to NV12
+        int uvPos = imgWidth * imgHeight;
+        for (int i = uvPos; i < data.length; i+=2)
+        {
+            byte b = data[i];
+            data[i] = data[i+1];
+            data[i+1] = b;
+        }
+        
         // compress using selected codec
         encode(timeStamp, data);
         
@@ -292,6 +329,7 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
     {
         if (camera != null)
         {
+            camera.stopPreview();
             camera.release();
             camera = null;
         }
@@ -307,6 +345,13 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
             bgLooper.quit();
             bgLooper = null;            
         }
+    }
+
+
+    @Override
+    public String getName()
+    {
+        return name;
     }
 
 
