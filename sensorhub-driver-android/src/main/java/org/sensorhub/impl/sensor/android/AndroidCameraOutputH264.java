@@ -188,7 +188,7 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
             MediaFormat mediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, imgWidth, imgHeight);
             mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 2000000);
             mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate);
-            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
+            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar);
             mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 5);
             mCodec.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);            
             log.debug("MediaCodec initialized");
