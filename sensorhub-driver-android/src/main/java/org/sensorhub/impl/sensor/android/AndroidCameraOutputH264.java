@@ -157,6 +157,7 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
                 // set parameters
                 camParams.setPreviewSize(imgWidth, imgHeight);
                 camParams.setPreviewFormat(ImageFormat.NV21);
+                camParams.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
                 camera.setParameters(camParams);
         
                 // setup buffers and callback
