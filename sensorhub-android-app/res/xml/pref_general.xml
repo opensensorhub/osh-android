@@ -18,5 +18,21 @@
         android:selectAllOnFocus="true"
         android:singleLine="true"
         android:title="SOS Endpoint URL" />
+    
+    <EditTextPreference
+        android:inputType="text"
+        android:key="sos_username"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="SOS Username"
+        android:summary="Enter your username or leave blank" />
+    
+    <EditTextPreference
+        android:inputType="textPassword"
+        android:key="sos_password"
+        android:selectAllOnFocus="true"
+        android:title="SOS Password"
+        android:summary="Enter your password or leave blank" />
 
 </PreferenceScreen>

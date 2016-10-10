@@ -137,6 +137,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         
         // get SOS URL from config
         String sosUriConfig = prefs.getString("sos_uri", "");
+        String sosUser = prefs.getString("sos_username", null);
+        String sosPwd = prefs.getString("sos_password", null);
         if (sosUriConfig != null && sosUriConfig.trim().length() > 0)
         {
             try
@@ -175,7 +177,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         sensorsConfig.camPreviewSurfaceHolder = this.camPreviewSurfaceHolder;
         sensorsConfig.runName = runName;
         sensorhubConfig.add(sensorsConfig);
-        addSosTConfig(sensorsConfig);
+        addSosTConfig(sensorsConfig, sosUser, sosPwd);
                 
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
@@ -194,7 +196,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
                 btConf.moduleClass = BluetoothCommProvider.class.getCanonicalName();
             trupulseConfig.commSettings = btConf;
             sensorhubConfig.add(trupulseConfig);
-            addSosTConfig(trupulseConfig);
+            addSosTConfig(trupulseConfig, sosUser, sosPwd);
         }
         
         // AngelSensor
@@ -217,7 +219,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             //angelConfig.btAddress = "00:07:80:03:0E:0A"; // mine
             angelConfig.btAddress = prefs.getString("angel_address", null);
             sensorhubConfig.add(angelConfig);
-            addSosTConfig(angelConfig);
+            addSosTConfig(angelConfig, sosUser, sosPwd);
         }
         
         // FLIR One sensor
@@ -231,12 +233,12 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             flironeConfig.androidContext = this.getApplicationContext();
             flironeConfig.camPreviewSurfaceHolder = this.camPreviewSurfaceHolder;            
             sensorhubConfig.add(flironeConfig);
-            addSosTConfig(flironeConfig);
+            addSosTConfig(flironeConfig, sosUser, sosPwd);
         }
     }
     
     
-    protected void addSosTConfig(SensorConfig sensorConf)
+    protected void addSosTConfig(SensorConfig sensorConf, String sosUser, String sosPwd)
     {
         if (sosUrl == null)
             return;
@@ -249,6 +251,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         sosConfig.sos.remoteHost = sosUrl.getHost();
         sosConfig.sos.remotePort = sosUrl.getPort();
         sosConfig.sos.resourcePath = sosUrl.getPath();
+        sosConfig.sos.enableTLS = sosUrl.getProtocol().equals("https");
+        sosConfig.sos.user = sosUser;
+        sosConfig.sos.password = sosPwd;
         sosConfig.connection.connectTimeout = 5000;
         sosConfig.connection.usePersistentConnection = true;
         sosConfig.connection.reconnectAttempts = 9;

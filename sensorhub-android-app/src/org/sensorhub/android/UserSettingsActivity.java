@@ -15,6 +15,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.android;
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
@@ -22,6 +23,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import java.net.URL;
 import java.util.List;
 
 
@@ -54,6 +56,26 @@ public class UserSettingsActivity extends PreferenceActivity
             else
             {
                 preference.setSummary(stringValue);
+            }
+            
+            // detect errors
+            if (preference.getKey().equals("sos_uri"))
+            {
+                try
+                {
+                    URL url = new URL(value.toString());
+                    if (!url.getProtocol().equals("http") && !url.getProtocol().equals("https"))
+                        throw new Exception("SOS URL must be HTTP or HTTPS");
+                }
+                catch (Exception e)
+                {
+                    AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(preference.getContext());
+                    dlgAlert.setMessage("Invalid SOS URL");
+                    dlgAlert.setTitle(e.getMessage());
+                    dlgAlert.setPositiveButton("OK", null);
+                    dlgAlert.setCancelable(true);
+                    dlgAlert.create().show();                
+                }
             }
             
             return true;
@@ -94,6 +116,7 @@ public class UserSettingsActivity extends PreferenceActivity
             addPreferencesFromResource(R.xml.pref_general);
             bindPreferenceSummaryToValue(findPreference("device_name"));
             bindPreferenceSummaryToValue(findPreference("sos_uri"));
+            bindPreferenceSummaryToValue(findPreference("sos_username"));
         }
     }
     
