@@ -12,7 +12,7 @@ This repo contains modules specific to Android, including:
 
 ### Build
 
-The App can be built by importing the project with Eclipse for now. We're working on new buidl scripts to be able to build it automatically using Gradle as well.
+The App can be built by importing the project with Eclipse for now. We're working on new Gradle scripts to build it automatically as well.
 
 
 ### How to use the App
