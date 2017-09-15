@@ -16,6 +16,8 @@ The App can be built using Gradle or IntelliJ Idea (version 2017.2.3 or later). 
 
 To build using command line gradle, just run `./gradlew build` and you'll find the resulting APK in `sensorhub-android-app/build/outputs/apk`
 
+You can also install it on a USB connected device by running `./gradlew installDebug`.
+
 
 ### How to use the App
 
