@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.android;
 
+import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.sensor.SensorConfig;
 import android.content.Context;
 import android.view.SurfaceHolder;
@@ -55,5 +56,12 @@ public class AndroidSensorsConfig extends SensorConfig
     public AndroidSensorsConfig()
     {
         this.moduleClass = AndroidSensorsDriver.class.getCanonicalName();
+    }
+
+
+    @Override
+    public ModuleConfig clone()
+    {
+        return this; // disable clone for now as it crashes Android app
     }
 }

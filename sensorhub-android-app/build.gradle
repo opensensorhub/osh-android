@@ -1,0 +1,34 @@
+apply plugin: 'com.android.application'
+
+description = 'OSH Demo Android App'
+ext.details = 'OSH demo app for Android'
+
+dependencies {
+  compile project(':sensorhub-android-lib')
+  provided 'javax.xml.stream:stax-api:1.0-2'
+}
+
+android {
+  compileSdkVersion rootProject.compileSdkVersion
+  buildToolsVersion rootProject.buildToolsVersion
+
+  packagingOptions {
+    exclude 'META-INF/LICENSE'
+    exclude '**/empty'
+  }
+
+  sourceSets {
+    main {
+      manifest.srcFile 'AndroidManifest.xml'
+      java.srcDirs = ['src']
+      resources.srcDirs = ['src']
+      res.srcDirs = ['res']
+      assets.srcDirs = ['assets']
+    }
+  }
+
+  lintOptions {
+    abortOnError false
+  }
+}
+

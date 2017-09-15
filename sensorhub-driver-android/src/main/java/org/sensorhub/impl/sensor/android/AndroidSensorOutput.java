@@ -14,6 +14,9 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.android;
 
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Process;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
@@ -49,7 +52,6 @@ public abstract class AndroidSensorOutput extends AbstractSensorOutput<AndroidSe
         this.sensorManager = aSensorManager;
         this.sensor = aSensor;
         this.name = sensor.getName().replaceAll(" ", "_") + "_data";
-        
         this.dataEncoding = new TextEncodingImpl(",", "\n");
     }
     
@@ -62,19 +64,19 @@ public abstract class AndroidSensorOutput extends AbstractSensorOutput<AndroidSe
     
     
     @Override
-    public void start()
+    public void start(Handler eventHandler)
     {
         // max 10Hz events
         int rateUs = Math.max(sensor.getMinDelay(), 100000);
         samplingPeriod = rateUs / 1e6;
-        sensorManager.registerListener(this, sensor, rateUs);
+        sensorManager.registerListener(this, sensor, rateUs, eventHandler);
     }
     
     
     @Override
     public void stop()
     {
-        sensorManager.unregisterListener(this);
+        sensorManager.unregisterListener(this, sensor);
     }
 
 

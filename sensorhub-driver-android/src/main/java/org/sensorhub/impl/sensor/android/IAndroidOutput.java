@@ -14,11 +14,12 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.android;
 
+import android.os.Handler;
 import org.sensorhub.api.sensor.SensorException;
 
 
 public interface IAndroidOutput
 {
-    public void start() throws SensorException;
+    public void start(Handler eventHandler) throws SensorException;
     public void stop();
 }

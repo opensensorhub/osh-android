@@ -17,6 +17,9 @@ package org.sensorhub.impl.sensor.android;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.namespace.QName;
+
+import android.os.Handler;
+import android.os.HandlerThread;
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.PhysicalComponent;
 import net.opengis.sensorml.v20.PhysicalSystem;
@@ -50,9 +53,8 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     private static final Logger log = LoggerFactory.getLogger(AndroidSensorsDriver.class.getSimpleName());
     public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
     
-    Thread bgThread;
-    Looper bgLooper;
     String localFrameURI;
+    HandlerThread eventThread;
     SensorManager sensorManager;
     LocationManager locationManager;
     SensorMLBuilder smlBuilder;
@@ -137,35 +139,20 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     @Override
     public void start() throws SensorException
     {
-        // start all outputs in a background thread
-        // we need an Android looper to process sensor and camera messages
-        bgThread = new Thread() {
-            public void run()
-            {
-                Looper.prepare();
-                bgLooper = Looper.myLooper();
-                
-                try
-                {
-                    for (ISensorDataInterface o: getAllOutputs().values())
-                        ((IAndroidOutput)o).start();
-                }
-                catch (SensorException e)
-                {
-                    reportError("Error while starting outputs", e);
-                }
-                
-                Looper.loop();
-            }
-        };
-        bgThread.start();
+        // start event handling thread
+        eventThread = new HandlerThread("SensorThread " + getName());
+        eventThread.start();
+        Handler eventHandler = new Handler(eventThread.getLooper());
+
+        for (ISensorDataInterface o: getAllOutputs().values())
+            ((IAndroidOutput)o).start(eventHandler);
     }
     
     
     @SuppressWarnings("deprecation")
     protected void createCameraOutputs(Context androidContext) throws SensorException
     {
-        if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.LOLLIPOP+2)
+        /*if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.LOLLIPOP)
         {
             CameraManager cameraManager = (CameraManager)androidContext.getSystemService(Context.CAMERA_SERVICE);
             
@@ -188,12 +175,13 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
                 throw new SensorException("Error while accessing cameras", e);
             }
         }
-        else
+        else*/
         {
             for (int cameraId = 0; cameraId < android.hardware.Camera.getNumberOfCameras(); cameraId++)
             {
                 android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();                    
                 android.hardware.Camera.getCameraInfo(cameraId, info);
+
                 if ( (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_BACK && config.activateBackCamera) ||
                      (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT && config.activateFrontCamera))
                 {
@@ -247,12 +235,12 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         // stop all outputs
         for (ISensorDataInterface o: this.getAllOutputs().values())
             ((IAndroidOutput)o).stop();
-        
-        // stop background thread looper
-        if (bgLooper != null)
+
+        // stop event handling thread
+        if (eventThread != null)
         {
-            bgLooper.quit();
-            bgLooper = null;
+            eventThread.quitSafely();
+            eventThread = null;
         }
         
         this.removeAllOutputs();
@@ -266,9 +254,6 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         synchronized (sensorDescLock)
         {
             super.updateSensorDescription();
-            
-            System.out.println("num outputs=" + sensorDescription.getNumOutputs());
-            System.out.println("state=" + this.state);
             
             // ref frame
             SpatialFrame localRefFrame = new SpatialFrameImpl();

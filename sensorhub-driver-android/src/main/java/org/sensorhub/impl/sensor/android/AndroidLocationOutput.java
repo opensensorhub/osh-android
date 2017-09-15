@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.android;
 
+import android.os.Handler;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -77,10 +78,10 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
     
     
     @Override
-    public void start()
+    public void start(Handler eventHandler)
     {
         // request location data
-        locManager.requestLocationUpdates(locProvider.getName(), 100, 0.0f, this);
+        locManager.requestLocationUpdates(locProvider.getName(), 100, 0.0f, this, eventHandler.getLooper());
     }
     
     

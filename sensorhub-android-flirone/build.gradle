@@ -1,0 +1,27 @@
+apply plugin: 'com.android.library'
+
+description = 'FLIR ONE Camera'
+ext.details = 'Driver for FLIR ONE thermal infrared camera'
+
+dependencies {
+  compile 'org.sensorhub:sensorhub-core:' + oshCoreVersion
+  compile 'org.sensorhub:sensorhub-driver-videocam:[1.0,2.0)'
+  compile fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+android {
+  compileSdkVersion rootProject.compileSdkVersion
+  buildToolsVersion rootProject.buildToolsVersion
+
+  sourceSets {
+    main {
+      manifest.srcFile 'AndroidManifest.xml'
+      java.srcDirs = ['src']
+      resources.srcDirs = ['src']
+      res.srcDirs = ['res']
+      assets.srcDirs = ['assets']
+      jniLibs.srcDirs = ['libs']
+    }
+  }
+}
+

@@ -1,0 +1,25 @@
+//apply from: gradle.oshCoreDir + '/common.gradle'
+ext.oshCoreVersion = '1.2.3'
+ext.compileSdkVersion = 21
+ext.buildToolsVersion = "25.0.2"
+version = '1.2.0'
+
+buildscript {
+  repositories {
+    jcenter()
+  }
+
+  dependencies {
+    classpath 'com.android.tools.build:gradle:2.2.3'
+  }
+}
+
+allprojects {
+  group = 'org.sensorhub'
+  version = version
+}
+
+subprojects {  
+  // inject all repositories from included builds if any
+  repositories.addAll(rootProject.repositories)
+}

@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.android;
 
+import android.util.Log;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -24,6 +25,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import android.view.*;
 import org.sensorhub.android.comm.BluetoothCommProvider;
 import org.sensorhub.android.comm.BluetoothCommProviderConfig;
 import org.sensorhub.android.comm.ble.BleConfig;
@@ -62,12 +65,9 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 import android.text.Html;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.widget.EditText;
 import android.widget.TextView;
+import org.vast.util.DateTimeFormat;
 
 
 public class MainActivity extends Activity implements SurfaceHolder.Callback, IEventListener
@@ -76,9 +76,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
     SensorHubService boundService;
     IModuleConfigRepository sensorhubConfig;
     Handler displayHandler;
-    Timer refreshTimer;
+    Runnable displayCallback;
     StringBuffer displayText = new StringBuffer();
-    SurfaceHolder camPreviewSurfaceHolder;    
+    SurfaceHolder camPreviewSurfaceHolder;
+    boolean oshStarted = false;
     ArrayList<SOSTClient> sostClients = new ArrayList<SOSTClient>();
     URL sosUrl = null;
     boolean showVideo;
@@ -91,7 +92,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             boundService = ((SensorHubService.LocalBinder) service).getService();
         }
 
-
         public void onServiceDisconnected(ComponentName className)
         {
             boundService = null;
@@ -99,42 +99,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
     };
 
 
-    @SuppressLint("HandlerLeak")
-    @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        textArea = (TextView) findViewById(R.id.text);
-        SurfaceView camPreview = (SurfaceView) findViewById(R.id.textureView1);
-        camPreview.getHolder().addCallback(this);
-
-        displayHandler = new Handler(Looper.getMainLooper())
-        {
-            public void handleMessage(Message msg)
-            {
-                String displayText = (String)msg.obj;
-                textArea.setText(Html.fromHtml(displayText));
-            }
-        };
-    }
-
-
-    @Override
-    protected void onStart()
-    {
-        super.onStart();
-        
-        // bind to SensorHub service
-        Intent intent = new Intent(this, SensorHubService.class);
-        bindService(intent, sConn, Context.BIND_AUTO_CREATE);
-    }
-
-
     protected void updateConfig(SharedPreferences prefs, String runName)
     {
         sensorhubConfig = new InMemoryConfigDb();
-        
+
         // get SOS URL from config
         String sosUriConfig = prefs.getString("sos_uri", "");
         String sosUser = prefs.getString("sos_username", null);
@@ -150,13 +118,13 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
                 e.printStackTrace();
             }
         }
-        
+
         // get device name
         String deviceID = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
         String deviceName = prefs.getString("device_name", null);
         if (deviceName == null || deviceName.length() < 2)
             deviceName = deviceID;
-        
+
         // Android sensors
         AndroidSensorsConfig sensorsConfig = new AndroidSensorsConfig();
         sensorsConfig.name = "Android Sensors [" + deviceName + "]";
@@ -178,7 +146,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         sensorsConfig.runName = runName;
         sensorhubConfig.add(sensorsConfig);
         addSosTConfig(sensorsConfig, sosUser, sosPwd);
-                
+
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
         if (enabled)
@@ -198,7 +166,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             sensorhubConfig.add(trupulseConfig);
             addSosTConfig(trupulseConfig, sosUser, sosPwd);
         }
-        
+
         // AngelSensor
         enabled = prefs.getBoolean("angel_enabled", false);
         if (enabled)
@@ -209,7 +177,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             bleConf.androidContext = this.getApplicationContext();
             bleConf.autoStart = true;
             sensorhubConfig.add(bleConf);
-            
+
             AngelSensorConfig angelConfig = new AngelSensorConfig();
             angelConfig.id = "ANGEL_SENSOR";
             angelConfig.name = "Angel Sensor [" + deviceName + "]";
@@ -221,7 +189,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             sensorhubConfig.add(angelConfig);
             addSosTConfig(angelConfig, sosUser, sosPwd);
         }
-        
+
         // FLIR One sensor
         enabled = prefs.getBoolean("flirone_enabled", false);
         if (enabled)
@@ -231,18 +199,18 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             flironeConfig.name = "FLIR One Camera [" + deviceName + "]";
             flironeConfig.autoStart = true;
             flironeConfig.androidContext = this.getApplicationContext();
-            flironeConfig.camPreviewSurfaceHolder = this.camPreviewSurfaceHolder;            
+            flironeConfig.camPreviewSurfaceHolder = this.camPreviewSurfaceHolder;
             sensorhubConfig.add(flironeConfig);
             addSosTConfig(flironeConfig, sosUser, sosPwd);
         }
     }
-    
-    
+
+
     protected void addSosTConfig(SensorConfig sensorConf, String sosUser, String sosPwd)
     {
         if (sosUrl == null)
             return;
-        
+
         SOSTClientConfig sosConfig = new SOSTClientConfig();
         sosConfig.id = sensorConf.id + "_SOST";
         sosConfig.name = sensorConf.name.replaceAll("\\[.*\\]", "");// + "SOS-T Client";
@@ -254,10 +222,29 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         sosConfig.sos.enableTLS = sosUrl.getProtocol().equals("https");
         sosConfig.sos.user = sosUser;
         sosConfig.sos.password = sosPwd;
-        sosConfig.connection.connectTimeout = 5000;
+        sosConfig.connection.connectTimeout = 10000;
         sosConfig.connection.usePersistentConnection = true;
         sosConfig.connection.reconnectAttempts = 9;
         sensorhubConfig.add(sosConfig);
+    }
+
+
+    @SuppressLint("HandlerLeak")
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        textArea = (TextView) findViewById(R.id.text);
+        SurfaceView camPreview = (SurfaceView) findViewById(R.id.textureView1);
+        camPreview.getHolder().addCallback(this);
+
+        // bind to SensorHub service
+        Intent intent = new Intent(this, SensorHubService.class);
+        bindService(intent, sConn, Context.BIND_AUTO_CREATE);
+
+        // handler to refresh sensor status in UI
+        displayHandler = new Handler(Looper.getMainLooper());
     }
 
 
@@ -283,35 +270,35 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         }
         else if (id == R.id.action_start)
         {
-            if (boundService != null)
-            {
-                boundService.stopSensorHub();
+            if (boundService != null && boundService.getSensorHub() == null)
                 showRunNamePopup();
-            }
             return true;
         }
         else if (id == R.id.action_stop)
         {
+            stopListeningForEvents();
             stopRefreshingStatus();
             sostClients.clear();
             if (boundService != null)
                 boundService.stopSensorHub();
             textArea.setBackgroundColor(0xFFFFFFFF);
+            oshStarted = false;
             newStatusMessage("SensorHub Stopped");
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
-    
-    
+
+
     protected void showRunNamePopup()
     {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
         alert.setTitle("Run Name");
         alert.setMessage("Please enter the name for this run");
-        
+
         // Set an EditText view to get user input
         final EditText input = new EditText(this);
         input.getText().append("Run-");
@@ -323,50 +310,80 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         {
             public void onClick(DialogInterface dialog, int whichButton)
             {
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 String runName = input.getText().toString();
                 updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
-                newStatusMessage("Waiting for SensorHub service to start...");
+                newStatusMessage("Starting SensorHub...");
                 sostClients.clear();
-                boundService.startSensorHub(sensorhubConfig);                
+                boundService.startSensorHub(sensorhubConfig, MainActivity.this);
                 if (showVideo)
                     textArea.setBackgroundColor(0x80FFFFFF);
-                startListeningForEvents();                
             }
         });
 
         alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-          public void onClick(DialogInterface dialog, int whichButton) {
-          }
+            public void onClick(DialogInterface dialog, int whichButton) {
+            }
         });
 
         alert.show();
+    }
+
+
+    @Override
+    public void handleEvent(Event<?> e)
+    {
+        if (e instanceof ModuleEvent)
+        {
+            // start refreshing status on first module loaded
+            if (!oshStarted && ((ModuleEvent) e).getType() == ModuleEvent.Type.LOADED)
+            {
+                oshStarted = true;
+                startRefreshingStatus();
+                return;
+            }
+
+            // detect when SOS-T modules are connected
+            else if (e.getSource() instanceof SOSTClient && ((ModuleEvent)e).getType() == ModuleEvent.Type.STATE_CHANGED)
+            {
+                switch (((ModuleEvent)e).getNewState())
+                {
+                    case INITIALIZING:
+                        sostClients.add((SOSTClient)e.getSource());
+                        break;
+                }
+            }
+        }
     }
     
     
     protected void startRefreshingStatus()
     {
-        if (refreshTimer != null)
+        if (displayCallback != null)
             return;
-        
-        TimerTask task = new TimerTask()
+
+        // handler to display async messages in UI
+        displayCallback = new Runnable()
         {
             public void run()
             {
-                displayStatus();        
-            }            
+                displayStatus();
+                textArea.setText(Html.fromHtml(displayText.toString()));
+                //textArea.setText(new DateTimeFormat().formatIso(System.currentTimeMillis()/1000., 0));
+                displayHandler.postDelayed(this, 1000);
+            }
         };
-        
-        refreshTimer = new Timer();
-        refreshTimer.schedule(task, 0, 500);
+
+        displayHandler.post(displayCallback);
     }
     
     
     protected void stopRefreshingStatus()
     {
-        if (refreshTimer != null)
+        if (displayCallback != null)
         {
-            refreshTimer.cancel();
-            refreshTimer = null;
+            displayHandler.removeCallbacks(displayCallback);
+            displayCallback = null;
         }
     }
     
@@ -431,11 +448,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
                 displayText.append("<br/>");
             }
         }
-        
-        displayText.setLength(displayText.length()-5); // remove last </br>
+
+        if (displayText.length() > 5)
+            displayText.setLength(displayText.length()-5); // remove last </br>
         displayText.append("</p>");
-        
-        displayHandler.obtainMessage(1, displayText.toString()).sendToTarget();
     }
     
     
@@ -449,45 +465,14 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
     protected synchronized void appendStatusMessage(String msg)
     {
         displayText.append(msg);
-        displayHandler.obtainMessage(1, displayText.toString()).sendToTarget();
-    }
-    
-    
-    @Override
-    public void handleEvent(Event<?> e)
-    {
-        if (e instanceof ModuleEvent)
+
+        displayHandler.post(new Runnable()
         {
-            // when SOS-T are connected
-            if (e.getSource() instanceof SOSTClient)
+            public void run()
             {
-                SOSTClient client = (SOSTClient)e.getSource();
-                
-                // whenever the SOS-T client is connected
-                if (((ModuleEvent)e).getType() == ModuleEvent.Type.STATE_CHANGED)
-                {
-                    switch (((ModuleEvent)e).getNewState())
-                    {
-                        case STARTING:
-                            sostClients.add(client);
-                            break;
-                            
-                        case STARTED:
-                            displayStatus();
-                            startRefreshingStatus(); // start refreshing as soon as first SOS is connected
-                            break;
-                            
-                        default:
-                            return;
-                    }
-                }
-                
-                else if (((ModuleEvent)e).getType() == ModuleEvent.Type.ERROR)
-                {
-                    displayStatus();
-                }
+                textArea.setText(displayText.toString());
             }
-        }        
+        });
     }
     
     
@@ -496,9 +481,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         if (boundService == null || boundService.getSensorHub() == null)
             return;
         
-        EventBus eventBus = boundService.getSensorHub().getEventBus();
-        for (ModuleConfig config: sensorhubConfig.getAllModulesConfigurations())
-            eventBus.registerListener(config.id, EventBus.MAIN_TOPIC, this);
+        boundService.getSensorHub().getModuleRegistry().registerListener(this);
     }
     
     
@@ -506,20 +489,28 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
     {
         if (boundService == null || boundService.getSensorHub() == null)
             return;
-        
-        EventBus eventBus = boundService.getSensorHub().getEventBus();
-        for (ModuleConfig config: sensorhubConfig.getAllModulesConfigurations())
-            eventBus.unregisterListener(config.id, EventBus.MAIN_TOPIC, this);
+
+        boundService.getSensorHub().getModuleRegistry().unregisterListener(this);
+    }
+
+
+    @Override
+    protected void onStart()
+    {
+        super.onStart();
     }
 
 
     @Override
     protected void onResume()
     {
-        super.onResume();        
-        startListeningForEvents();
-        if (!sostClients.isEmpty())
+        super.onResume();
+
+        if (oshStarted)
+        {
+            startListeningForEvents();
             startRefreshingStatus();
+        }
     }
 
 
@@ -533,9 +524,17 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
 
 
     @Override
-    protected void onDestroy()
+    protected void onStop()
     {
         stopListeningForEvents();
+        stopRefreshingStatus();
+        super.onStop();
+    }
+
+
+    @Override
+    protected void onDestroy()
+    {
         stopService(new Intent(this, SensorHubService.class));
         super.onDestroy();
     }

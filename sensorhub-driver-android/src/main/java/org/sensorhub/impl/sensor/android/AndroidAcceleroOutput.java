@@ -71,6 +71,6 @@ public class AndroidAcceleroOutput extends AndroidSensorOutput implements Sensor
         // update latest record and send event
         latestRecord = dataBlock;
         latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, dataBlock)); 
+        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, dataBlock));
     }    
 }

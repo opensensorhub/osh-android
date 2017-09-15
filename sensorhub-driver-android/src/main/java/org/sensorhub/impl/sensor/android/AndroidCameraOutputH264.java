@@ -15,6 +15,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor.android;
 
 import java.nio.ByteBuffer;
+
+import android.os.Handler;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -93,6 +95,9 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
 
     protected void initCam() throws SensorException
     {
+        android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
+        android.hardware.Camera.getCameraInfo(cameraId, info);
+
         // handle camera in its own thread
         // this is to avoid running in the same thread as other sensors
         Thread bgThread = new Thread() {
@@ -167,7 +172,7 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
                 camera.addCallbackBuffer(imgBuf1);
                 camera.addCallbackBuffer(imgBuf2);
                 camera.setPreviewCallbackWithBuffer(AndroidCameraOutputH264.this);
-                camera.setDisplayOrientation(90);
+                camera.setDisplayOrientation(info.orientation);
             }
             catch (Exception e)
             {
@@ -202,7 +207,7 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
 
 
     @Override
-    public void start() throws SensorException
+    public void start(Handler eventHandler) throws SensorException
     {        
         try
         {

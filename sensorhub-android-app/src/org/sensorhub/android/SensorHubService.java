@@ -15,7 +15,13 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.android;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import android.os.*;
+import android.os.Process;
+import android.util.Log;
+import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModuleConfigRepository;
+import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.common.EventBus;
@@ -23,8 +29,6 @@ import org.sensorhub.impl.module.ModuleRegistry;
 import org.vast.xml.XMLImplFinder;
 import android.app.Service;
 import android.content.Intent;
-import android.os.Binder;
-import android.os.IBinder;
 
 
 /**
@@ -38,7 +42,8 @@ import android.os.IBinder;
 public class SensorHubService extends Service
 {
     final IBinder binder = new LocalBinder();
-    private Thread bgThread;
+    private HandlerThread msgThread;
+    private Handler msgHandler;
     SensorHub sensorhub;
     
     
@@ -65,6 +70,11 @@ public class SensorHubService extends Service
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             dbf.setNamespaceAware(true);
             XMLImplFinder.setDOMImplementation(dbf.newDocumentBuilder().getDOMImplementation());
+
+            // start handler thread
+            msgThread = new HandlerThread("SensorHubService", Process.THREAD_PRIORITY_BACKGROUND);
+            msgThread.start();
+            msgHandler = new Handler(msgThread.getLooper());
         }
         catch (Exception e)
         {
@@ -73,54 +83,37 @@ public class SensorHubService extends Service
     }
     
     
-    public synchronized void startSensorHub(final IModuleConfigRepository config)
+    public synchronized void startSensorHub(final IModuleConfigRepository config, final IEventListener listener)
     {
-        if (bgThread == null)
-        {
-            bgThread = new Thread() {
-                
-                public void run() 
-                {
-                    // create sensorhub instance
-                    EventBus eventBus = new EventBus();
-                    ModuleRegistry reg = new ModuleRegistry(config, eventBus);
-                    sensorhub = SensorHub.createInstance(new SensorHubConfig(), reg, eventBus);
-                    
-                    // notify waithing thread that sensorhub instance is available
-                    synchronized (SensorHubService.this)
-                    {
-                        SensorHubService.this.notify();
-                    }
-                    
-                    // start sensorhub    
-                    sensorhub.start();
-                }        
-            };
-            
-            bgThread.start();
-        }
-        
-        try
-        {
-            while (sensorhub == null)
-                wait();
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
+        if (sensorhub != null)
+            return;
+
+        msgHandler.post(new Runnable() {
+            public void run()
+            {
+                // create and start sensorhub instance
+                EventBus eventBus = new EventBus();
+                ModuleRegistry reg = new ModuleRegistry(config, eventBus);
+                reg.registerListener(listener);
+                sensorhub = SensorHub.createInstance(new SensorHubConfig(), reg, eventBus);
+                sensorhub.start();
+            }
+        });
     }
     
     
     public synchronized void stopSensorHub()
     {
-        if (bgThread != null)
-        {
-            sensorhub.stop();
-            SensorHub.clearInstance();
-            sensorhub = null;
-            bgThread = null;
-        }
+        if (sensorhub == null)
+            return;
+
+        msgHandler.post(new Runnable() {
+            public void run() {
+                sensorhub.stop();
+                SensorHub.clearInstance();
+                sensorhub = null;
+            }
+        });
     }    
     
 
@@ -135,6 +128,7 @@ public class SensorHubService extends Service
     public void onDestroy()
     {
         stopSensorHub();
+        msgThread.quitSafely();
     }
 
 

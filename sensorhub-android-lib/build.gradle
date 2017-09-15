@@ -1,0 +1,58 @@
+apply plugin: 'com.android.library'
+
+description = 'OSH Android Lib'
+ext.details = 'OSH library for Android'
+
+dependencies {
+  compile 'org.sensorhub:sensorhub-core:' + oshCoreVersion
+  compile 'org.sensorhub:sensorhub-service-swe:' + oshCoreVersion
+  compile 'org.sensorhub:sensorhub-comm-ble:' + oshCoreVersion
+  compile 'org.sensorhub:sensorhub-driver-trupulse:[0.1,2.0)'
+  compile 'org.sensorhub:sensorhub-driver-angelsensor:[0.1,2.0)'
+  compile project(':sensorhub-driver-android')
+  compile project(':sensorhub-android-flirone')
+  compile 'org.slf4j:slf4j-android:1.6.1-RC1'
+  provided 'javax.xml.stream:stax-api:1.0-2'
+}
+
+configurations {
+  compile {
+    exclude group: "javax.xml.stream"
+    exclude group: "javax.servlet"
+    exclude group: "xml-apis"
+    exclude group: "org.eclipse.jetty"
+    exclude group: "org.n52.amused"
+    exclude group: "ch.qos.logback"
+    exclude group: "org.apache.felix"
+
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        if (details.requested.group == 'org.slf4j') {
+           details.useTarget 'org.slf4j:slf4j-android:1.6.1-RC1'
+        }
+    }
+  }
+}
+
+android {
+  compileSdkVersion rootProject.compileSdkVersion
+  buildToolsVersion rootProject.buildToolsVersion
+
+  packagingOptions {
+    exclude '**/empty'
+  }
+
+  sourceSets {
+    main {
+      manifest.srcFile 'AndroidManifest.xml'
+      java.srcDirs = ['src']
+      resources.srcDirs = ['src']
+      res.srcDirs = ['res']
+      assets.srcDirs = ['assets']
+    }
+  }
+
+  lintOptions {
+    abortOnError false
+  }
+}
+
