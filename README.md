@@ -14,7 +14,7 @@ This repo contains modules specific to Android, including:
 
 The App can be built using Gradle or IntelliJ Idea (version 2017.2.3 or later). It doesn't work in Android Studio until full support for "Gradle Composite Builds" is added.
 
-To build using command line gradle, just run `./gradlew build` and you'll find the resulting APK in `sensorhub-android-app/build/outputs/apk'
+To build using command line gradle, just run `./gradlew build` and you'll find the resulting APK in `sensorhub-android-app/build/outputs/apk`
 
 
 ### How to use the App
