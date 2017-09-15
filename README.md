@@ -14,7 +14,7 @@ This repo contains modules specific to Android, including:
 
 The App can be built using Gradle or IntelliJ Idea (version 2017.2.3 or later). It doesn't work in Android Studio until full support for "Gradle Composite Builds" is added.
 
-You'll need to install an up-to-date Android SDK and set its path in the [local.properties](local.properties) file
+You'll need to install an up-to-date Android SDK and set its path in the [local.properties](local.properties) file. Also make sure you pulled source code from the following repos: `osh-core`, `osh-comm`, `osh-processing`, `osh-positioning`, `osh-sensors` and `osh-video` in the same location as this repo.
 
 To build using command line gradle, just run `./gradlew build` and you'll find the resulting APK in `sensorhub-android-app/build/outputs/apk`
 
