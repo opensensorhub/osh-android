@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.sensorhub.android"
-    android:hardwareAccelerated="true"
-    android:versionCode="1"
-    android:versionName="1.0" >
+    android:hardwareAccelerated="true">
 
     <uses-feature android:name="android.hardware.location" />
     <uses-feature android:name="android.hardware.sensor.compass" />

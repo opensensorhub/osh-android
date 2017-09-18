@@ -14,6 +14,8 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.android;
 
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.util.Log;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -287,6 +289,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             return true;
         }
+        else if (id == R.id.action_about)
+        {
+            showAboutPopup();
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -326,6 +332,30 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             }
         });
 
+        alert.show();
+    }
+
+
+    protected void showAboutPopup()
+    {
+        String version = "?";
+
+        try
+        {
+            PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);
+            version = pInfo.versionName;
+        }
+        catch (PackageManager.NameNotFoundException e)
+        {
+        }
+
+        String message = "A software platform for building smart sensor networks and the Internet of Things\n\n";
+        message += "Version: " + version;
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("OpenSensorHub");
+        alert.setMessage(message);
+        alert.setIcon(R.drawable.ic_launcher);
         alert.show();
     }
 
