@@ -16,6 +16,7 @@ package org.sensorhub.impl.sensor.android;
 
 import java.io.ByteArrayOutputStream;
 
+import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
@@ -59,7 +60,7 @@ public class AndroidCameraOutputMJPEG extends AbstractSensorOutput<AndroidSensor
     YuvImage yuvImg1, yuvImg2;
     Rect imgArea;
     ByteArrayOutputStream jpegBuf = new ByteArrayOutputStream();
-    SurfaceHolder previewSurfaceHolder;
+    SurfaceTexture previewTexture;
     
     String name;
     DataComponent dataStruct;
@@ -68,12 +69,12 @@ public class AndroidCameraOutputMJPEG extends AbstractSensorOutput<AndroidSensor
     long systemTimeOffset = -1L;
     
     
-    protected AndroidCameraOutputMJPEG(AndroidSensorsDriver parentModule, int cameraId, SurfaceHolder previewSurfaceHolder) throws SensorException
+    protected AndroidCameraOutputMJPEG(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture) throws SensorException
     {
         super(parentModule);
         this.cameraId = cameraId;
         this.name = "camera" + cameraId + "_MJPEG";
-        this.previewSurfaceHolder = previewSurfaceHolder;
+        this.previewTexture = previewTexture;
         
         // init camera hardware
         initCam();
@@ -188,8 +189,8 @@ public class AndroidCameraOutputMJPEG extends AbstractSensorOutput<AndroidSensor
         try
         {
             // start streaming video
-            if (previewSurfaceHolder != null)
-                camera.setPreviewDisplay(previewSurfaceHolder);
+            if (previewTexture != null)
+                camera.setPreviewTexture(previewTexture);
             camera.startPreview();
         }
         catch (Exception e)

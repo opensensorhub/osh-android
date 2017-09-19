@@ -14,9 +14,9 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.driver.flir;
 
+import android.graphics.SurfaceTexture;
 import org.sensorhub.api.sensor.SensorConfig;
 import android.content.Context;
-import android.view.SurfaceHolder;
 
 
 /**
@@ -36,7 +36,7 @@ public class FlirOneCameraConfig extends SensorConfig
     public String runDescription; 
     
     public transient Context androidContext;
-    public transient SurfaceHolder camPreviewSurfaceHolder;
+    public transient SurfaceTexture camPreviewTexture;
        
     
     

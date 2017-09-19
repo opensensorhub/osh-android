@@ -16,9 +16,15 @@ package org.sensorhub.android;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import android.content.Context;
+import android.graphics.PixelFormat;
+import android.graphics.SurfaceTexture;
 import android.os.*;
 import android.os.Process;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.SurfaceView;
+import android.view.WindowManager;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleConfig;
@@ -45,8 +51,9 @@ public class SensorHubService extends Service
     private HandlerThread msgThread;
     private Handler msgHandler;
     SensorHub sensorhub;
-    
-    
+    SurfaceTexture videoTex;
+
+
     public class LocalBinder extends Binder {
         SensorHubService getService() {
             return SensorHubService.this;
@@ -70,6 +77,10 @@ public class SensorHubService extends Service
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             dbf.setNamespaceAware(true);
             XMLImplFinder.setDOMImplementation(dbf.newDocumentBuilder().getDOMImplementation());
+
+            // create video surface texture here so it's not destroyed when pausing the app
+            videoTex = new SurfaceTexture(1);
+            videoTex.detachFromGLContext();
 
             // start handler thread
             msgThread = new HandlerThread("SensorHubService", Process.THREAD_PRIORITY_BACKGROUND);
@@ -129,6 +140,7 @@ public class SensorHubService extends Service
     {
         stopSensorHub();
         msgThread.quitSafely();
+        videoTex.release();
     }
 
 
@@ -139,12 +151,15 @@ public class SensorHubService extends Service
     }
 
 
-    /**
-     * @return the SensorHub instance
-     */
     public SensorHub getSensorHub()
     {
         return sensorhub;
+    }
+
+
+    public SurfaceTexture getVideoTexture()
+    {
+        return videoTex;
     }
     
 }

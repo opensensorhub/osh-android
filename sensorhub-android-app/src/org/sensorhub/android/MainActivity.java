@@ -16,6 +16,8 @@ package org.sensorhub.android;
 
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.PixelFormat;
+import android.graphics.SurfaceTexture;
 import android.util.Log;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -71,8 +73,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import org.vast.util.DateTimeFormat;
 
+import javax.microedition.khronos.egl.EGL10;
 
-public class MainActivity extends Activity implements SurfaceHolder.Callback, IEventListener
+
+public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener
 {
     TextView textArea;
     SensorHubService boundService;
@@ -80,7 +84,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
     Handler displayHandler;
     Runnable displayCallback;
     StringBuffer displayText = new StringBuffer();
-    SurfaceHolder camPreviewSurfaceHolder;
     boolean oshStarted = false;
     ArrayList<SOSTClient> sostClients = new ArrayList<SOSTClient>();
     URL sosUrl = null;
@@ -144,7 +147,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             showVideo = true;
         sensorsConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
         sensorsConfig.androidContext = this.getApplicationContext();
-        sensorsConfig.camPreviewSurfaceHolder = this.camPreviewSurfaceHolder;
+        sensorsConfig.camPreviewTexture = boundService.getVideoTexture();
         sensorsConfig.runName = runName;
         sensorhubConfig.add(sensorsConfig);
         addSosTConfig(sensorsConfig, sosUser, sosPwd);
@@ -201,7 +204,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             flironeConfig.name = "FLIR One Camera [" + deviceName + "]";
             flironeConfig.autoStart = true;
             flironeConfig.androidContext = this.getApplicationContext();
-            flironeConfig.camPreviewSurfaceHolder = this.camPreviewSurfaceHolder;
+            flironeConfig.camPreviewTexture = boundService.getVideoTexture();
             sensorhubConfig.add(flironeConfig);
             addSosTConfig(flironeConfig, sosUser, sosPwd);
         }
@@ -238,8 +241,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textArea = (TextView) findViewById(R.id.text);
-        SurfaceView camPreview = (SurfaceView) findViewById(R.id.textureView1);
-        camPreview.getHolder().addCallback(this);
 
         // bind to SensorHub service
         Intent intent = new Intent(this, SensorHubService.class);
@@ -318,12 +319,17 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             {
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 String runName = input.getText().toString();
-                updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
                 newStatusMessage("Starting SensorHub...");
+
+                updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
                 sostClients.clear();
                 boundService.startSensorHub(sensorhubConfig, MainActivity.this);
+
                 if (showVideo)
+                {
+                    showVideo();
                     textArea.setBackgroundColor(0x80FFFFFF);
+                }
             }
         });
 
@@ -350,7 +356,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         }
 
         String message = "A software platform for building smart sensor networks and the Internet of Things\n\n";
-        message += "Version: " + version;
+        message += "Version: " + version + "\n";
 
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle("OpenSensorHub");
@@ -399,7 +405,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
             {
                 displayStatus();
                 textArea.setText(Html.fromHtml(displayText.toString()));
-                //textArea.setText(new DateTimeFormat().formatIso(System.currentTimeMillis()/1000., 0));
                 displayHandler.postDelayed(this, 1000);
             }
         };
@@ -524,6 +529,25 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
     }
 
 
+    protected void showVideo()
+    {
+        if (boundService.getVideoTexture() != null)
+        {
+            TextureView textureView = (TextureView) findViewById(R.id.video);
+            if (textureView.getSurfaceTexture() != boundService.getVideoTexture())
+            {
+                textureView.setSurfaceTexture(boundService.getVideoTexture());
+                textureView.setSurfaceTextureListener(this);
+            }
+        }
+    }
+
+
+    protected void hideVideo()
+    {
+    }
+
+
     @Override
     protected void onStart()
     {
@@ -540,6 +564,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
         {
             startListeningForEvents();
             startRefreshingStatus();
+            showVideo();
         }
     }
 
@@ -549,6 +574,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
     {
         stopListeningForEvents();
         stopRefreshingStatus();
+        hideVideo();
         super.onPause();
     }
 
@@ -571,20 +597,25 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, IE
 
 
     @Override
-    public void surfaceCreated(SurfaceHolder holder)
-    {
-        this.camPreviewSurfaceHolder = holder;
-    }
-
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
+    public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1)
     {
     }
 
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder)
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i1)
     {
-    }    
+    }
+
+
+    @Override
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture)
+    {
+        return false;
+    }
+
+    @Override
+    public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture)
+    {
+    }
 }

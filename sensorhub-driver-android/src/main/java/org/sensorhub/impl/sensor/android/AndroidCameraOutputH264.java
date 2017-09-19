@@ -16,6 +16,7 @@ package org.sensorhub.impl.sensor.android;
 
 import java.nio.ByteBuffer;
 
+import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
@@ -64,8 +65,8 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
     byte[] imgBuf1, imgBuf2;
     byte[] codecInfoData;
     MediaCodec mCodec;
-    BufferInfo bufferInfo = new BufferInfo();    
-    SurfaceHolder previewSurfaceHolder;
+    BufferInfo bufferInfo = new BufferInfo();
+    SurfaceTexture previewTexture;
 
     String name;
     DataComponent dataStruct;
@@ -74,12 +75,13 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
     long systemTimeOffset = -1L;
 
 
-    protected AndroidCameraOutputH264(AndroidSensorsDriver parentModule, int cameraId, SurfaceHolder previewSurfaceHolder) throws SensorException
+    protected AndroidCameraOutputH264(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture) throws SensorException
     {
         super(parentModule);
         this.cameraId = cameraId;
         this.name = "camera" + cameraId + "_H264";
-        this.previewSurfaceHolder = previewSurfaceHolder;
+        //this.previewSurfaceHolder = previewSurfaceHolder;
+        this.previewTexture = previewTexture;
         
         // init camera hardware and H264 codec
         initCam();
@@ -223,8 +225,8 @@ public class AndroidCameraOutputH264 extends AbstractSensorOutput<AndroidSensors
         try
         {
             // start streaming video        
-            if (previewSurfaceHolder != null)
-                camera.setPreviewDisplay(previewSurfaceHolder);
+            if (previewTexture != null)
+                camera.setPreviewTexture(previewTexture);
             camera.startPreview();
         }
         catch (Exception e)

@@ -69,7 +69,7 @@ public class FlirOneCameraDriver extends AbstractSensorModule<FlirOneCameraConfi
         this.xmlID = "FLIRONE_CAMERA_" + deviceID;
         
         // create output
-        camOutput = new FlirOneCameraOutput(this, config.camPreviewSurfaceHolder);
+        camOutput = new FlirOneCameraOutput(this, config.camPreviewTexture);
         camOutput.init();
         this.addOutput(camOutput, false);
     }
@@ -104,7 +104,7 @@ public class FlirOneCameraDriver extends AbstractSensorModule<FlirOneCameraConfi
             super.updateSensorDescription();
             
             SpatialFrame localRefFrame = new SpatialFrameImpl();
-            localRefFrame.setId("LOCAL_FRAME");
+            localRefFrame.setId(LOCAL_REF_FRAME);
             localRefFrame.setOrigin("Center of the device screen");
             localRefFrame.addAxis("x", "The X axis is in the plane of the screen and points to the right");
             localRefFrame.addAxis("y", "The Y axis is in the plane of the screen and points up");

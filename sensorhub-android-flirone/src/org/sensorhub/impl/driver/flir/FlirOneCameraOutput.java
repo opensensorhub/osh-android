@@ -16,6 +16,8 @@ package org.sensorhub.impl.driver.flir;
 
 import java.io.ByteArrayOutputStream;
 import java.util.EnumSet;
+
+import android.graphics.SurfaceTexture;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -61,18 +63,18 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
     
     int imgHeight, imgWidth, frameRate;
     ByteArrayOutputStream jpegBuf = new ByteArrayOutputStream();
-    SurfaceHolder previewSurfaceHolder;
+    SurfaceTexture previewTexture;
     
     String name;
     DataComponent dataStruct;
     DataEncoding dataEncoding;
     
     
-    protected FlirOneCameraOutput(FlirOneCameraDriver parentModule, SurfaceHolder previewSurfaceHolder)
+    protected FlirOneCameraOutput(FlirOneCameraDriver parentModule, SurfaceTexture previewTexture)
     {
         super(parentModule);
         this.name = "flirone_camera_data";
-        this.previewSurfaceHolder = previewSurfaceHolder;
+        this.previewTexture = previewTexture;
         
         imgWidth = 480;
         imgHeight = 640;
