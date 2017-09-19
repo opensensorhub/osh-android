@@ -8,6 +8,19 @@ This repo contains modules specific to Android, including:
   [Sensor API](http://developer.android.com/guide/topics/sensors/sensors_overview.html),
   [Camera API](http://developer.android.com/guide/topics/media/camera.html) and
   [Location API](http://developer.android.com/guide/topics/location/index.html)
+  
+The demo app allows a phone or tablet running Android 5.0 (Lollipop) or later to send sensor data to a remote OSH node using the SOS-T standard.
+
+Supported sensors include the ones that are on-board the phone:
+- GPS
+- Raw IMU (Accelerometers, Gyroscopes, Magnetometers)
+- Fused Orientation (Quaternions or Euler angles)
+- Video Camera (MJPEG or H264 codec)
+
+But also other sensors connected via USB, Bluetooth or Bluetooth Smart:
+- FLIR One Thermal Camera (USB)
+- Trupulse 360 Range Finder (Bluetooth)
+- Angel Sensor Wrist Band (Bluetooth Smart)
 
 
 ### Build
