@@ -1,25 +1,59 @@
-//apply from: gradle.oshCoreDir + '/common.gradle'
-ext.oshCoreVersion = '1.2.3'
+ext.oshCoreVersion = '1.3.2'
 ext.compileSdkVersion = 21
-ext.buildToolsVersion = "25.0.2"
-version = '1.2.0'
+ext.minSdkVersion = 21
+ext.targetSdkVersion = 21
+ext.buildToolsVersion = "28.0.3"
+version = oshCoreVersion
 
 buildscript {
   repositories {
+    google()
     jcenter()
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:2.2.3'
+    classpath 'com.android.tools.build:gradle:3.2.1'
   }
 }
 
-allprojects {
+subprojects {
   group = 'org.sensorhub'
-  version = version
-}
 
-subprojects {  
-  // inject all repositories from included builds if any
-  repositories.addAll(rootProject.repositories)
+  repositories {
+    jcenter()
+    google()
+  }
+
+  if (!project.projectDir.parent.endsWith('osh-android')) {
+    apply plugin: 'java'
+    apply plugin: 'osgi'
+    apply plugin: 'maven-publish'
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+    ext.details = null
+    ext.pom = {}
+
+    configurations {
+      embedded
+      compile {
+        extendsFrom embedded
+      }
+    }
+  }
+
+  configurations.all {
+    exclude group: 'org.sensorhub', module: 'sensorhub-comm-ble-dbus'
+    resolutionStrategy.dependencySubstitution {
+      // force use of local projects
+      substitute module('org.sensorhub:sensorhub-core') with project(':sensorhub-core')
+      substitute module('org.sensorhub:sensorhub-comm-ble') with project(':sensorhub-comm-ble')
+      substitute module('org.sensorhub:sensorhub-process-geoloc') with project(':sensorhub-process-geoloc')
+      substitute module('org.vast.opengis:ogc-services-sps') with project(':ogc-services-sps')
+
+      // override objenesis version to get new android instantiatiors
+      substitute module('uk.com.robust-it:cloning:1.9.1') with module('uk.com.robust-it:cloning:1.9.10')
+    }
+  }
+
+  version = oshCoreVersion
 }

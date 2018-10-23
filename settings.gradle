@@ -2,12 +2,29 @@ rootProject.name = 'osh-android'
 def oshMainDir = "$rootDir/.."
 
 // include builds from other repos
-def repos = ['osh-core', 'osh-comm', 'osh-sensors', 'osh-video', 'osh-positioning', 'osh-processing']
-repos.each { repoName ->
-  File repoDir = new File(oshMainDir, repoName)
+def repos = [
+        'osh-core':['lib-swe-common', 'lib-sensorml', 'lib-ows', 'sensorhub-core', 'sensorhub-service-swe', 'sensorhub-storage-perst'],
+        'osh-comm':['sensorhub-comm-ble'],
+        'osh-sensors':['sensorhub-driver-angelsensor'],
+        'osh-video':['sensorhub-driver-videocam'],
+        'osh-positioning':['sensorhub-driver-trupulse'],
+        'osh-processing':['sensorhub-process-vecmath', 'sensorhub-process-geoloc']]
+
+repos.each { repoName, modules ->
+  File repoDir = new File(oshMainDir, repoName).getCanonicalFile()
   if (!repoDir.exists())
-    throw new GradleException('Repository ' + repoName + ' is missing. Please clone it from https://github.com/opensensorhub/' + repoName)  
-  includeBuild repoDir
+    throw new GradleException('Repository ' + repoName + ' is missing. Please clone it from https://github.com/opensensorhub/' + repoName)
+  modules.each { moduleName ->
+    File moduleDir = new File(repoDir, moduleName).getCanonicalFile()
+    // include all folders with build.gradle as subprojects
+    FileTree subprojects = fileTree(moduleDir).include('**/build.gradle')
+    subprojects.files.each { File f ->
+      File projectFolder = f.parentFile
+      String projectName = projectFolder.name
+      include projectName
+      project(':' + projectName).projectDir = projectFolder
+    }
+  }
 }
 
 // include all folders with build.gradle as subprojects
