@@ -16,9 +16,8 @@ package org.sensorhub.android;
 
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.PixelFormat;
 import android.graphics.SurfaceTexture;
-import android.util.Log;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -27,8 +26,6 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import android.view.*;
 import org.sensorhub.android.comm.BluetoothCommProvider;
@@ -38,14 +35,12 @@ import org.sensorhub.android.comm.ble.BleNetwork;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModuleConfigRepository;
-import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
-import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
@@ -65,15 +60,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 import android.text.Html;
 import android.widget.EditText;
 import android.widget.TextView;
-import org.vast.util.DateTimeFormat;
-
-import javax.microedition.khronos.egl.EGL10;
 
 
 public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener
@@ -188,8 +179,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             angelConfig.name = "Angel Sensor [" + deviceName + "]";
             angelConfig.autoStart = true;
             angelConfig.networkID = bleConf.id;
-            //angelConfig.btAddress = "00:07:80:79:04:AF"; // mike's
-            //angelConfig.btAddress = "00:07:80:03:0E:0A"; // mine
+            //angelConfig.btAddress = "00:07:80:79:04:AF"; // mike
+            //angelConfig.btAddress = "00:07:80:03:0E:0A"; // alex
             angelConfig.btAddress = prefs.getString("angel_address", null);
             sensorhubConfig.add(angelConfig);
             addSosTConfig(angelConfig, sosUser, sosPwd);
@@ -205,6 +196,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             flironeConfig.autoStart = true;
             flironeConfig.androidContext = this.getApplicationContext();
             flironeConfig.camPreviewTexture = boundService.getVideoTexture();
+            showVideo = true;
             sensorhubConfig.add(flironeConfig);
             addSosTConfig(flironeConfig, sosUser, sosPwd);
         }
@@ -241,6 +233,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textArea = (TextView) findViewById(R.id.text);
+
+        // listen to texture view lifecycle
+        TextureView textureView = (TextureView) findViewById(R.id.video);
+        textureView.setSurfaceTextureListener(this);
 
         // bind to SensorHub service
         Intent intent = new Intent(this, SensorHubService.class);
@@ -323,13 +319,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
                 updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
                 sostClients.clear();
-                boundService.startSensorHub(sensorhubConfig, MainActivity.this);
+                boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
 
-                if (showVideo)
-                {
-                    showVideo();
+                if (boundService.hasVideo())
                     textArea.setBackgroundColor(0x80FFFFFF);
-                }
             }
         });
 
@@ -535,10 +528,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         {
             TextureView textureView = (TextureView) findViewById(R.id.video);
             if (textureView.getSurfaceTexture() != boundService.getVideoTexture())
-            {
                 textureView.setSurfaceTexture(boundService.getVideoTexture());
-                textureView.setSurfaceTextureListener(this);
-            }
         }
     }
 
@@ -560,11 +550,16 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     {
         super.onResume();
 
+        TextureView textureView = (TextureView) findViewById(R.id.video);
+        textureView.setSurfaceTextureListener(this);
+
         if (oshStarted)
         {
             startListeningForEvents();
             startRefreshingStatus();
-            showVideo();
+
+            if (boundService.hasVideo())
+                textArea.setBackgroundColor(0x80FFFFFF);
         }
     }
 
@@ -599,6 +594,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1)
     {
+        showVideo();
     }
 
 
@@ -613,6 +609,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     {
         return false;
     }
+
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture)

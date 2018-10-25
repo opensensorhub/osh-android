@@ -32,12 +32,6 @@ configurations {
     exclude group: "ch.qos.logback"
     exclude group: "org.apache.felix"
 
-    /*resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-        if (details.requested.group == 'org.slf4j') {
-           details.useTarget 'org.slf4j:slf4j-android:1.6.1-RC1'
-        }
-    }*/
-
     resolutionStrategy.dependencySubstitution {
       // use Android version of slf4j
       substitute module('org.slf4j:slf4j-api') with module('org.slf4j:slf4j-android:1.6.1-RC1')

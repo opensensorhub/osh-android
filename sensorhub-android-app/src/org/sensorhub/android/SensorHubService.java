@@ -52,6 +52,7 @@ public class SensorHubService extends Service
     private Handler msgHandler;
     SensorHub sensorhub;
     SurfaceTexture videoTex;
+    boolean hasVideo;
 
 
     public class LocalBinder extends Binder {
@@ -94,10 +95,12 @@ public class SensorHubService extends Service
     }
     
     
-    public synchronized void startSensorHub(final IModuleConfigRepository config, final IEventListener listener)
+    public synchronized void startSensorHub(final IModuleConfigRepository config, final boolean hasVideo, final IEventListener listener)
     {
         if (sensorhub != null)
             return;
+
+        this.hasVideo = hasVideo;
 
         msgHandler.post(new Runnable() {
             public void run()
@@ -117,6 +120,8 @@ public class SensorHubService extends Service
     {
         if (sensorhub == null)
             return;
+
+        this.hasVideo = false;
 
         msgHandler.post(new Runnable() {
             public void run() {
@@ -160,6 +165,12 @@ public class SensorHubService extends Service
     public SurfaceTexture getVideoTexture()
     {
         return videoTex;
+    }
+
+
+    public boolean hasVideo()
+    {
+        return hasVideo;
     }
     
 }
