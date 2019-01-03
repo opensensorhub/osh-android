@@ -5,7 +5,7 @@ ext.details = 'OSH demo app for Android'
 
 dependencies {
   api project(':sensorhub-android-lib')
-  compileOnly 'javax.xml.stream:stax-api:1.0-2'
+  api 'javax.xml.stream:stax-api:1.0-2'
 }
 
 android {
