@@ -67,9 +67,6 @@ public class SensorHubService extends Service
         
         try
         {
-            // load external dex file containing stax API
-            Dexter.loadFromAssets(this.getApplicationContext(), "stax-api-1.0-2.dex");
-            
             // set default StAX implementation
             XMLImplFinder.setStaxInputFactory(com.ctc.wstx.stax.WstxInputFactory.class.newInstance());
             XMLImplFinder.setStaxOutputFactory(com.ctc.wstx.stax.WstxOutputFactory.class.newInstance());
