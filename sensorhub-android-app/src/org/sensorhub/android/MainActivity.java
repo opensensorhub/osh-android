@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import android.view.*;
 
 
+import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.ServerConnector;
@@ -73,11 +74,6 @@ import android.text.Html;
 import android.widget.EditText;
 import android.widget.TextView;
 
-/**
- * Jetty
- */
-
-import org.eclipse.jetty.server.HttpConfiguration;
 
 public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener
 {
