@@ -28,12 +28,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import android.view.*;
+
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.HandlerList;
 import org.sensorhub.android.comm.BluetoothCommProvider;
 import org.sensorhub.android.comm.BluetoothCommProviderConfig;
 import org.sensorhub.android.comm.ble.BleConfig;
 import org.sensorhub.android.comm.ble.BleNetwork;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
@@ -66,6 +73,11 @@ import android.text.Html;
 import android.widget.EditText;
 import android.widget.TextView;
 
+/**
+ * Jetty
+ */
+
+import org.eclipse.jetty.server.HttpConfiguration;
 
 public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener
 {
@@ -79,6 +91,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     ArrayList<SOSTClient> sostClients = new ArrayList<SOSTClient>();
     URL sosUrl = null;
     boolean showVideo;
+
+    Server server;
     
     
     private ServiceConnection sConn = new ServiceConnection()
@@ -98,6 +112,27 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     protected void updateConfig(SharedPreferences prefs, String runName)
     {
         sensorhubConfig = new InMemoryConfigDb();
+
+        try {
+            server = new Server();
+            ServerConnector http = null;
+            ServerConnector https = null;
+            HandlerList handlers = new HandlerList();
+
+            HttpConfiguration httpConfig = new HttpConfiguration();
+            httpConfig.setSecureScheme("https");
+            httpConfig.setSecurePort(3443); // TODO: Change me to non-fixed port
+
+            http = new ServerConnector(server,
+                    new HttpConnectionFactory(httpConfig));
+            http.setPort(3080); // TODO: Change me to non-fixed port
+            http.setIdleTimeout(300000);
+
+            server.addConnector(http);
+            server.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // get SOS URL from config
         String sosUriConfig = prefs.getString("sos_uri", "");
