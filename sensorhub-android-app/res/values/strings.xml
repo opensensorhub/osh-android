@@ -6,9 +6,20 @@
     <string name="action_start">Start SensorHub</string>
     <string name="action_stop">Stop SensorHub</string>
     <string name="action_about">About</string>
-    
+
     <string-array name="video_codec_list">
         <item>JPEG</item>
         <item>H264</item>
     </string-array>
+
+    <string-array name="sos_option_list">
+        <item>SOS</item>
+        <item>No</item>
+    </string-array>
+
+    <string-array name="sos_value_list">
+        <item>1</item>
+        <item>0</item>
+    </string-array>
+
 </resources>
