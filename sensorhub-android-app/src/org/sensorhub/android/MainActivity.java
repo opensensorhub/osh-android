@@ -18,6 +18,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -27,14 +28,21 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import android.util.Log;
 import android.view.*;
 
-
+import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.server.handler.AllowSymLinkAliasChecker;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.sensorhub.android.comm.BluetoothCommProvider;
 import org.sensorhub.android.comm.BluetoothCommProviderConfig;
 import org.sensorhub.android.comm.ble.BleConfig;
@@ -45,16 +53,28 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
+import org.sensorhub.api.sensor.ISensorModule;
 import org.sensorhub.api.sensor.SensorConfig;
+import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
+import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
+import org.sensorhub.impl.service.sos.ISOSDataProviderFactory;
+import org.sensorhub.impl.service.sos.SOSProviderConfig;
+import org.sensorhub.impl.service.sos.SOSService;
+import org.sensorhub.impl.service.sos.SOSServiceConfig;
+import org.sensorhub.impl.service.sos.SOSServlet;
+import org.sensorhub.impl.service.sos.SensorDataProvider;
+import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
 import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
+import org.sensorhub.impl.service.HttpServerConfig;
+import org.sensorhub.impl.service.HttpServer;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -73,7 +93,7 @@ import android.provider.Settings.Secure;
 import android.text.Html;
 import android.widget.EditText;
 import android.widget.TextView;
-
+import org.vast.util.Asserts;
 
 public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener
 {
@@ -88,9 +108,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     URL sosUrl = null;
     boolean showVideo;
 
-    Server server;
-    
-    
     private ServiceConnection sConn = new ServiceConnection()
     {
         public void onServiceConnected(ComponentName className, IBinder service)
@@ -109,26 +126,18 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     {
         sensorhubConfig = new InMemoryConfigDb();
 
-        try {
-            server = new Server();
-            ServerConnector http = null;
-            ServerConnector https = null;
-            HandlerList handlers = new HandlerList();
+        /**
+         * TODO: Test this first
+         * TODO: Test if one phone can connect to another via SOS-T
+         */
 
-            HttpConfiguration httpConfig = new HttpConfiguration();
-            httpConfig.setSecureScheme("https");
-            httpConfig.setSecurePort(3443); // TODO: Change me to non-fixed port
+        // Sensorhub HTTP Server Config
+        HttpServerConfig serverConfig = new HttpServerConfig();
+        sensorhubConfig.add(serverConfig);
 
-            http = new ServerConnector(server,
-                    new HttpConnectionFactory(httpConfig));
-            http.setPort(3080); // TODO: Change me to non-fixed port
-            http.setIdleTimeout(300000);
-
-            server.addConnector(http);
-            server.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // SOS Config
+        SOSServiceConfig sosConfig = new SOSServiceConfig();
+        sosConfig.enableTransactional = true;
 
         // get SOS URL from config
         String sosUriConfig = prefs.getString("sos_uri", "");
@@ -174,6 +183,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig.add(sensorsConfig);
         addSosTConfig(sensorsConfig, sosUser, sosPwd);
 
+        /**
+         * I want sensor data provider config
+         * then I want to give sensor ID and ID of storage. only sensor for now
+         *
+         */
+
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
         if (enabled)
@@ -192,6 +207,13 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             trupulseConfig.commSettings = btConf;
             sensorhubConfig.add(trupulseConfig);
             addSosTConfig(trupulseConfig, sosUser, sosPwd);
+
+            /*
+            SensorDataProviderConfig truPulseDataProviderConfig = new SensorDataProviderConfig();
+            truPulseDataProviderConfig.sensorID = trupulseConfig.id;
+            truPulseDataProviderConfig.enabled = true;
+            sosConfig.dataProviders.add(truPulseDataProviderConfig);
+            */
         }
 
         // AngelSensor
@@ -231,6 +253,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sensorhubConfig.add(flironeConfig);
             addSosTConfig(flironeConfig, sosUser, sosPwd);
         }
+
+        sensorhubConfig.add(sosConfig);
     }
 
 
@@ -445,7 +469,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             displayCallback = null;
         }
     }
-    
+
     
     protected synchronized void displayStatus()
     {
