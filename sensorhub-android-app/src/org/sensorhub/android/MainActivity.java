@@ -41,6 +41,7 @@ import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
+//import org.sensorhub.impl.driver.dji.DjiConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
@@ -200,6 +201,21 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sensorhubConfig.add(flironeConfig);
             addSosTConfig(flironeConfig, sosUser, sosPwd);
         }
+
+        // DJI Drone
+        /*enabled = prefs.getBoolean("dji_enabled", false);
+        if (enabled)
+        {
+            DjiConfig djiConfig = new DjiConfig();
+            djiConfig.id = "DJI_DRONE";
+            djiConfig.name = "DJI Aircraft [" + deviceName + "]";
+            djiConfig.autoStart = true;
+            djiConfig.androidContext = this.getApplicationContext();
+            djiConfig.camPreviewTexture = boundService.getVideoTexture();
+            showVideo = true;
+            sensorhubConfig.add(djiConfig);
+            addSosTConfig(djiConfig, sosUser, sosPwd);
+        }*/
     }
 
 
