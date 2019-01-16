@@ -25,9 +25,9 @@ configurations {
   compile {
     // exclude stuff from APK
     exclude group: "javax.xml.stream"
-    exclude group: "javax.servlet"
+    //exclude group: "javax.servlet"
     exclude group: "xml-apis"
-    exclude group: "org.eclipse.jetty"
+    //exclude group: "org.eclipse.jetty"
     exclude group: "org.n52.amused"
     exclude group: "ch.qos.logback"
     exclude group: "org.apache.felix"

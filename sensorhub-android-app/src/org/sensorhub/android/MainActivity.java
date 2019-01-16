@@ -127,16 +127,16 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig = new InMemoryConfigDb();
 
         /**
-         * TODO: Test this first
          * TODO: Test if one phone can connect to another via SOS-T
          */
-
         // Sensorhub HTTP Server Config
         HttpServerConfig serverConfig = new HttpServerConfig();
+        serverConfig.autoStart = true;
         sensorhubConfig.add(serverConfig);
 
         // SOS Config
         SOSServiceConfig sosConfig = new SOSServiceConfig();
+        sosConfig.autoStart = true;
         sosConfig.enableTransactional = true;
 
         // get SOS URL from config
@@ -183,12 +183,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig.add(sensorsConfig);
         addSosTConfig(sensorsConfig, sosUser, sosPwd);
 
-        /**
-         * I want sensor data provider config
-         * then I want to give sensor ID and ID of storage. only sensor for now
-         *
-         */
-
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
         if (enabled)
@@ -208,12 +202,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sensorhubConfig.add(trupulseConfig);
             addSosTConfig(trupulseConfig, sosUser, sosPwd);
 
-            /*
+            /**
+             * I want sensor data provider config
+             * then I want to give sensor ID and ID of storage. only sensor for now
+             */
             SensorDataProviderConfig truPulseDataProviderConfig = new SensorDataProviderConfig();
             truPulseDataProviderConfig.sensorID = trupulseConfig.id;
             truPulseDataProviderConfig.enabled = true;
             sosConfig.dataProviders.add(truPulseDataProviderConfig);
-            */
         }
 
         // AngelSensor
