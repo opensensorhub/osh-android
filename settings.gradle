@@ -7,7 +7,7 @@ def repos = [
         'osh-persistence':['sensorhub-storage-h2'],
         'osh-comm':['sensorhub-comm-ble'],
         'osh-sensors':['sensorhub-driver-angelsensor'],
-        'osh-video':['sensorhub-driver-videocam'],
+        'osh-video':['sensorhub-driver-videocam', 'sensorhub-service-video'],
         'osh-positioning':['sensorhub-driver-trupulse'],
         'osh-processing':['sensorhub-process-vecmath', 'sensorhub-process-geoloc']]
 

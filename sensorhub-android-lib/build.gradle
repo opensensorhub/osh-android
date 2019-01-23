@@ -12,6 +12,7 @@ dependencies {
   api project(':sensorhub-core')
   api project(':sensorhub-storage-h2')
   api project(':sensorhub-service-swe')
+  api project(':sensorhub-service-video')
   api project(':sensorhub-comm-ble')
   api project(':sensorhub-driver-trupulse')
   api project(':sensorhub-driver-angelsensor')
