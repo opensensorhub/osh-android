@@ -2,8 +2,6 @@
 
     <!--
         TODO: list of sensors and each item goes to a sub menu. Once it gets into each sensor, ask Alex for things like orientation.
-
-        TODO: QUATERNION IS DEFAULT NOT EULER
     -->
     <CheckBoxPreference
         android:defaultValue="false"
