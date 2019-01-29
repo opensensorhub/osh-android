@@ -318,6 +318,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             startActivity(new Intent(this, UserSettingsActivity.class));
             return true;
         }
+        else if (id == R.id.action_test) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            return true;
+        }
         else if (id == R.id.action_start)
         {
             if (boundService != null && boundService.getSensorHub() == null)
