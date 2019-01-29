@@ -18,7 +18,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 
-import java.io.FileOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -44,21 +43,16 @@ import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
-//import org.sensorhub.impl.driver.dji.DjiConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVObsStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
-import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
-import org.sensorhub.impl.persistence.perst.BasicStorageImpl;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
-import org.sensorhub.impl.service.sos.SOSCustomFormatConfig;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
-import org.sensorhub.impl.service.sos.SensorConsumerConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
 import org.sensorhub.impl.service.sos.video.MP4Serializer;
 import org.sensorhub.impl.service.sos.video.MJPEGSerializer;
@@ -81,7 +75,6 @@ import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 import android.text.Html;
 import android.widget.EditText;
-import android.widget.ExpandableListView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener
@@ -115,6 +108,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     {
         /**
          * TODO: H2 in sensorhubconfig
+         * TODO: Double check capabilities are only showing checked simple sensors
          */
         sensorhubConfig = new InMemoryConfigDb();
 
@@ -151,19 +145,19 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.enableTransactional = true;
 
         // Storage Config
-        /*
-        FIXME: Which StorageImpl class use for moduleClass?
-        Example from working config:
-            BasicStorageConfig storageConfig = new BasicStorageConfig();
-            storageConfig.moduleClass = BasicStorageImpl.class.getCanonicalName();
-        */
+        /**
+         * FIXME: Which StorageImpl class use for moduleClass?
+         * Example from working config:
+         *   BasicStorageConfig storageConfig = new BasicStorageConfig();
+         *   storageConfig.moduleClass = BasicStorageImpl.class.getCanonicalName();
+         */
         MVStorageConfig storageConfig = new MVStorageConfig();
         storageConfig.autoStart = true;
-//        storageConfig.moduleClass = MVMultiStorageImpl.class.getCanonicalName();
+        //storageConfig.moduleClass = MVMultiStorageImpl.class.getCanonicalName();
         storageConfig.moduleClass = MVObsStorageImpl.class.getCanonicalName();
         storageConfig.storagePath = getFilesDir().getAbsolutePath()
                                            + "/oshAndroid_h2.dat";
-//        sosConfig.newStorageConfig = storageConfig;
+        sosConfig.newStorageConfig = storageConfig;
         Log.d("MAIN_ACTIVITY", storageConfig.storagePath);
         Log.d("MAIN_ACTIVITY", String.valueOf(getFilesDir().canWrite()));
 
@@ -193,10 +187,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         addSosTConfig(sensorsConfig, sosUser, sosPwd);
 
         // Android Data Provider
-        /*
-        FIXME: How to get procedure after it is added to as data provider?
-        Adding android via SOS-T properly adds to hub, but this programmatic way doesn't work...
-        */
+        /**
+         * FIXME: How to get procedure after it is added to as data provider?
+         */
         SensorDataProviderConfig androidDataProviderConfig = new SensorDataProviderConfig();
         androidDataProviderConfig.sensorID = sensorsConfig.id;
         androidDataProviderConfig.offeringID = sensorsConfig.id+"-sos";
@@ -204,28 +197,19 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         androidDataProviderConfig.liveDataTimeout = 600.0;
         androidDataProviderConfig.maxFois = 10;
         androidDataProviderConfig.enabled = true;
-//        sosConfig.dataProviders.add(androidDataProviderConfig);
-
-        // Android Data Consumer
-        /*
-        FIXME: How to get procedure after it is added to as data provider?
-        Adding android via SOS-T properly adds to hub, but this programmatic route doesn't work...
-        */
-        /* TODO: Check to see if I need to implement data consumer. It's from android working using SOS-T
-        SensorConsumerConfig androidDataConsumerConfig = new SensorConsumerConfig();
-        androidDataConsumerConfig.sensorID = sensorsConfig.id;
-        androidDataConsumerConfig.offeringID = sensorsConfig.id+"-sos";
-        androidDataConsumerConfig.enabled = true;
-        sosConfig.dataConsumers.add(androidDataConsumerConfig);
-        */
+        sosConfig.dataProviders.add(androidDataProviderConfig);
 
         // Android Stream Storage
+        /**
+         * TODO: Test deeper if stream storage at specified path is working.
+         * It's not erroring at current path but IS ERRORING at auto-generated path for SOS-T sensors
+         */
         StreamStorageConfig androidStreamStorageConfig = new StreamStorageConfig();
         androidStreamStorageConfig.name = "Android Sensor Storage";
         androidStreamStorageConfig.autoStart = true;
         androidStreamStorageConfig.storageConfig = storageConfig;
         androidStreamStorageConfig.dataSourceID = sensorsConfig.id;
-//        sensorhubConfig.add(androidStreamStorageConfig);
+        sensorhubConfig.add(androidStreamStorageConfig);
 
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
@@ -247,7 +231,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             addSosTConfig(trupulseConfig, sosUser, sosPwd);
 
 
-            // TODO: Add TruPulse to SOS Config
             SensorDataProviderConfig trupulseDataProviderConfig = new SensorDataProviderConfig();
             trupulseDataProviderConfig.sensorID = trupulseConfig.id;
             trupulseDataProviderConfig.offeringID = trupulseConfig.id+"-sos";
@@ -277,7 +260,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sensorhubConfig.add(angelConfig);
             addSosTConfig(angelConfig, sosUser, sosPwd);
 
-            // TODO: Add Angel to SOS Config
             SensorDataProviderConfig angelDataProviderConfig = new SensorDataProviderConfig();
             angelDataProviderConfig.sensorID = angelConfig.id;
             angelDataProviderConfig.offeringID = angelConfig.id+"-sos";
@@ -299,7 +281,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sensorhubConfig.add(flironeConfig);
             addSosTConfig(flironeConfig, sosUser, sosPwd);
 
-            // TODO: Add FLIR One to SOS Config
             SensorDataProviderConfig flironeDataProviderConfig = new SensorDataProviderConfig();
             flironeDataProviderConfig.sensorID = flironeConfig.id;
             flironeDataProviderConfig.offeringID = flironeConfig.id+"-sos";
@@ -396,10 +377,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if (id == R.id.action_settings)
         {
             startActivity(new Intent(this, UserSettingsActivity.class));
-            return true;
-        }
-        else if (id == R.id.action_test) {
-            startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
         else if (id == R.id.action_start)

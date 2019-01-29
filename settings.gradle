@@ -3,13 +3,13 @@ def oshMainDir = "$rootDir/.."
 
 // include builds from other repos
 def repos = [
-        'osh-core':['lib-swe-common', 'lib-sensorml', 'lib-ows', 'sensorhub-core', 'sensorhub-service-swe', 'sensorhub-storage-perst'],
+        'osh-core':['lib-swe-common', 'lib-sensorml', 'lib-ows', 'sensorhub-core', 'sensorhub-service-swe', 'sensorhub-storage-perst', 'sensorhub-storage-h2'],
         'osh-persistence':['sensorhub-storage-h2'],
         'osh-comm':['sensorhub-comm-ble'],
         'osh-sensors':['sensorhub-driver-angelsensor'],
         'osh-video':['sensorhub-driver-videocam', 'sensorhub-service-video'],
         'osh-positioning':['sensorhub-driver-trupulse'],
-        'osh-processing':['sensorhub-process-vecmath', 'sensorhub-process-geoloc']]
+        'osh-processing':['sensorhub-process-vecmath', 'sensorhub-process-geoloc', 'sensorhub-process-basicmath']]
 
 repos.each { repoName, modules ->
   File repoDir = new File(oshMainDir, repoName).getCanonicalFile()
