@@ -195,7 +195,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // Android Data Provider
         /*
         FIXME: How to get procedure after it is added to as data provider?
-        Adding android via SOS-T properly adds to hub, but this programatic route doesn't work...
+        Adding android via SOS-T properly adds to hub, but this programmatic way doesn't work...
         */
         SensorDataProviderConfig androidDataProviderConfig = new SensorDataProviderConfig();
         androidDataProviderConfig.sensorID = sensorsConfig.id;
@@ -209,7 +209,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // Android Data Consumer
         /*
         FIXME: How to get procedure after it is added to as data provider?
-        Adding android via SOS-T properly adds to hub, but this programatic route doesn't work...
+        Adding android via SOS-T properly adds to hub, but this programmatic route doesn't work...
         */
         /* TODO: Check to see if I need to implement data consumer. It's from android working using SOS-T
         SensorConsumerConfig androidDataConsumerConfig = new SensorConsumerConfig();
