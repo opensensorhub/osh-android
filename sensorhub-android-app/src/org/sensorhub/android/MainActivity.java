@@ -159,11 +159,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         */
         MVStorageConfig storageConfig = new MVStorageConfig();
         storageConfig.autoStart = true;
-        storageConfig.moduleClass = MVMultiStorageImpl.class.getCanonicalName();
-        //storageConfig.moduleClass = MVObsStorageImpl.class.getCanonicalName();
+//        storageConfig.moduleClass = MVMultiStorageImpl.class.getCanonicalName();
+        storageConfig.moduleClass = MVObsStorageImpl.class.getCanonicalName();
         storageConfig.storagePath = getFilesDir().getAbsolutePath()
                                            + "/oshAndroid_h2.dat";
-        sosConfig.newStorageConfig = storageConfig;
+//        sosConfig.newStorageConfig = storageConfig;
         Log.d("MAIN_ACTIVITY", storageConfig.storagePath);
         Log.d("MAIN_ACTIVITY", String.valueOf(getFilesDir().canWrite()));
 
@@ -204,7 +204,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         androidDataProviderConfig.liveDataTimeout = 600.0;
         androidDataProviderConfig.maxFois = 10;
         androidDataProviderConfig.enabled = true;
-        sosConfig.dataProviders.add(androidDataProviderConfig);
+//        sosConfig.dataProviders.add(androidDataProviderConfig);
 
         // Android Data Consumer
         /*
@@ -225,7 +225,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         androidStreamStorageConfig.autoStart = true;
         androidStreamStorageConfig.storageConfig = storageConfig;
         androidStreamStorageConfig.dataSourceID = sensorsConfig.id;
-        sensorhubConfig.add(androidStreamStorageConfig);
+//        sensorhubConfig.add(androidStreamStorageConfig);
 
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
