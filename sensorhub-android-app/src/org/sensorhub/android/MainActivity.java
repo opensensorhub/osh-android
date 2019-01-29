@@ -48,13 +48,17 @@ import org.sensorhub.impl.client.sost.SOSTClientConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
+import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
+import org.sensorhub.impl.persistence.h2.MVObsStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
+import org.sensorhub.impl.persistence.perst.BasicStorageImpl;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import org.sensorhub.impl.service.sos.SOSCustomFormatConfig;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
+import org.sensorhub.impl.service.sos.SensorConsumerConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
 import org.sensorhub.impl.service.sos.video.MP4Serializer;
 import org.sensorhub.impl.service.sos.video.MJPEGSerializer;
@@ -111,7 +115,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     {
         /**
          * TODO: H2 in sensorhubconfig
-         * TODO: Test video from phone1 to phone2. Get video on web browser from phone2 (perf)
          */
         sensorhubConfig = new InMemoryConfigDb();
 
@@ -146,19 +149,23 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         SOSServiceConfig sosConfig = new SOSServiceConfig();
         sosConfig.autoStart = true;
         sosConfig.enableTransactional = true;
-        sosConfig.customFormats.add(new SOSCustomFormatConfig("video/mp4", "org.sensorhub.impl.service.sos.video.MP4Serializer"));
-        sosConfig.customFormats.add(new SOSCustomFormatConfig("video/x-motion-jpeg", "org.sensorhub.impl.service.sos.video.MJPEGSerializer"));
 
         // Storage Config
+        /*
+        FIXME: Which StorageImpl class use for moduleClass?
+        Example from working config:
+            BasicStorageConfig storageConfig = new BasicStorageConfig();
+            storageConfig.moduleClass = BasicStorageImpl.class.getCanonicalName();
+        */
         MVStorageConfig storageConfig = new MVStorageConfig();
         storageConfig.autoStart = true;
+        storageConfig.moduleClass = MVMultiStorageImpl.class.getCanonicalName();
+        //storageConfig.moduleClass = MVObsStorageImpl.class.getCanonicalName();
         storageConfig.storagePath = getFilesDir().getAbsolutePath()
                                            + "/oshAndroid_h2.dat";
-        Log.d("MAIN_ACTIVITY", storageConfig.storagePath);
-        /*
-        TODO: Fix this...
         sosConfig.newStorageConfig = storageConfig;
-        */
+        Log.d("MAIN_ACTIVITY", storageConfig.storagePath);
+        Log.d("MAIN_ACTIVITY", String.valueOf(getFilesDir().canWrite()));
 
         // Sensors Config
         AndroidSensorsConfig sensorsConfig = new AndroidSensorsConfig();
@@ -186,13 +193,30 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         addSosTConfig(sensorsConfig, sosUser, sosPwd);
 
         // Android Data Provider
+        /*
+        FIXME: How to get procedure after it is added to as data provider?
+        Adding android via SOS-T properly adds to hub, but this programatic route doesn't work...
+        */
         SensorDataProviderConfig androidDataProviderConfig = new SensorDataProviderConfig();
         androidDataProviderConfig.sensorID = sensorsConfig.id;
         androidDataProviderConfig.offeringID = sensorsConfig.id+"-sos";
+        // TODO: Add hidden inputs list based off pref/settings logic
+        androidDataProviderConfig.liveDataTimeout = 600.0;
+        androidDataProviderConfig.maxFois = 10;
         androidDataProviderConfig.enabled = true;
-        /*
-        TODO: Fix this...
         sosConfig.dataProviders.add(androidDataProviderConfig);
+
+        // Android Data Consumer
+        /*
+        FIXME: How to get procedure after it is added to as data provider?
+        Adding android via SOS-T properly adds to hub, but this programatic route doesn't work...
+        */
+        /* TODO: Check to see if I need to implement data consumer. It's from android working using SOS-T
+        SensorConsumerConfig androidDataConsumerConfig = new SensorConsumerConfig();
+        androidDataConsumerConfig.sensorID = sensorsConfig.id;
+        androidDataConsumerConfig.offeringID = sensorsConfig.id+"-sos";
+        androidDataConsumerConfig.enabled = true;
+        sosConfig.dataConsumers.add(androidDataConsumerConfig);
         */
 
         // Android Stream Storage
@@ -200,11 +224,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         androidStreamStorageConfig.name = "Android Sensor Storage";
         androidStreamStorageConfig.autoStart = true;
         androidStreamStorageConfig.storageConfig = storageConfig;
-        androidStreamStorageConfig.dataSourceID = androidDataProviderConfig.sensorID;
-        /*
-        TODO: Fix this...
+        androidStreamStorageConfig.dataSourceID = sensorsConfig.id;
         sensorhubConfig.add(androidStreamStorageConfig);
-        */
 
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
@@ -225,7 +246,13 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sensorhubConfig.add(trupulseConfig);
             addSosTConfig(trupulseConfig, sosUser, sosPwd);
 
+
             // TODO: Add TruPulse to SOS Config
+            SensorDataProviderConfig trupulseDataProviderConfig = new SensorDataProviderConfig();
+            trupulseDataProviderConfig.sensorID = trupulseConfig.id;
+            trupulseDataProviderConfig.offeringID = trupulseConfig.id+"-sos";
+            trupulseDataProviderConfig.enabled = true;
+            sosConfig.dataProviders.add(trupulseDataProviderConfig);
         }
 
         // AngelSensor
@@ -251,6 +278,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             addSosTConfig(angelConfig, sosUser, sosPwd);
 
             // TODO: Add Angel to SOS Config
+            SensorDataProviderConfig angelDataProviderConfig = new SensorDataProviderConfig();
+            angelDataProviderConfig.sensorID = angelConfig.id;
+            angelDataProviderConfig.offeringID = angelConfig.id+"-sos";
+            angelDataProviderConfig.enabled = true;
+            sosConfig.dataProviders.add(angelDataProviderConfig);
         }
 
         // FLIR One sensor
@@ -268,6 +300,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             addSosTConfig(flironeConfig, sosUser, sosPwd);
 
             // TODO: Add FLIR One to SOS Config
+            SensorDataProviderConfig flironeDataProviderConfig = new SensorDataProviderConfig();
+            flironeDataProviderConfig.sensorID = flironeConfig.id;
+            flironeDataProviderConfig.offeringID = flironeConfig.id+"-sos";
+            flironeDataProviderConfig.enabled = true;
+            sosConfig.dataProviders.add(flironeDataProviderConfig);
         }
 
         // DJI Drone
@@ -284,12 +321,16 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             showVideo = true;
             sensorhubConfig.add(djiConfig);
             addSosTConfig(djiConfig, sosUser, sosPwd);
+
+            SensorDataProviderConfig djiDataProviderConfig = new SensorDataProviderConfig();
+            djiDataConsumerConfig.sensorID = djiConfig.id;
+            djiDataConsumerConfig.offeringID = djiConfig.id+"-sos";
+            djiDataConsumerConfig.enabled = true;
+            sosConfig.dataConsumers.add(djiDataConsumerConfig);
         }
         */
 
-        Log.d("MAIN_ACTIVITY", sosConfig.toString());
         sensorhubConfig.add(sosConfig);
-
     }
 
 
