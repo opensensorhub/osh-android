@@ -9,27 +9,11 @@
         android:summary="Enable streaming of accelerometer data"
         android:title="Accelerometer Data" />
 
-    <ListPreference
-        android:title="Accelerometer SOS"
-        android:summary=""
-        android:key="accel_sos"
-        android:defaultValue="1"
-        android:entries="@array/sos_option_list"
-        android:entryValues="@array/sos_value_list" />
-
     <CheckBoxPreference
         android:defaultValue="false"
         android:key="gyro_enabled"
         android:summary="Enable streaming of gyroscope data"
         android:title="Gyroscope Data" />
-
-    <!--<ListPreference-->
-        <!--android:title="Accelerometer SOS"-->
-        <!--android:summary=""-->
-        <!--android:key="accel_sos"-->
-        <!--android:defaultValue="1"-->
-        <!--android:entries="@array/sos_option_list"-->
-        <!--android:entryValues="@array/sos_value_list" />-->
 
     <CheckBoxPreference
         android:defaultValue="false"
@@ -37,27 +21,11 @@
         android:summary="Enable streaming of magnetometer data"
         android:title="Magnetometer Data" />
 
-    <!--<ListPreference-->
-        <!--android:title="Accelerometer SOS"-->
-        <!--android:summary=""-->
-        <!--android:key="accel_sos"-->
-        <!--android:defaultValue="1"-->
-        <!--android:entries="@array/sos_option_list"-->
-        <!--android:entryValues="@array/sos_value_list" />-->
-
     <CheckBoxPreference
         android:defaultValue="false"
         android:key="orient_quat_enabled"
         android:summary="Enable streaming of orientation data"
         android:title="Orientation Data (Quaternions)" />
-
-    <!--<ListPreference-->
-        <!--android:title="Accelerometer SOS"-->
-        <!--android:summary=""-->
-        <!--android:key="accel_sos"-->
-        <!--android:defaultValue="1"-->
-        <!--android:entries="@array/sos_option_list"-->
-        <!--android:entryValues="@array/sos_value_list" />-->
 
     <CheckBoxPreference
         android:defaultValue="true"
@@ -65,41 +33,17 @@
         android:summary="Enable streaming of orientation data"
         android:title="Orientation Data (Euler Angles)" />
 
-    <!--<ListPreference-->
-        <!--android:title="Accelerometer SOS"-->
-        <!--android:summary=""-->
-        <!--android:key="accel_sos"-->
-        <!--android:defaultValue="1"-->
-        <!--android:entries="@array/sos_option_list"-->
-        <!--android:entryValues="@array/sos_value_list" />-->
-
     <CheckBoxPreference
         android:defaultValue="true"
         android:key="gps_enabled"
         android:summary="Enable streaming of GPS location data"
         android:title="GPS Location Data" />
 
-    <!--<ListPreference-->
-        <!--android:title="Accelerometer SOS"-->
-        <!--android:summary=""-->
-        <!--android:key="accel_sos"-->
-        <!--android:defaultValue="1"-->
-        <!--android:entries="@array/sos_option_list"-->
-        <!--android:entryValues="@array/sos_value_list" />-->
-
     <CheckBoxPreference
         android:defaultValue="false"
         android:key="netloc_enabled"
         android:summary="Enable streaming of network location data"
         android:title="Network Location Data" />
-
-    <ListPreference
-        android:title="Network Location SOS"
-        android:summary=""
-        android:key="netloc_sos"
-        android:defaultValue="1"
-        android:entries="@array/sos_option_list"
-        android:entryValues="@array/sos_value_list" />
 
     <CheckBoxPreference
         android:defaultValue="false"
@@ -117,27 +61,11 @@
         android:positiveButtonText="@null"
         android:title="Video Codec" />
 
-    <ListPreference
-        android:title="Video SOS"
-        android:summary=""
-        android:key="cam_sos"
-        android:defaultValue="1"
-        android:entries="@array/sos_option_list"
-        android:entryValues="@array/sos_value_list" />
-    
     <CheckBoxPreference
         android:defaultValue="false"
         android:key="trupulse_enabled"
         android:summary="Enable streaming of TruPulse range finder data (sensor must be connected via Bluetooth on startup)"
         android:title="TruPulse Range Finder Data" />
-
-    <ListPreference
-        android:title="TruPulse Range Finder SOS"
-        android:summary=""
-        android:key="trupulse_sos"
-        android:defaultValue="1"
-        android:entries="@array/sos_option_list"
-        android:entryValues="@array/sos_value_list" />
 
     <CheckBoxPreference
         android:defaultValue="false"
@@ -145,27 +73,11 @@
         android:summary="Use simulated TruPulse data instead of the actual sensor data"
         android:title="Use Simulated TruPulse Data" />
 
-    <ListPreference
-        android:title="Simulated TruPulse SOS"
-        android:summary=""
-        android:key="trupulse_simu_sos"
-        android:defaultValue="1"
-        android:entries="@array/sos_option_list"
-        android:entryValues="@array/sos_value_list" />
-
     <CheckBoxPreference
         android:defaultValue="false"
         android:key="angel_enabled"
         android:summary="Enable streaming of Angel Sensor health data (sensor must be connected via Bluetooth LE on startup)"
         android:title="Angel Sensor Health Data" />
-
-    <ListPreference
-        android:title="Angel Sensor Health SOS"
-        android:summary=""
-        android:key="angel_sos"
-        android:defaultValue="1"
-        android:entries="@array/sos_option_list"
-        android:entryValues="@array/sos_value_list" />
 
     <EditTextPreference
         android:key="angel_address"
@@ -179,13 +91,4 @@
         android:key="flirone_enabled"
         android:summary="Enable streaming of FLIR One thermal camera data when connected on USB port"
         android:title="FLIR One Thermal Camera Data" />
-
-    <ListPreference
-        android:title="FLIR One Thermal Camera SOS"
-        android:summary=""
-        android:key="flirone_sos"
-        android:defaultValue="1"
-        android:entries="@array/sos_option_list"
-        android:entryValues="@array/sos_value_list" />
-
 </PreferenceScreen>
