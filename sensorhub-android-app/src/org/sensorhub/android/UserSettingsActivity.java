@@ -16,15 +16,23 @@ package org.sensorhub.android;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
+import android.util.Log;
+
+import com.esotericsoftware.kryo.util.MapReferenceResolver;
+
 import java.net.URL;
 import java.util.List;
+
+import static android.content.ContentValues.TAG;
 
 
 public class UserSettingsActivity extends PreferenceActivity
@@ -119,8 +127,8 @@ public class UserSettingsActivity extends PreferenceActivity
             bindPreferenceSummaryToValue(findPreference("sos_username"));
         }
     }
-    
-    
+
+
     /*
      * Fragment for sensor preferences
      */
@@ -134,6 +142,65 @@ public class UserSettingsActivity extends PreferenceActivity
             addPreferencesFromResource(R.xml.pref_sensors);
             bindPreferenceSummaryToValue(findPreference("video_codec"));
             bindPreferenceSummaryToValue(findPreference("angel_address"));
+
+            SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
+
+            Preference accelerometerEnable = getPreferenceScreen().findPreference("accelerometer_enable");
+            Preference accelerometerOptions = getPreferenceScreen().findPreference("accelerometer_options");
+            accelerometerOptions.setEnabled(prefs.getBoolean(accelerometerEnable.getKey(), false));
+            accelerometerEnable.setOnPreferenceChangeListener((preference, newValue) -> {
+                accelerometerOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference gyroscopeEnable = getPreferenceScreen().findPreference("gyroscope_enable");
+            Preference gyroscopeOptions = getPreferenceScreen().findPreference("gyroscope_options");
+            gyroscopeOptions.setEnabled(prefs.getBoolean(gyroscopeEnable.getKey(), false));
+            gyroscopeEnable.setOnPreferenceChangeListener((preference, newValue) -> {
+                gyroscopeOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference magnetometerEnable = getPreferenceScreen().findPreference("magnetometer_enable");
+            Preference magnetometerOptions = getPreferenceScreen().findPreference("magnetometer_options");
+            magnetometerOptions.setEnabled(prefs.getBoolean(magnetometerEnable.getKey(), false));
+            magnetometerEnable.setOnPreferenceChangeListener((preference, newValue) -> {
+                magnetometerOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference orientationEnable = getPreferenceScreen().findPreference("orientation_enable");
+            Preference orientationOptions = getPreferenceScreen().findPreference("orientation_options");
+            Preference orientationAngles = getPreferenceScreen().findPreference("orientation_angles");
+            orientationOptions.setEnabled(prefs.getBoolean(orientationEnable.getKey(), false));
+            orientationAngles.setEnabled(prefs.getBoolean(orientationEnable.getKey(), false));
+            orientationEnable.setOnPreferenceChangeListener((preference, newValue) -> {
+                orientationOptions.setEnabled((boolean) newValue);
+                orientationAngles.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference locationEnable = getPreferenceScreen().findPreference("location_enable");
+            Preference locationOptions = getPreferenceScreen().findPreference("location_options");
+            Preference locationType = getPreferenceScreen().findPreference("location_type");
+            locationOptions.setEnabled(prefs.getBoolean(locationEnable.getKey(), false));
+            locationType.setEnabled(prefs.getBoolean(locationEnable.getKey(), false));
+            locationEnable.setOnPreferenceChangeListener((preference, newValue) -> {
+                locationOptions.setEnabled((boolean) newValue);
+                locationType.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference videoEnable = getPreferenceScreen().findPreference("video_enable");
+            Preference videoOptions = getPreferenceScreen().findPreference("video_options");
+            Preference videoCodec = getPreferenceScreen().findPreference("video_codec");
+            videoOptions.setEnabled(prefs.getBoolean(videoEnable.getKey(), false));
+            videoCodec.setEnabled(prefs.getBoolean(videoEnable.getKey(), false));
+            videoEnable.setOnPreferenceChangeListener((preference, newValue) -> {
+                videoOptions.setEnabled((boolean) newValue);
+                videoCodec.setEnabled((boolean) newValue);
+                return true;
+            });
         }
     }
 

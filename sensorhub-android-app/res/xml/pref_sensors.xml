@@ -1,94 +1,220 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android" >
     <!--
         TODO: list of sensors and each item goes to a sub menu. Once it gets into each sensor, ask Alex for things like orientation.
     -->
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="accel_enabled"
-        android:summary="Enable streaming of accelerometer data"
-        android:title="Accelerometer Data" />
+    <PreferenceCategory android:title="@string/sensor_android">
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="gyro_enabled"
-        android:summary="Enable streaming of gyroscope data"
-        android:title="Gyroscope Data" />
+        <SwitchPreference
+            android:key="accelerometer_enable"
+            android:title="Accelerometer"
+            android:defaultValue="false" />
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="mag_enabled"
-        android:summary="Enable streaming of magnetometer data"
-        android:title="Magnetometer Data" />
+        <MultiSelectListPreference
+            android:key="accelerometer_options"
+            android:enabled="false"
+            android:title="Accelerometer Output Options"
+            android:summary="Options for pushing data"
+            android:entries="@array/sos_option_list"
+            android:entryValues="@array/sos_option_values"
+            android:defaultValue="@array/sos_option_defaults" />
 
-    <CheckBoxPreference
-        android:defaultValue="true"
-        android:key="orient_quat_enabled"
-        android:summary="Enable streaming of orientation data"
-        android:title="Orientation Data (Quaternions)" />
+        <SwitchPreference
+            android:key="gyroscope_enable"
+            android:title="Gyroscope"
+            android:defaultValue="false" />
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="orient_euler_enabled"
-        android:summary="Enable streaming of orientation data"
-        android:title="Orientation Data (Euler Angles)" />
+        <MultiSelectListPreference
+            android:key="gyroscope_options"
+            android:enabled="false"
+            android:title="Gyroscope Output Options"
+            android:summary="Options for pushing data"
+            android:entries="@array/sos_option_list"
+            android:entryValues="@array/sos_option_values"
+            android:defaultValue="@array/sos_option_defaults" />
 
-    <CheckBoxPreference
-        android:defaultValue="true"
-        android:key="gps_enabled"
-        android:summary="Enable streaming of GPS location data"
-        android:title="GPS Location Data" />
+        <SwitchPreference
+            android:key="magnetometer_enable"
+            android:title="Magnetometer"
+            android:defaultValue="false" />
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="netloc_enabled"
-        android:summary="Enable streaming of network location data"
-        android:title="Network Location Data" />
+        <MultiSelectListPreference
+            android:key="magnetometer_options"
+            android:enabled="false"
+            android:title="Magnetometer Output Options"
+            android:summary="Options for pushing data"
+            android:entries="@array/sos_option_list"
+            android:entryValues="@array/sos_option_values"
+            android:defaultValue="@array/sos_option_defaults" />
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="cam_enabled"
-        android:summary="Enable streaming of video data"
-        android:title="Video Data" />
+        <SwitchPreference
+            android:key="orientation_enable"
+            android:title="Orientation"
+            android:defaultValue="false" />
 
-    <ListPreference
-        android:defaultValue="JPEG"
-        android:entries="@array/video_codec_list"
-        android:entryValues="@array/video_codec_list"
-        android:key="video_codec"
-        android:summary="%s"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:title="Video Codec" />
+        <MultiSelectListPreference
+            android:key="orientation_angles"
+            android:enabled="false"
+            android:title="Orientation Angle Format"
+            android:summary="(Quaternion, Euler, etc.)"
+            android:entries="@array/orientation_angle_list"
+            android:entryValues="@array/orientation_angle_values"
+            android:defaultValue="@array/orientation_angle_defaults" />
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="trupulse_enabled"
-        android:summary="Enable streaming of TruPulse range finder data (sensor must be connected via Bluetooth on startup)"
-        android:title="TruPulse Range Finder Data" />
+        <MultiSelectListPreference
+            android:key="orientation_options"
+            android:enabled="false"
+            android:title="Orientation Output Options"
+            android:summary="Options for pushing data"
+            android:entries="@array/sos_option_list"
+            android:entryValues="@array/sos_option_values"
+            android:defaultValue="@array/sos_option_defaults" />
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="trupulse_simu"
-        android:summary="Use simulated TruPulse data instead of the actual sensor data"
-        android:title="Use Simulated TruPulse Data" />
+        <SwitchPreference
+            android:key="location_enable"
+            android:title="Location"
+            android:defaultValue="false" />
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="angel_enabled"
-        android:summary="Enable streaming of Angel Sensor health data (sensor must be connected via Bluetooth LE on startup)"
-        android:title="Angel Sensor Health Data" />
+        <MultiSelectListPreference
+            android:key="location_type"
+            android:enabled="false"
+            android:title="Sensor for Location"
+            android:summary="(GPS, Network, etc.)"
+            android:entries="@array/location_type_list"
+            android:entryValues="@array/location_type_values"
+            android:defaultValue="@array/location_type_defaults" />
 
-    <EditTextPreference
-        android:key="angel_address"
-        android:inputType="text"
-        android:singleLine="true"
-        android:defaultValue="00:07:80:03:0E:0A"
-        android:title="Angel Sensor Bluetooth Address" />
-    
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="flirone_enabled"
-        android:summary="Enable streaming of FLIR One thermal camera data when connected on USB port"
-        android:title="FLIR One Thermal Camera Data" />
+        <MultiSelectListPreference
+            android:key="location_options"
+            android:enabled="false"
+            android:title="Location Output Options"
+            android:summary="Options for pushing data"
+            android:entries="@array/sos_option_list"
+            android:entryValues="@array/sos_option_values"
+            android:defaultValue="@array/sos_option_defaults" />
+
+        <SwitchPreference
+            android:key="video_enable"
+            android:title="Video"
+            android:defaultValue="false" />
+
+        <ListPreference
+            android:key="video_codec"
+            android:enabled="false"
+            android:title="Video Codec"
+            android:summary="%s"
+            android:entries="@array/video_codec_list"
+            android:entryValues="@array/video_codec_list"
+            android:defaultValue="JPEG" />
+
+        <MultiSelectListPreference
+            android:key="video_options"
+            android:enabled="false"
+            android:title="Video Output Options"
+            android:summary="Options for pushing data"
+            android:entries="@array/sos_option_list"
+            android:entryValues="@array/sos_option_values"
+            android:defaultValue="@array/sos_option_defaults" />
+
+        <!-- OLD CODE -->
+        <!--
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="accel_enabled"
+            android:summary="Enable streaming of accelerometer data"
+            android:title="Accelerometer Data" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="gyro_enabled"
+            android:summary="Enable streaming of gyroscope data"
+            android:title="Gyroscope Data" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="mag_enabled"
+            android:summary="Enable streaming of magnetometer data"
+            android:title="Magnetometer Data" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="orient_quat_enabled"
+            android:summary="Enable streaming of orientation data"
+            android:title="Orientation Data (Quaternions)" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="orient_euler_enabled"
+            android:summary="Enable streaming of orientation data"
+            android:title="Orientation Data (Euler Angles)" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="gps_enabled"
+            android:summary="Enable streaming of GPS location data"
+            android:title="GPS Location Data" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="netloc_enabled"
+            android:summary="Enable streaming of network location data"
+            android:title="Network Location Data" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="cam_enabled"
+            android:summary="Enable streaming of video data"
+            android:title="Video Data" />
+
+        <ListPreference
+            android:defaultValue="JPEG"
+            android:entries="@array/video_codec_list"
+            android:entryValues="@array/video_codec_list"
+            android:key="video_codec"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary="%s"
+            android:title="Video Codec" />
+        -->
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/sensor_trupulse">
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="trupulse_enabled"
+            android:summary="Enable streaming of TruPulse range finder data (sensor must be connected via Bluetooth on startup)"
+            android:title="TruPulse Range Finder Data" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="trupulse_simu"
+            android:summary="Use simulated TruPulse data instead of the actual sensor data"
+            android:title="Use Simulated TruPulse Data" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/sensor_angel">
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="angel_enabled"
+            android:summary="Enable streaming of Angel Sensor health data (sensor must be connected via Bluetooth LE on startup)"
+            android:title="Angel Sensor Health Data" />
+
+        <EditTextPreference
+            android:key="angel_address"
+            android:inputType="text"
+            android:singleLine="true"
+            android:defaultValue="00:07:80:03:0E:0A"
+            android:title="Angel Sensor Bluetooth Address" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/sensor_flirone">
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="flirone_enabled"
+            android:summary="Enable streaming of FLIR One thermal camera data when connected on USB port"
+            android:title="FLIR One Thermal Camera Data" />
+    </PreferenceCategory>
 </PreferenceScreen>

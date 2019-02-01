@@ -139,6 +139,10 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     @Override
     public void start() throws SensorException
     {
+        /**
+         * TODO: What thread does Jetty run on? Reduce the number of threads Jetty is using first.
+         * TODO: Are each sensor on their own thread? Look into how android handles threads
+         */
         // start event handling thread
         eventThread = new HandlerThread("SensorThread " + getName());
         eventThread.start();

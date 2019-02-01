@@ -36,9 +36,9 @@ public class AndroidSensorsConfig extends SensorConfig
     public boolean activateAccelerometer = false;
     public boolean activateGyrometer = false;
     public boolean activateMagnetometer = false;
-    public boolean activateOrientationQuat = true;
-    public boolean activateOrientationEuler = true;
-    public boolean activateGpsLocation = true;
+    public boolean activateOrientationQuat = false;
+    public boolean activateOrientationEuler = false;
+    public boolean activateGpsLocation = false;
     public boolean activateNetworkLocation = false;
     public boolean activateBackCamera = false;
     public boolean activateFrontCamera = false;
