@@ -41,12 +41,12 @@
 
     <string-array name="sos_option_list">
         <item>Real-time</item>
-        <!--<item>Archive</item>-->
+        <item>Archive</item>
         <item>Push</item>
     </string-array>
     <string-array name="sos_option_values">
         <item>REALTIME</item>
-        <!--<item>ARCHIVE</item>-->
+        <item>ARCHIVE</item>
         <item>PUSH</item>
     </string-array>
     <string-array name="sos_option_defaults">
