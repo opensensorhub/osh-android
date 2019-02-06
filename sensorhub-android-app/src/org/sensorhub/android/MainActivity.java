@@ -174,68 +174,21 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // Push Sensors Config
         AndroidSensorsConfig androidSensorsConfig = createSensorConfig(Sensors.Android, prefs);
 
-        // (Simple) Sensors
-        if (prefs.getBoolean("accelerometer_enable", false)) {
-            androidSensorsConfig.activateAccelerometer = true;
-
-            /* TODO: Remove me if single sensor doesn't work...
-            Set<String> options = prefs.getStringSet("accelerometer_options", Collections.emptySet());
-
-            androidSensorsConfig.activateAccelerometer = options.contains("PUSH");
-            if (options.contains("REALTIME")) {
-                AndroidSensorsConfig sensorConfig = createSensorConfig(Sensors.Accelerometer, prefs);
-                sensorhubConfig.add(sensorConfig);
-
-                StreamStorageConfig streamStorageConfig = createStreamStorageConfig(sensorConfig);
-                sensorhubConfig.add(streamStorageConfig);
-
-                SensorDataProviderConfig dataProviderConfig = createDataProviderConfig(sensorConfig);
-
-                if (options.contains("ARCHIVE"))
-                    dataProviderConfig.storageID = streamStorageConfig.id;
-
-                sosConfig.dataProviders.add(dataProviderConfig);
-            }
-            */
-        }
-        if (prefs.getBoolean("gyroscope_enable", false)) {
-            androidSensorsConfig.activateGyrometer = true;
-        }
-        if (prefs.getBoolean("magnetometer_enable", false)) {
-            androidSensorsConfig.activateMagnetometer = true;
-        }
+        androidSensorsConfig.activateAccelerometer = prefs.getBoolean("accelerometer_enable", false);
+        androidSensorsConfig.activateGyrometer = prefs.getBoolean("gyroscope_enable", false);
+        androidSensorsConfig.activateMagnetometer = prefs.getBoolean("magnetometer_enable", false);
         if (prefs.getBoolean("orientation_enable", false)) {
-            if (prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH")) {
-                androidSensorsConfig.activateOrientationQuat = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("QUATERNION");
-                androidSensorsConfig.activateOrientationEuler = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("EULER");
-            }
-            if (prefs.getStringSet("orientation_options", Collections.emptySet()).contains("REALTIME")) {
-                if (prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("QUATERNION")) {
-                }
-                if (prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("EULER")) {
-                }
-            }
+            androidSensorsConfig.activateOrientationQuat = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("QUATERNION");
+            androidSensorsConfig.activateOrientationEuler = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("EULER");
         }
         if (prefs.getBoolean("location_enable", false)) {
-            if (prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH")) {
-                androidSensorsConfig.activateGpsLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("GPS");
-                androidSensorsConfig.activateNetworkLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("NETWORK");
-            }
-            if (prefs.getStringSet("location_options", Collections.emptySet()).contains("REALTIME")) {
-                if (prefs.getStringSet("location_type", Collections.emptySet()).contains("GPS")) {
-                }
-                if (prefs.getStringSet("location_type", Collections.emptySet()).contains("NETWORK")) {
-                }
-            }
+            androidSensorsConfig.activateGpsLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("GPS");
+            androidSensorsConfig.activateNetworkLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("NETWORK");
         }
         if (prefs.getBoolean("video_enable", false)) {
             showVideo = true;
-
-            // TODO: create androidsensorsconfig here (one with androidsensor that's going sost and one with dataprovider for local sensorhub)
             androidSensorsConfig.activateBackCamera = prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH");
             androidSensorsConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
-//            realtimeSensorsConfig.activateBackCamera = prefs.getStringSet("video_options", Collections.emptySet()).contains("REALTIME");
-//            realtimeSensorsConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
         }
 
         sensorhubConfig.add(androidSensorsConfig);
