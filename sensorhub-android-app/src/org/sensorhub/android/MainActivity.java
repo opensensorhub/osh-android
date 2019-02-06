@@ -100,14 +100,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
     enum Sensors {
         Android,
-        Accelerometer,
-        Gyroscope,
-        Magnetometer,
-        Orientation_Quat,
-        Orientation_Euler,
-        Location_GPS,
-        Location_Network,
-        Video
+        TruPulse,
+        TruPulseSim,
+        Angel,
+        FlirOne,
     }
 
     TextView textArea;
@@ -150,7 +146,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         String sosUriConfig = prefs.getString("sos_uri", "");
         String sosUser = prefs.getString("sos_username", null);
         String sosPwd = prefs.getString("sos_password", null);
-        if (sosUriConfig != null && sosUriConfig.trim().length() > 0) {
+        if (sosUriConfig != null && sosUriConfig.trim().length() > 0)
+        {
             try
             {
                 sosUrl = new URL(sosUriConfig);
@@ -172,22 +169,25 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.enableTransactional = true;
 
         // Push Sensors Config
-        AndroidSensorsConfig androidSensorsConfig = createSensorConfig(Sensors.Android, prefs);
+        AndroidSensorsConfig androidSensorsConfig = (AndroidSensorsConfig) createSensorConfig(Sensors.Android);
 
         androidSensorsConfig.activateAccelerometer = prefs.getBoolean("accelerometer_enable", false);
         androidSensorsConfig.activateGyrometer = prefs.getBoolean("gyroscope_enable", false);
         androidSensorsConfig.activateMagnetometer = prefs.getBoolean("magnetometer_enable", false);
-        if (prefs.getBoolean("orientation_enable", false)) {
+        if (prefs.getBoolean("orientation_enable", false))
+        {
             androidSensorsConfig.activateOrientationQuat = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("QUATERNION");
             androidSensorsConfig.activateOrientationEuler = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("EULER");
         }
-        if (prefs.getBoolean("location_enable", false)) {
+        if (prefs.getBoolean("location_enable", false))
+        {
             androidSensorsConfig.activateGpsLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("GPS");
             androidSensorsConfig.activateNetworkLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("NETWORK");
         }
-        if (prefs.getBoolean("video_enable", false)) {
+        if (prefs.getBoolean("video_enable", false))
+        {
             showVideo = true;
-            androidSensorsConfig.activateBackCamera = prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH");
+            androidSensorsConfig.activateBackCamera = true;
             androidSensorsConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
         }
 
@@ -196,6 +196,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         StreamStorageConfig androidStreamStorageConfig = createStreamStorageConfig(androidSensorsConfig);
         sensorhubConfig.add(androidStreamStorageConfig);
+
         SensorDataProviderConfig androidDataProviderConfig = createDataProviderConfig(androidSensorsConfig);
         androidDataProviderConfig.storageID = androidStreamStorageConfig.id;
         sosConfig.dataProviders.add(androidDataProviderConfig);
@@ -204,77 +205,34 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
         if (enabled)
         {
-            TruPulseConfig trupulseConfig = new TruPulseConfig();
-            trupulseConfig.id = "TRUPULSE_SENSOR";
-            trupulseConfig.name = "TruPulse Range Finder [" + deviceName + "]";
-            trupulseConfig.autoStart = true;
-            trupulseConfig.serialNumber = deviceID;
-            BluetoothCommProviderConfig btConf = new BluetoothCommProviderConfig();
-            btConf.protocol.deviceName = "TP360RB.*";
-            if (prefs.getBoolean("trupulse_simu", false))
-                btConf.moduleClass = SimulatedDataStream.class.getCanonicalName();
-            else
-                btConf.moduleClass = BluetoothCommProvider.class.getCanonicalName();
-            trupulseConfig.commSettings = btConf;
-            sensorhubConfig.add(trupulseConfig);
-            addSosTConfig(trupulseConfig, sosUser, sosPwd);
-
-
-            SensorDataProviderConfig trupulseDataProviderConfig = new SensorDataProviderConfig();
-            trupulseDataProviderConfig.sensorID = trupulseConfig.id;
-            trupulseDataProviderConfig.offeringID = trupulseConfig.id+"-sos";
-            trupulseDataProviderConfig.enabled = true;
-            sosConfig.dataProviders.add(trupulseDataProviderConfig);
+            TruPulseConfig truPulseConfig= prefs.getBoolean("trupulse_simu", false)
+                    ? (TruPulseConfig) createSensorConfig(Sensors.TruPulse)
+                    : (TruPulseConfig) createSensorConfig(Sensors.TruPulse);
+            sensorhubConfig.add(truPulseConfig);
+            addSosTConfig(truPulseConfig, sosUser, sosPwd);
         }
 
         // AngelSensor
         enabled = prefs.getBoolean("angel_enabled", false);
         if (enabled)
         {
-            BleConfig bleConf = new BleConfig();
-            bleConf.id = "BLE";
-            bleConf.moduleClass = BleNetwork.class.getCanonicalName();
-            bleConf.androidContext = this.getApplicationContext();
-            bleConf.autoStart = true;
-            sensorhubConfig.add(bleConf);
-
-            AngelSensorConfig angelConfig = new AngelSensorConfig();
-            angelConfig.id = "ANGEL_SENSOR";
-            angelConfig.name = "Angel Sensor [" + deviceName + "]";
-            angelConfig.autoStart = true;
-            angelConfig.networkID = bleConf.id;
+            AngelSensorConfig angelConfig = (AngelSensorConfig) createSensorConfig(Sensors.Angel);
             //angelConfig.btAddress = "00:07:80:79:04:AF"; // mike
             //angelConfig.btAddress = "00:07:80:03:0E:0A"; // alex
             angelConfig.btAddress = prefs.getString("angel_address", null);
             sensorhubConfig.add(angelConfig);
             addSosTConfig(angelConfig, sosUser, sosPwd);
-
-            SensorDataProviderConfig angelDataProviderConfig = new SensorDataProviderConfig();
-            angelDataProviderConfig.sensorID = angelConfig.id;
-            angelDataProviderConfig.offeringID = angelConfig.id+"-sos";
-            angelDataProviderConfig.enabled = true;
-            sosConfig.dataProviders.add(angelDataProviderConfig);
         }
 
         // FLIR One sensor
         enabled = prefs.getBoolean("flirone_enabled", false);
         if (enabled)
         {
-            FlirOneCameraConfig flironeConfig = new FlirOneCameraConfig();
-            flironeConfig.id = "FLIRONE_SENSOR";
-            flironeConfig.name = "FLIR One Camera [" + deviceName + "]";
-            flironeConfig.autoStart = true;
-            flironeConfig.androidContext = this.getApplicationContext();
-            flironeConfig.camPreviewTexture = boundService.getVideoTexture();
             showVideo = true;
+
+            FlirOneCameraConfig flironeConfig = (FlirOneCameraConfig) createSensorConfig(Sensors.FlirOne);
             sensorhubConfig.add(flironeConfig);
             addSosTConfig(flironeConfig, sosUser, sosPwd);
-
-            SensorDataProviderConfig flironeDataProviderConfig = new SensorDataProviderConfig();
-            flironeDataProviderConfig.sensorID = flironeConfig.id;
-            flironeDataProviderConfig.offeringID = flironeConfig.id+"-sos";
-            flironeDataProviderConfig.enabled = true;
-            sosConfig.dataProviders.add(flironeDataProviderConfig);
         }
 
         /*
@@ -318,10 +276,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // H2 Storage Config
         File dbFile = new File(getApplicationContext().getFilesDir()+"/db/", deviceID+"_h2.dat");
         dbFile.getParentFile().mkdirs();
-        if(!dbFile.exists()) {
-            try {
+        if(!dbFile.exists())
+        {
+            try
+            {
                 dbFile.createNewFile();
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 e.printStackTrace();
             }
         }
@@ -352,57 +314,83 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         return streamStorageConfig;
     }
 
-    private AndroidSensorsConfig createSensorConfig(Sensors sensor, SharedPreferences prefs) {
-        String sensorName = "";
-        String sensorId = "";
+    private SensorConfig createSensorConfig(Sensors sensor) {
+        SensorConfig sensorConfig;
+        if (Sensors.Android.equals(sensor))
+        {
+            sensorConfig = new AndroidSensorsConfig();
+            sensorConfig.id = "urn:device:android:" + deviceID;
+            sensorConfig.name = "Android Sensors [" + deviceName + "]";
+            sensorConfig.autoStart = true;
 
-        // Sensor Config
-        AndroidSensorsConfig sensorConfig = new AndroidSensorsConfig();
+            ((AndroidSensorsConfig) sensorConfig).androidContext = this.getApplicationContext();
+            ((AndroidSensorsConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
+            ((AndroidSensorsConfig) sensorConfig).runName = runName;
+        }
+        else if (Sensors.TruPulse.equals(sensor))
+        {
+            sensorConfig = new TruPulseConfig();
+            sensorConfig.id = "TRUPULSE_SENSOR";
+            sensorConfig.name = "TruPulse Range Finder [" + deviceName + "]";
+            sensorConfig.autoStart = true;
 
-        if (Sensors.Android.equals(sensor)) {
-            sensorName = "Sensors [" + deviceName + "]";
-        } else if (Sensors.Accelerometer.equals(sensor)) {
-            sensorName = "Accelerometer Sensor";
-            sensorId = ":sensor:accelerometer";
-            sensorConfig.activateAccelerometer = true;
-        } else if (Sensors.Gyroscope.equals(sensor)) {
-            sensorName = "Gyroscope Sensor";
-            sensorId = ":sensor:gyroscope";
-            sensorConfig.activateGyrometer = true;
-        } else if (Sensors.Magnetometer.equals(sensor)) {
-            sensorName = "Magnetometer Sensor";
-            sensorId = ":sensor:magnetometer";
-            sensorConfig.activateMagnetometer = true;
-        } else if (Sensors.Orientation_Quat.equals(sensor)) {
-            sensorName = "Quaternion Orientation Sensor";
-            sensorId = ":sensor:orientationQuaternion";
-            sensorConfig.activateOrientationQuat = true;
-        } else if (Sensors.Orientation_Euler.equals(sensor)) {
-            sensorName = "Euler Orientation Sensor";
-            sensorId = ":sensor:orientationEuler";
-            sensorConfig.activateOrientationEuler = true;
-        } else if (Sensors.Location_GPS.equals(sensor)) {
-            sensorName = "GPS Location Sensor";
-            sensorId = ":sensor:locationGps";
-            sensorConfig.activateGpsLocation = true;
-        } else if (Sensors.Location_Network.equals(sensor)) {
-            sensorName = "Network Location Sensor";
-            sensorId = ":sensor:locationNetwork";
-            sensorConfig.activateNetworkLocation = true;
-        } else if (Sensors.Video.equals(sensor)) {
-            sensorName = "Video Sensor";
-            sensorId = ":sensor:video";
-            sensorConfig.activateBackCamera = true;
-            sensorConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
+            BluetoothCommProviderConfig btConf = new BluetoothCommProviderConfig();
+            btConf.protocol.deviceName = "TP360RB.*";
+            btConf.moduleClass = BluetoothCommProvider.class.getCanonicalName();
+            ((TruPulseConfig) sensorConfig).commSettings = btConf;
+            ((TruPulseConfig) sensorConfig).serialNumber = deviceID;
+        }
+        else if (Sensors.TruPulseSim.equals(sensor))
+        {
+            sensorConfig = new TruPulseConfig();
+            sensorConfig.id = "TRUPULSE_SENSOR_SIMULATED";
+            sensorConfig.name = "Simulated TruPulse Range Finder [" + deviceName + "]";
+            sensorConfig.autoStart = true;
+
+            BluetoothCommProviderConfig btConf = new BluetoothCommProviderConfig();
+            btConf.protocol.deviceName = "TP360RB.*";
+            btConf.moduleClass = SimulatedDataStream.class.getCanonicalName();
+            ((TruPulseConfig) sensorConfig).commSettings = btConf;
+            ((TruPulseConfig) sensorConfig).serialNumber = deviceID;
+        }
+        else if (Sensors.Angel.equals(sensor))
+        {
+            sensorConfig = new AngelSensorConfig();
+            sensorConfig.id = "ANGEL_SENSOR";
+            sensorConfig.name = "Angel Sensor [" + deviceName + "]";
+            sensorConfig.autoStart = true;
+
+            BleConfig bleConf = new BleConfig();
+            bleConf.id = "BLE";
+            bleConf.moduleClass = BleNetwork.class.getCanonicalName();
+            bleConf.androidContext = this.getApplicationContext();
+            bleConf.autoStart = true;
+            sensorhubConfig.add(bleConf);
+
+            ((AngelSensorConfig) sensorConfig).networkID = bleConf.id;
+        }
+        else if (Sensors.FlirOne.equals(sensor))
+        {
+            sensorConfig = new FlirOneCameraConfig();
+            sensorConfig.id = "FLIRONE_SENSOR";
+            sensorConfig.name = "FLIR One Camera [" + deviceName + "]";
+            sensorConfig.autoStart = true;
+
+            ((FlirOneCameraConfig) sensorConfig).androidContext = this.getApplicationContext();
+            ((FlirOneCameraConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
+        }
+        else
+        {
+            sensorConfig = new SensorConfig();
         }
 
-        sensorConfig.id = "urn:device:android:"+deviceID+sensorId;
-        sensorConfig.name = "Android " + sensorName;
-        sensorConfig.autoStart = true;
-        sensorConfig.androidContext = this.getApplicationContext();
-        sensorConfig.camPreviewTexture = boundService.getVideoTexture();
-        sensorConfig.runName = runName+"_"+sensorId;
         return sensorConfig;
+    }
+
+    protected void addStorageConfig() {
+    }
+
+    protected void addSosServerConfig() {
     }
 
     protected void addSosTConfig(SensorConfig sensorConf, String sosUser, String sosPwd)
@@ -424,6 +412,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.connection.connectTimeout = 10000;
         sosConfig.connection.usePersistentConnection = true;
         sosConfig.connection.reconnectAttempts = 9;
+
+        if (sensorConf instanceof AndroidSensorsConfig)
+        {
+            /*
+            sosConfig.excludeOutputs.add(
+            */
+        }
+
         sensorhubConfig.add(sosConfig);
     }
 
