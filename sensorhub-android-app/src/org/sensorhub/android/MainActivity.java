@@ -98,8 +98,16 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     String deviceName;
     String runName;
 
-    enum SimpleSensors {
-        Accelerometer
+    enum Sensors {
+        Android,
+        Accelerometer,
+        Gyroscope,
+        Magnetometer,
+        Orientation_Quat,
+        Orientation_Euler,
+        Location_GPS,
+        Location_Network,
+        Video
     }
 
     TextView textArea;
@@ -163,59 +171,66 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.autoStart = true;
         sosConfig.enableTransactional = true;
 
-        /*
-        // Storage Config
-        File dbFile = new File(getApplicationContext().getFilesDir()+"/db/", "oshAndroid_h2.dat");
-        dbFile.getParentFile().mkdirs();
-        if(!dbFile.exists()) {
-            try {
-                dbFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        MVStorageConfig storageConfig = new MVStorageConfig();
-        storageConfig.autoStart = true;
-        storageConfig.moduleClass = MVMultiStorageImpl.class.getCanonicalName();
-        storageConfig.storagePath = dbFile.getPath();
-        sosConfig.newStorageConfig = storageConfig; // FIXME: Alex will fix this in the core.
-        */
-
         // Push Sensors Config
-        AndroidSensorsConfig androidSensorsConfig = new AndroidSensorsConfig();
-        androidSensorsConfig.id = "urn:device:android:"+deviceID;
-        androidSensorsConfig.name = "Android Sensors [" + deviceName + "] via SOST";
-        androidSensorsConfig.autoStart = true;
-        androidSensorsConfig.androidContext = this.getApplicationContext();
-        androidSensorsConfig.camPreviewTexture = boundService.getVideoTexture();
-        androidSensorsConfig.runName = runName;
-
-        // Realtime Sensors Config
-        AndroidSensorsConfig realtimeSensorsConfig = new AndroidSensorsConfig();
-        realtimeSensorsConfig.id = "urn:device:android-realtime:"+deviceID;
-        realtimeSensorsConfig.name = "Android Sensors [" + deviceName + "]";
-        realtimeSensorsConfig.autoStart = true;
-        realtimeSensorsConfig.androidContext = this.getApplicationContext();
-        realtimeSensorsConfig.camPreviewTexture = boundService.getVideoTexture();
-        realtimeSensorsConfig.runName = runName;
+        AndroidSensorsConfig androidSensorsConfig = createSensorConfig(Sensors.Android, prefs);
 
         // (Simple) Sensors
         if (prefs.getBoolean("accelerometer_enable", false)) {
-            androidSensorsConfig.activateAccelerometer = prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH");
-            if (prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("REALTIME")) {
-                addSosProviderConfig(sosConfig, SimpleSensors.Accelerometer);
-            }
-            if (prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE")) {
-                addSosStreamStorageConfig(SimpleSensors.Accelerometer);
+            Set<String> options = prefs.getStringSet("accelerometer_options", Collections.emptySet());
+
+            androidSensorsConfig.activateAccelerometer = options.contains("PUSH");
+            if (options.contains("REALTIME")) {
+                AndroidSensorsConfig sensorConfig = createSensorConfig(Sensors.Accelerometer, prefs);
+                sensorhubConfig.add(sensorConfig);
+
+                StreamStorageConfig streamStorageConfig = createStreamStorageConfig(sensorConfig);
+                sensorhubConfig.add(streamStorageConfig);
+
+                SensorDataProviderConfig dataProviderConfig = createDataProviderConfig(sensorConfig);
+
+                if (options.contains("ARCHIVE"))
+                    dataProviderConfig.storageID = streamStorageConfig.id;
+
+                sosConfig.dataProviders.add(dataProviderConfig);
             }
         }
         if (prefs.getBoolean("gyroscope_enable", false)) {
-            androidSensorsConfig.activateGyrometer = prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH");
-            realtimeSensorsConfig.activateGyrometer = prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("REALTIME");
+            Set<String> options = prefs.getStringSet("gyroscope_options", Collections.emptySet());
+
+            androidSensorsConfig.activateGyrometer = options.contains("PUSH");
+            if (options.contains("REALTIME")) {
+                AndroidSensorsConfig sensorConfig = createSensorConfig(Sensors.Gyroscope, prefs);
+                sensorhubConfig.add(sensorConfig);
+
+                StreamStorageConfig streamStorageConfig = createStreamStorageConfig(sensorConfig);
+                sensorhubConfig.add(streamStorageConfig);
+
+                SensorDataProviderConfig dataProviderConfig = createDataProviderConfig(sensorConfig);
+
+                if (options.contains("ARCHIVE"))
+                    dataProviderConfig.storageID = streamStorageConfig.id;
+
+                sosConfig.dataProviders.add(dataProviderConfig);
+            }
         }
         if (prefs.getBoolean("magnetometer_enable", false)) {
-            androidSensorsConfig.activateMagnetometer = prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH");
-            realtimeSensorsConfig.activateMagnetometer = prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("REALTIME");
+            Set<String> options = prefs.getStringSet("magnetometer_options", Collections.emptySet());
+
+            androidSensorsConfig.activateMagnetometer = options.contains("PUSH");
+            if (options.contains("REALTIME")) {
+                AndroidSensorsConfig sensorConfig = createSensorConfig(Sensors.Magnetometer, prefs);
+                sensorhubConfig.add(sensorConfig);
+
+                StreamStorageConfig streamStorageConfig = createStreamStorageConfig(sensorConfig);
+                sensorhubConfig.add(streamStorageConfig);
+
+                SensorDataProviderConfig dataProviderConfig = createDataProviderConfig(sensorConfig);
+
+                if (options.contains("ARCHIVE"))
+                    dataProviderConfig.storageID = streamStorageConfig.id;
+
+                sosConfig.dataProviders.add(dataProviderConfig);
+            }
         }
         if (prefs.getBoolean("orientation_enable", false)) {
             if (prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH")) {
@@ -223,8 +238,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 androidSensorsConfig.activateOrientationEuler = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("EULER");
             }
             if (prefs.getStringSet("orientation_options", Collections.emptySet()).contains("REALTIME")) {
-                realtimeSensorsConfig.activateOrientationQuat = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("QUATERNION");
-                realtimeSensorsConfig.activateOrientationEuler = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("EULER");
+                if (prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("QUATERNION")) {
+                }
+                if (prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("EULER")) {
+                }
             }
         }
         if (prefs.getBoolean("location_enable", false)) {
@@ -233,8 +250,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 androidSensorsConfig.activateNetworkLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("NETWORK");
             }
             if (prefs.getStringSet("location_options", Collections.emptySet()).contains("REALTIME")) {
-                realtimeSensorsConfig.activateGpsLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("GPS");
-                realtimeSensorsConfig.activateNetworkLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("NETWORK");
+                if (prefs.getStringSet("location_type", Collections.emptySet()).contains("GPS")) {
+                }
+                if (prefs.getStringSet("location_type", Collections.emptySet()).contains("NETWORK")) {
+                }
             }
         }
         if (prefs.getBoolean("video_enable", false)) {
@@ -243,40 +262,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             // TODO: create androidsensorsconfig here (one with androidsensor that's going sost and one with dataprovider for local sensorhub)
             androidSensorsConfig.activateBackCamera = prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH");
             androidSensorsConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
-            realtimeSensorsConfig.activateBackCamera = prefs.getStringSet("video_options", Collections.emptySet()).contains("REALTIME");
-            realtimeSensorsConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
+//            realtimeSensorsConfig.activateBackCamera = prefs.getStringSet("video_options", Collections.emptySet()).contains("REALTIME");
+//            realtimeSensorsConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
         }
 
         sensorhubConfig.add(androidSensorsConfig);
         addSosTConfig(androidSensorsConfig, sosUser, sosPwd);
-
-        /*
-        sensorhubConfig.add(realtimeSensorsConfig);
-
-        // Android Data Provider
-        SensorDataProviderConfig androidDataProviderConfig = new SensorDataProviderConfig();
-        androidDataProviderConfig.sensorID = realtimeSensorsConfig.id;
-        androidDataProviderConfig.offeringID = realtimeSensorsConfig.id+"-sos";
-        androidDataProviderConfig.storageID = realtimeSensorsConfig.id+"#storage";
-        androidDataProviderConfig.enabled = true;
-        androidDataProviderConfig.liveDataTimeout = 600.0;
-        androidDataProviderConfig.maxFois = 10;
-        sosConfig.dataProviders.add(androidDataProviderConfig);
-
-        // Android Stream Storage
-        MaxAgeAutoPurgeConfig autoPurgeConfig = new MaxAgeAutoPurgeConfig();
-        autoPurgeConfig.enabled = true;
-        autoPurgeConfig.purgePeriod = 600.0;
-        StreamStorageConfig androidStreamStorageConfig = new StreamStorageConfig();
-        androidStreamStorageConfig.moduleClass = GenericStreamStorage.class.getCanonicalName();
-        androidStreamStorageConfig.name = "Android Sensor Storage";
-        androidStreamStorageConfig.id = androidDataProviderConfig.storageID;
-        androidStreamStorageConfig.dataSourceID = realtimeSensorsConfig.id;
-        androidStreamStorageConfig.autoStart = true;
-        androidStreamStorageConfig.autoPurgeConfig = autoPurgeConfig;
-        androidStreamStorageConfig.storageConfig = storageConfig;
-        sensorhubConfig.add(androidStreamStorageConfig);
-        */
 
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
@@ -381,30 +372,21 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig.add(sosConfig);
     }
 
-    protected void addSosStreamStorageConfig(SimpleSensors sensor) {
-        String sensorName = "";
-        String sensorId = "";
-        if (sensor.equals(SimpleSensors.Accelerometer)) {
-            sensorName = "Accelerometer";
-            sensorId = "accelerometer";
-        }
+    private SensorDataProviderConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig) {
+        SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
+        dataProviderConfig.offeringID = sensorConfig.id+":offering";
+        dataProviderConfig.sensorID = sensorConfig.id;
+        dataProviderConfig.enabled = true;
+        dataProviderConfig.liveDataTimeout = 600.0;
+        dataProviderConfig.maxFois = 10;
 
-        // Sensors Config
-        AndroidSensorsConfig sensorConfig = new AndroidSensorsConfig();
-        sensorConfig.id = "urn:device:android:sensor:"+sensorId;
-        sensorConfig.name = "Android " + sensorName + " Sensor (Archive)";
-        sensorConfig.autoStart = true;
-        sensorConfig.androidContext = this.getApplicationContext();
-        sensorConfig.camPreviewTexture = boundService.getVideoTexture();
-        sensorConfig.runName = runName;
+        return dataProviderConfig;
+    }
 
-        if (sensor.equals(SimpleSensors.Accelerometer)) {
-            sensorConfig.activateAccelerometer = true;
-        }
-        sensorhubConfig.add(sensorConfig);
-
+    private StreamStorageConfig createStreamStorageConfig(AndroidSensorsConfig sensorConfig) {
         // H2 Storage Config
-        File dbFile = new File(getApplicationContext().getFilesDir()+"/db/", deviceID+"_"+sensorId+"_h2.dat");
+        File dbFile = new File(getApplicationContext().getFilesDir()+"/db/",
+                deviceID+"_"+sensorConfig.name.replace(" ", "")+"_h2.dat");
         dbFile.getParentFile().mkdirs();
         if(!dbFile.exists()) {
             try {
@@ -414,66 +396,83 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             }
         }
         MVStorageConfig storageConfig = new MVStorageConfig();
-        storageConfig.id = "urn:storage:h2:device:android:sensor:"+sensorId;
-        storageConfig.moduleClass = MVObsStorageImpl.class.getCanonicalName();
+        storageConfig.moduleClass = MVMultiStorageImpl.class.getCanonicalName();
         storageConfig.storagePath = dbFile.getPath();
         storageConfig.autoStart = true;
+        storageConfig.memoryCacheSize = 102400;
+        storageConfig.autoCommitBufferSize = 1024;
 
-        // Stream Storage Config
+        // Auto Purge Config
         MaxAgeAutoPurgeConfig autoPurgeConfig = new MaxAgeAutoPurgeConfig();
         autoPurgeConfig.enabled = true;
         autoPurgeConfig.purgePeriod = 600.0;
         autoPurgeConfig.maxRecordAge = 864000;
+
+        // Stream Storage Config
         StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
-        streamStorageConfig.id = "urn:stream-storage:android:sensor:"+sensorId;
-        streamStorageConfig.name = "Android " + sensorName + " Storage";
         streamStorageConfig.moduleClass = GenericStreamStorage.class.getCanonicalName();
+        streamStorageConfig.id = sensorConfig.id + ":stream-storage";
+        streamStorageConfig.name = sensorConfig.name + " Storage";
         streamStorageConfig.dataSourceID = sensorConfig.id;
         streamStorageConfig.autoStart = true;
         streamStorageConfig.processEvents = true;
+        streamStorageConfig.minCommitPeriod = 10000;
         streamStorageConfig.autoPurgeConfig = autoPurgeConfig;
         streamStorageConfig.storageConfig = storageConfig;
-        sensorhubConfig.add(streamStorageConfig);
-
-        // Storage Data Provider
-        SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
-        dataProviderConfig.storageID = streamStorageConfig.id;
-        dataProviderConfig.offeringID = streamStorageConfig.id+":offering";
-        dataProviderConfig.enabled = true;
+        return streamStorageConfig;
     }
 
-    protected void addSosProviderConfig(SOSServiceConfig sosConfig, SimpleSensors sensor) {
+    private AndroidSensorsConfig createSensorConfig(Sensors sensor, SharedPreferences prefs) {
         String sensorName = "";
         String sensorId = "";
-        if (sensor.equals(SimpleSensors.Accelerometer)) {
-            sensorName = "Accelerometer";
-            sensorId = "accelerometer";
+
+        // Sensor Config
+        AndroidSensorsConfig sensorConfig = new AndroidSensorsConfig();
+
+        if (Sensors.Android.equals(sensor)) {
+            sensorName = "Sensors [" + deviceName + "]";
+        } else if (Sensors.Accelerometer.equals(sensor)) {
+            sensorName = "Accelerometer Sensor";
+            sensorId = ":sensor:accelerometer";
+            sensorConfig.activateAccelerometer = true;
+        } else if (Sensors.Gyroscope.equals(sensor)) {
+            sensorName = "Gyroscope Sensor";
+            sensorId = ":sensor:gyroscope";
+            sensorConfig.activateGyrometer = true;
+        } else if (Sensors.Magnetometer.equals(sensor)) {
+            sensorName = "Magnetometer Sensor";
+            sensorId = ":sensor:magnetometer";
+            sensorConfig.activateMagnetometer = true;
+        } else if (Sensors.Orientation_Quat.equals(sensor)) {
+            sensorName = "Quaternion Orientation Sensor";
+            sensorId = ":sensor:orientationQuaternion";
+            sensorConfig.activateOrientationQuat = true;
+        } else if (Sensors.Orientation_Euler.equals(sensor)) {
+            sensorName = "Euler Orientation Sensor";
+            sensorId = ":sensor:orientationEuler";
+            sensorConfig.activateOrientationEuler = true;
+        } else if (Sensors.Location_GPS.equals(sensor)) {
+            sensorName = "GPS Location Sensor";
+            sensorId = ":sensor:locationGps";
+            sensorConfig.activateGpsLocation = true;
+        } else if (Sensors.Location_Network.equals(sensor)) {
+            sensorName = "Network Location Sensor";
+            sensorId = ":sensor:locationNetwork";
+            sensorConfig.activateNetworkLocation = true;
+        } else if (Sensors.Video.equals(sensor)) {
+            sensorName = "Video Sensor";
+            sensorId = ":sensor:video";
+            sensorConfig.activateBackCamera = true;
+            sensorConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
         }
 
-        // Realtime Sensors Config
-        AndroidSensorsConfig sensorConfig = new AndroidSensorsConfig();
-        sensorConfig.id = "urn:device:android:"+deviceID+":sensor:"+sensorId+":realtime";
-        sensorConfig.name = "Android " + sensorName + " Sensor";
+        sensorConfig.id = "urn:device:android:"+deviceID+sensorId;
+        sensorConfig.name = "Android " + sensorName;
         sensorConfig.autoStart = true;
         sensorConfig.androidContext = this.getApplicationContext();
         sensorConfig.camPreviewTexture = boundService.getVideoTexture();
-        sensorConfig.runName = runName;
-
-        if (sensor.equals(SimpleSensors.Accelerometer)) {
-            sensorConfig.activateAccelerometer = true;
-        }
-
-        sensorhubConfig.add(sensorConfig);
-
-        // Android Data Provider
-        SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
-        dataProviderConfig.sensorID = sensorConfig.id;
-        dataProviderConfig.offeringID = sensorConfig.id+"-sos";
-        dataProviderConfig.enabled = true;
-        dataProviderConfig.liveDataTimeout = 600.0;
-        dataProviderConfig.maxFois = 10;
-
-        sosConfig.dataProviders.add(dataProviderConfig);
+        sensorConfig.runName = runName+"_"+sensorId;
+        return sensorConfig;
     }
 
     protected void addSosTConfig(SensorConfig sensorConf, String sosUser, String sosPwd)
