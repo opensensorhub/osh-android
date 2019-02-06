@@ -176,6 +176,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // (Simple) Sensors
         if (prefs.getBoolean("accelerometer_enable", false)) {
+            androidSensorsConfig.activateAccelerometer = true;
+
+            /* TODO: Remove me if single sensor doesn't work...
             Set<String> options = prefs.getStringSet("accelerometer_options", Collections.emptySet());
 
             androidSensorsConfig.activateAccelerometer = options.contains("PUSH");
@@ -193,44 +196,13 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
                 sosConfig.dataProviders.add(dataProviderConfig);
             }
+            */
         }
         if (prefs.getBoolean("gyroscope_enable", false)) {
-            Set<String> options = prefs.getStringSet("gyroscope_options", Collections.emptySet());
-
-            androidSensorsConfig.activateGyrometer = options.contains("PUSH");
-            if (options.contains("REALTIME")) {
-                AndroidSensorsConfig sensorConfig = createSensorConfig(Sensors.Gyroscope, prefs);
-                sensorhubConfig.add(sensorConfig);
-
-                StreamStorageConfig streamStorageConfig = createStreamStorageConfig(sensorConfig);
-                sensorhubConfig.add(streamStorageConfig);
-
-                SensorDataProviderConfig dataProviderConfig = createDataProviderConfig(sensorConfig);
-
-                if (options.contains("ARCHIVE"))
-                    dataProviderConfig.storageID = streamStorageConfig.id;
-
-                sosConfig.dataProviders.add(dataProviderConfig);
-            }
+            androidSensorsConfig.activateGyrometer = true;
         }
         if (prefs.getBoolean("magnetometer_enable", false)) {
-            Set<String> options = prefs.getStringSet("magnetometer_options", Collections.emptySet());
-
-            androidSensorsConfig.activateMagnetometer = options.contains("PUSH");
-            if (options.contains("REALTIME")) {
-                AndroidSensorsConfig sensorConfig = createSensorConfig(Sensors.Magnetometer, prefs);
-                sensorhubConfig.add(sensorConfig);
-
-                StreamStorageConfig streamStorageConfig = createStreamStorageConfig(sensorConfig);
-                sensorhubConfig.add(streamStorageConfig);
-
-                SensorDataProviderConfig dataProviderConfig = createDataProviderConfig(sensorConfig);
-
-                if (options.contains("ARCHIVE"))
-                    dataProviderConfig.storageID = streamStorageConfig.id;
-
-                sosConfig.dataProviders.add(dataProviderConfig);
-            }
+            androidSensorsConfig.activateMagnetometer = true;
         }
         if (prefs.getBoolean("orientation_enable", false)) {
             if (prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH")) {
@@ -268,6 +240,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         sensorhubConfig.add(androidSensorsConfig);
         addSosTConfig(androidSensorsConfig, sosUser, sosPwd);
+
+        StreamStorageConfig androidStreamStorageConfig = createStreamStorageConfig(androidSensorsConfig);
+        sensorhubConfig.add(androidStreamStorageConfig);
+        SensorDataProviderConfig androidDataProviderConfig = createDataProviderConfig(androidSensorsConfig);
+        androidDataProviderConfig.storageID = androidStreamStorageConfig.id;
+        sosConfig.dataProviders.add(androidDataProviderConfig);
 
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
@@ -385,8 +363,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
     private StreamStorageConfig createStreamStorageConfig(AndroidSensorsConfig sensorConfig) {
         // H2 Storage Config
-        File dbFile = new File(getApplicationContext().getFilesDir()+"/db/",
-                deviceID+"_"+sensorConfig.name.replace(" ", "")+"_h2.dat");
+        File dbFile = new File(getApplicationContext().getFilesDir()+"/db/", deviceID+"_h2.dat");
         dbFile.getParentFile().mkdirs();
         if(!dbFile.exists()) {
             try {
