@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import android.hardware.Sensor;
 import android.util.Log;
 import android.view.*;
 
@@ -43,6 +44,7 @@ import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
@@ -104,6 +106,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         TruPulseSim,
         Angel,
         FlirOne,
+        DJIDrone
     }
 
     TextView textArea;
@@ -187,6 +190,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if (prefs.getBoolean("video_enable", false))
         {
             showVideo = true;
+
             androidSensorsConfig.activateBackCamera = true;
             androidSensorsConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
         }
@@ -195,11 +199,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         addSosTConfig(androidSensorsConfig, sosUser, sosPwd);
 
         StreamStorageConfig androidStreamStorageConfig = createStreamStorageConfig(androidSensorsConfig);
-        sensorhubConfig.add(androidStreamStorageConfig);
+        addStorageConfig(androidSensorsConfig, androidStreamStorageConfig);
 
         SensorDataProviderConfig androidDataProviderConfig = createDataProviderConfig(androidSensorsConfig);
         androidDataProviderConfig.storageID = androidStreamStorageConfig.id;
-        sosConfig.dataProviders.add(androidDataProviderConfig);
+        addSosServerConfig(sosConfig, androidDataProviderConfig, androidSensorsConfig);
 
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
@@ -261,7 +265,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig.add(sosConfig);
     }
 
-    private SensorDataProviderConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig) {
+    private SensorDataProviderConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig)
+    {
         SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
         dataProviderConfig.offeringID = sensorConfig.id+":offering";
         dataProviderConfig.sensorID = sensorConfig.id;
@@ -272,7 +277,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         return dataProviderConfig;
     }
 
-    private StreamStorageConfig createStreamStorageConfig(AndroidSensorsConfig sensorConfig) {
+    private StreamStorageConfig createStreamStorageConfig(AndroidSensorsConfig sensorConfig)
+    {
         // H2 Storage Config
         File dbFile = new File(getApplicationContext().getFilesDir()+"/db/", deviceID+"_h2.dat");
         dbFile.getParentFile().mkdirs();
@@ -314,7 +320,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         return streamStorageConfig;
     }
 
-    private SensorConfig createSensorConfig(Sensors sensor) {
+    private SensorConfig createSensorConfig(Sensors sensor)
+    {
         SensorConfig sensorConfig;
         if (Sensors.Android.equals(sensor))
         {
@@ -387,10 +394,101 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         return sensorConfig;
     }
 
-    protected void addStorageConfig() {
+    protected void addStorageConfig(SensorConfig sensorConf, StreamStorageConfig storageConf)
+    {
+        if (sensorConf instanceof AndroidSensorsConfig)
+        {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+
+            String sensorName = "";
+            if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE"))
+            {
+                storageConf.excludedOutputs.add(sensorName);
+            }
+            if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("ARCHIVE"))
+            {
+                storageConf.excludedOutputs.add(sensorName);
+            }
+            if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("ARCHIVE"))
+            {
+                storageConf.excludedOutputs.add(sensorName);
+            }
+            if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE"))
+            {
+                if (((AndroidSensorsConfig) sensorConf).activateOrientationQuat)
+                {
+                    storageConf.excludedOutputs.add(sensorName);
+                }
+                if (((AndroidSensorsConfig) sensorConf).activateOrientationEuler)
+                {
+                    storageConf.excludedOutputs.add(sensorName);
+                }
+            }
+            if (!prefs.getStringSet("location_options", Collections.emptySet()).contains("ARCHIVE"))
+            {
+                if (((AndroidSensorsConfig) sensorConf).activateGpsLocation)
+                {
+                    storageConf.excludedOutputs.add(sensorName);
+                }
+                if (((AndroidSensorsConfig) sensorConf).activateNetworkLocation)
+                {
+                    storageConf.excludedOutputs.add(sensorName);
+                }
+            }
+            if (!prefs.getStringSet("video_options", Collections.emptySet()).contains("ARCHIVE"))
+            {
+                storageConf.excludedOutputs.add(sensorName);
+            }
+        }
+
+        sensorhubConfig.add(storageConf);
     }
 
-    protected void addSosServerConfig() {
+    protected void addSosServerConfig(SOSServiceConfig sosConf, SensorDataProviderConfig dataProviderConf, SensorConfig sensorConf)
+    {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+
+        String sensorName = "";
+        if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("REALTIME"))
+        {
+            dataProviderConf.excludedOutputs.add(sensorName);
+        }
+        if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("REALTIME"))
+        {
+            dataProviderConf.excludedOutputs.add(sensorName);
+        }
+        if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("REALTIME"))
+        {
+            dataProviderConf.excludedOutputs.add(sensorName);
+        }
+        if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("REALTIME"))
+        {
+            if (((AndroidSensorsConfig) sensorConf).activateOrientationQuat)
+            {
+                dataProviderConf.excludedOutputs.add(sensorName);
+            }
+            if (((AndroidSensorsConfig) sensorConf).activateOrientationEuler)
+            {
+                dataProviderConf.excludedOutputs.add(sensorName);
+            }
+        }
+        if (!prefs.getStringSet("location_options", Collections.emptySet()).contains("REALTIME"))
+        {
+            if (((AndroidSensorsConfig) sensorConf).activateGpsLocation)
+            {
+                dataProviderConf.excludedOutputs.add(sensorName);
+            }
+            if (((AndroidSensorsConfig) sensorConf).activateNetworkLocation)
+            {
+                dataProviderConf.excludedOutputs.add(sensorName);
+            }
+        }
+        if (!prefs.getStringSet("video_options", Collections.emptySet()).contains("REALTIME"))
+        {
+            dataProviderConf.excludedOutputs.add(sensorName);
+        }
+
+        sosConf.dataProviders.add(dataProviderConf);
     }
 
     protected void addSosTConfig(SensorConfig sensorConf, String sosUser, String sosPwd)
@@ -415,9 +513,43 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         if (sensorConf instanceof AndroidSensorsConfig)
         {
-            /*
-            sosConfig.excludeOutputs.add(
-            */
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+
+            String sensorName;
+            if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH"))
+            {
+                sensorName = Sensor.STRING_TYPE_ACCELEROMETER.replaceAll(" ", "_") + "_data";
+                sosConfig.excludedOutputs.add(sensorName);
+            }
+            if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH"))
+            {
+                sensorName = Sensor.STRING_TYPE_GYROSCOPE.replaceAll(" ", "_") + "_data";
+                sosConfig.excludedOutputs.add(sensorName);
+            }
+            if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH"))
+            {
+                sensorName = Sensor.STRING_TYPE_MAGNETIC_FIELD.replaceAll(" ", "_") + "_data";
+                sosConfig.excludedOutputs.add(sensorName);
+            }
+            if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH"))
+            {
+                if (((AndroidSensorsConfig) sensorConf).activateOrientationQuat)
+                {
+                    sensorName = "quat_orientation_data";
+                    sosConfig.excludedOutputs.add(sensorName);
+                }
+                if (((AndroidSensorsConfig) sensorConf).activateOrientationEuler)
+                {
+                    sensorName = "euler_orientation_data";
+                    sosConfig.excludedOutputs.add(sensorName);
+                }
+            }
+            if (!prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH"))
+            {
+            }
+            if (!prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH"))
+            {
+            }
         }
 
         sensorhubConfig.add(sosConfig);
