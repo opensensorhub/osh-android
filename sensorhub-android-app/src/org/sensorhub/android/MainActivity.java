@@ -449,19 +449,27 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
 
         String sensorName = "";
-        if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("REALTIME"))
+        if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("REALTIME")
+            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE")
+        )
         {
             dataProviderConf.excludedOutputs.add(sensorName);
         }
-        if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("REALTIME"))
+        if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("REALTIME")
+            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("ARCHIVE")
+        )
         {
             dataProviderConf.excludedOutputs.add(sensorName);
         }
-        if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("REALTIME"))
+        if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("REALTIME")
+            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("ARCHIVE")
+        )
         {
             dataProviderConf.excludedOutputs.add(sensorName);
         }
-        if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("REALTIME"))
+        if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("REALTIME")
+            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE")
+        )
         {
             if (((AndroidSensorsConfig) sensorConf).activateOrientationQuat)
             {
@@ -472,7 +480,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 dataProviderConf.excludedOutputs.add(sensorName);
             }
         }
-        if (!prefs.getStringSet("location_options", Collections.emptySet()).contains("REALTIME"))
+        if (!prefs.getStringSet("location_options", Collections.emptySet()).contains("REALTIME")
+            || !prefs.getStringSet("location_options", Collections.emptySet()).contains("ARCHIVE")
+        )
         {
             if (((AndroidSensorsConfig) sensorConf).activateGpsLocation)
             {
@@ -483,7 +493,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 dataProviderConf.excludedOutputs.add(sensorName);
             }
         }
-        if (!prefs.getStringSet("video_options", Collections.emptySet()).contains("REALTIME"))
+        if (!prefs.getStringSet("video_options", Collections.emptySet()).contains("REALTIME")
+            || !prefs.getStringSet("video_options", Collections.emptySet()).contains("ARCHIVE")
+        )
         {
             dataProviderConf.excludedOutputs.add(sensorName);
         }
