@@ -403,41 +403,41 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             String sensorName = "";
             if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE"))
             {
-                storageConf.excludedOutputs.add(sensorName);
+//                storageConf.excludedOutputs.add(sensorName);
             }
             if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("ARCHIVE"))
             {
-                storageConf.excludedOutputs.add(sensorName);
+//                storageConf.excludedOutputs.add(sensorName);
             }
             if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("ARCHIVE"))
             {
-                storageConf.excludedOutputs.add(sensorName);
+//                storageConf.excludedOutputs.add(sensorName);
             }
             if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE"))
             {
                 if (((AndroidSensorsConfig) sensorConf).activateOrientationQuat)
                 {
-                    storageConf.excludedOutputs.add(sensorName);
+//                    storageConf.excludedOutputs.add(sensorName);
                 }
                 if (((AndroidSensorsConfig) sensorConf).activateOrientationEuler)
                 {
-                    storageConf.excludedOutputs.add(sensorName);
+//                    storageConf.excludedOutputs.add(sensorName);
                 }
             }
             if (!prefs.getStringSet("location_options", Collections.emptySet()).contains("ARCHIVE"))
             {
                 if (((AndroidSensorsConfig) sensorConf).activateGpsLocation)
                 {
-                    storageConf.excludedOutputs.add(sensorName);
+//                    storageConf.excludedOutputs.add(sensorName);
                 }
                 if (((AndroidSensorsConfig) sensorConf).activateNetworkLocation)
                 {
-                    storageConf.excludedOutputs.add(sensorName);
+//                    storageConf.excludedOutputs.add(sensorName);
                 }
             }
             if (!prefs.getStringSet("video_options", Collections.emptySet()).contains("ARCHIVE"))
             {
-                storageConf.excludedOutputs.add(sensorName);
+//                storageConf.excludedOutputs.add(sensorName);
             }
         }
 
@@ -453,19 +453,19 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE")
         )
         {
-            dataProviderConf.excludedOutputs.add(sensorName);
+//            dataProviderConf.excludedOutputs.add(sensorName);
         }
         if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("REALTIME")
             || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("ARCHIVE")
         )
         {
-            dataProviderConf.excludedOutputs.add(sensorName);
+//            dataProviderConf.excludedOutputs.add(sensorName);
         }
         if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("REALTIME")
             || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("ARCHIVE")
         )
         {
-            dataProviderConf.excludedOutputs.add(sensorName);
+//            dataProviderConf.excludedOutputs.add(sensorName);
         }
         if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("REALTIME")
             || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE")
@@ -473,11 +473,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         {
             if (((AndroidSensorsConfig) sensorConf).activateOrientationQuat)
             {
-                dataProviderConf.excludedOutputs.add(sensorName);
+//                dataProviderConf.excludedOutputs.add(sensorName);
             }
             if (((AndroidSensorsConfig) sensorConf).activateOrientationEuler)
             {
-                dataProviderConf.excludedOutputs.add(sensorName);
+//                dataProviderConf.excludedOutputs.add(sensorName);
             }
         }
         if (!prefs.getStringSet("location_options", Collections.emptySet()).contains("REALTIME")
@@ -486,18 +486,18 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         {
             if (((AndroidSensorsConfig) sensorConf).activateGpsLocation)
             {
-                dataProviderConf.excludedOutputs.add(sensorName);
+//                dataProviderConf.excludedOutputs.add(sensorName);
             }
             if (((AndroidSensorsConfig) sensorConf).activateNetworkLocation)
             {
-                dataProviderConf.excludedOutputs.add(sensorName);
+//                dataProviderConf.excludedOutputs.add(sensorName);
             }
         }
         if (!prefs.getStringSet("video_options", Collections.emptySet()).contains("REALTIME")
             || !prefs.getStringSet("video_options", Collections.emptySet()).contains("ARCHIVE")
         )
         {
-            dataProviderConf.excludedOutputs.add(sensorName);
+//            dataProviderConf.excludedOutputs.add(sensorName);
         }
 
         sosConf.dataProviders.add(dataProviderConf);
