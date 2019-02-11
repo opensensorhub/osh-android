@@ -26,12 +26,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.util.Log;
 import android.view.*;
 
@@ -58,6 +60,7 @@ import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVObsStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
+import org.sensorhub.impl.sensor.android.AndroidAcceleroOutput;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
@@ -203,7 +206,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         SensorDataProviderConfig androidDataProviderConfig = createDataProviderConfig(androidSensorsConfig);
         androidDataProviderConfig.storageID = androidStreamStorageConfig.id;
-        addSosServerConfig(sosConfig, androidDataProviderConfig, androidSensorsConfig);
+        addSosServerConfig(sosConfig, androidDataProviderConfig);
 
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
@@ -399,115 +402,131 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if (sensorConf instanceof AndroidSensorsConfig)
         {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+            SensorManager sensorManager = (SensorManager)getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
+            List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
-            String sensorName = "";
-            if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE"))
+            String sensorName;
+            for (Sensor sensor: deviceSensors)
             {
-                sensorName = Sensor.STRING_TYPE_ACCELEROMETER.replaceAll(" ", "_") + "_data";
-                storageConf.excludedOutputs.add(sensorName);
-            }
-            if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("ARCHIVE"))
-            {
-                sensorName = Sensor.STRING_TYPE_GYROSCOPE.replaceAll(" ", "_") + "_data";
-                storageConf.excludedOutputs.add(sensorName);
-            }
-            if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("ARCHIVE"))
-            {
-                sensorName = Sensor.STRING_TYPE_MAGNETIC_FIELD.replaceAll(" ", "_") + "_data";
-                storageConf.excludedOutputs.add(sensorName);
-            }
-            if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE"))
-            {
-                if (((AndroidSensorsConfig) sensorConf).activateOrientationQuat)
+                switch (sensor.getType())
                 {
-                    sensorName = "quat_orientation_data";
-                    storageConf.excludedOutputs.add(sensorName);
-                }
-                if (((AndroidSensorsConfig) sensorConf).activateOrientationEuler)
-                {
-                    sensorName = "euler_orientation_data";
-                    storageConf.excludedOutputs.add(sensorName);
+                    case Sensor.TYPE_ACCELEROMETER:
+                        if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE"))
+                        {
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            storageConf.excludedOutputs.add(sensorName);
+                        }
+                        break;
+                    case Sensor.TYPE_GYROSCOPE:
+                        if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("ARCHIVE"))
+                        {
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            storageConf.excludedOutputs.add(sensorName);
+                        }
+                        break;
+                    case Sensor.TYPE_MAGNETIC_FIELD:
+                        if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("ARCHIVE"))
+                        {
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            storageConf.excludedOutputs.add(sensorName);
+                        }
+                        break;
+                    case Sensor.TYPE_ROTATION_VECTOR:
+                        if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE"))
+                        {
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            storageConf.excludedOutputs.add(sensorName);
+                            sensorName = "quat_orientation_data";
+                            storageConf.excludedOutputs.add(sensorName);
+                            sensorName = "euler_orientation_data";
+                            storageConf.excludedOutputs.add(sensorName);
+                        }
+                        break;
                 }
             }
             if (!prefs.getStringSet("location_options", Collections.emptySet()).contains("ARCHIVE"))
             {
-                if (((AndroidSensorsConfig) sensorConf).activateGpsLocation)
-                {
-//                    storageConf.excludedOutputs.add(sensorName);
-                }
-                if (((AndroidSensorsConfig) sensorConf).activateNetworkLocation)
-                {
-//                    storageConf.excludedOutputs.add(sensorName);
-                }
+                sensorName = "gps_data";
+                storageConf.excludedOutputs.add(sensorName);
+                sensorName = "network_data";
+                storageConf.excludedOutputs.add(sensorName);
             }
             if (!prefs.getStringSet("video_options", Collections.emptySet()).contains("ARCHIVE"))
             {
-//                storageConf.excludedOutputs.add(sensorName);
+                sensorName = "camera0_MJPEG";
+                storageConf.excludedOutputs.add(sensorName);
+                sensorName = "camera0_H264";
+                storageConf.excludedOutputs.add(sensorName);
             }
         }
 
         sensorhubConfig.add(storageConf);
     }
 
-    protected void addSosServerConfig(SOSServiceConfig sosConf, SensorDataProviderConfig dataProviderConf, SensorConfig sensorConf)
+    protected void addSosServerConfig(SOSServiceConfig sosConf, SensorDataProviderConfig dataProviderConf)
     {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        SensorManager sensorManager = (SensorManager)getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
+        List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
-        String sensorName = "";
-        if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("REALTIME")
-            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE")
-        )
+        String sensorName;
+        for (Sensor sensor: deviceSensors)
         {
-            sensorName = Sensor.STRING_TYPE_ACCELEROMETER.replaceAll(" ", "_") + "_data";
-            dataProviderConf.excludedOutputs.add(sensorName);
-        }
-        if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("REALTIME")
-            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("ARCHIVE")
-        )
-        {
-            sensorName = Sensor.STRING_TYPE_GYROSCOPE.replaceAll(" ", "_") + "_data";
-            dataProviderConf.excludedOutputs.add(sensorName);
-        }
-        if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("REALTIME")
-            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("ARCHIVE")
-        )
-        {
-            sensorName = Sensor.STRING_TYPE_MAGNETIC_FIELD.replaceAll(" ", "_") + "_data";
-            dataProviderConf.excludedOutputs.add(sensorName);
-        }
-        if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("REALTIME")
-            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE")
-        )
-        {
-            if (((AndroidSensorsConfig) sensorConf).activateOrientationQuat)
+            switch (sensor.getType())
             {
-                sensorName = "quat_orientation_data";
-                dataProviderConf.excludedOutputs.add(sensorName);
-            }
-            if (((AndroidSensorsConfig) sensorConf).activateOrientationEuler)
-            {
-                sensorName = "euler_orientation_data";
-                dataProviderConf.excludedOutputs.add(sensorName);
+                case Sensor.TYPE_ACCELEROMETER:
+                    if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("REALTIME")
+                            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE"))
+                    {
+                        sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
+                    }
+                    break;
+                case Sensor.TYPE_GYROSCOPE:
+                    if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("REALTIME")
+                            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("ARCHIVE"))
+                    {
+                        sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
+                    }
+                    break;
+                case Sensor.TYPE_MAGNETIC_FIELD:
+                    if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("REALTIME")
+                            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("ARCHIVE"))
+                    {
+                        sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
+                    }
+                    break;
+                case Sensor.TYPE_ROTATION_VECTOR:
+                    if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("REALTIME")
+                            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE"))
+                    {
+                        sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
+                        sensorName = "quat_orientation_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
+                        sensorName = "euler_orientation_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
+                    }
+                    break;
             }
         }
         if (!prefs.getStringSet("location_options", Collections.emptySet()).contains("REALTIME")
-            || !prefs.getStringSet("location_options", Collections.emptySet()).contains("ARCHIVE")
-        )
+                || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE"))
         {
-            if (((AndroidSensorsConfig) sensorConf).activateGpsLocation)
-            {
-//                dataProviderConf.excludedOutputs.add(sensorName);
-            }
-            if (((AndroidSensorsConfig) sensorConf).activateNetworkLocation)
-            {
-//                dataProviderConf.excludedOutputs.add(sensorName);
-            }
+            sensorName = "gps_data";
+            dataProviderConf.excludedOutputs.add(sensorName);
+            sensorName = "network_data";
+            dataProviderConf.excludedOutputs.add(sensorName);
         }
         if (!prefs.getStringSet("video_options", Collections.emptySet()).contains("REALTIME")
-            || !prefs.getStringSet("video_options", Collections.emptySet()).contains("ARCHIVE")
-        )
+                || !prefs.getStringSet("video_options", Collections.emptySet()).contains("ARCHIVE"))
         {
-//            dataProviderConf.excludedOutputs.add(sensorName);
+            sensorName = "camera0_MJPEG";
+            dataProviderConf.excludedOutputs.add(sensorName);
+            sensorName = "camera0_H264";
+            dataProviderConf.excludedOutputs.add(sensorName);
         }
 
         sosConf.dataProviders.add(dataProviderConf);
@@ -536,41 +555,61 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if (sensorConf instanceof AndroidSensorsConfig)
         {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+            SensorManager sensorManager = (SensorManager)getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
+            List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
             String sensorName;
-            if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH"))
+            for (Sensor sensor: deviceSensors)
             {
-                sensorName = Sensor.STRING_TYPE_ACCELEROMETER.replaceAll(" ", "_") + "_data";
-                sosConfig.excludedOutputs.add(sensorName);
-            }
-            if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH"))
-            {
-                sensorName = Sensor.STRING_TYPE_GYROSCOPE.replaceAll(" ", "_") + "_data";
-                sosConfig.excludedOutputs.add(sensorName);
-            }
-            if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH"))
-            {
-                sensorName = Sensor.STRING_TYPE_MAGNETIC_FIELD.replaceAll(" ", "_") + "_data";
-                sosConfig.excludedOutputs.add(sensorName);
-            }
-            if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH"))
-            {
-                if (((AndroidSensorsConfig) sensorConf).activateOrientationQuat)
+                switch (sensor.getType())
                 {
-                    sensorName = "quat_orientation_data";
-                    sosConfig.excludedOutputs.add(sensorName);
-                }
-                if (((AndroidSensorsConfig) sensorConf).activateOrientationEuler)
-                {
-                    sensorName = "euler_orientation_data";
-                    sosConfig.excludedOutputs.add(sensorName);
+                    case Sensor.TYPE_ACCELEROMETER:
+                        if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH"))
+                        {
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            sosConfig.excludedOutputs.add(sensorName);
+                        }
+                        break;
+                    case Sensor.TYPE_GYROSCOPE:
+                        if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH"))
+                        {
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            sosConfig.excludedOutputs.add(sensorName);
+                        }
+                        break;
+                    case Sensor.TYPE_MAGNETIC_FIELD:
+                        if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH"))
+                        {
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            sosConfig.excludedOutputs.add(sensorName);
+                        }
+                        break;
+                    case Sensor.TYPE_ROTATION_VECTOR:
+                        if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH"))
+                        {
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            sosConfig.excludedOutputs.add(sensorName);
+                            sensorName = "quat_orientation_data";
+                            sosConfig.excludedOutputs.add(sensorName);
+                            sensorName = "euler_orientation_data";
+                            sosConfig.excludedOutputs.add(sensorName);
+                        }
+                        break;
                 }
             }
             if (!prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH"))
             {
+                sensorName = "gps_data";
+                sosConfig.excludedOutputs.add(sensorName);
+                sensorName = "network_data";
+                sosConfig.excludedOutputs.add(sensorName);
             }
             if (!prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH"))
             {
+                sensorName = "camera0_MJPEG";
+                sosConfig.excludedOutputs.add(sensorName);
+                sensorName = "camera0_H264";
+                sosConfig.excludedOutputs.add(sensorName);
             }
         }
 

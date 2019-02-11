@@ -3,23 +3,28 @@ package org.sensorhub.android;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.vast.ows.OWSRequest;
+import org.vast.ows.sos.InsertSensorRequest;
+
 public class IPCReciever extends BroadcastReceiver {
     private static final String TAG = "MyBroadcastReceiver";
+
     @Override
     public void onReceive(Context context, Intent intent) {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append('\n');
-        sb.append("Action: " + intent.getAction());
-        sb.append('\n');
-        sb.append("URI: " + intent.toUri(Intent.URI_INTENT_SCHEME).toString());
-        sb.append('\n');
+        String action = intent.getAction();
+        Bundle extras = intent.getExtras();
 
-        String log = sb.toString();
-        Log.d(TAG, log);
-        Toast.makeText(context, log, Toast.LENGTH_LONG).show();
+        String origin = extras.getString("src");
+        String payload = extras.getString("SOS");
+
+        String log;
+        log = origin;
+        Log.d(TAG, '\n'+log);
+        log = payload;
+        Log.d(TAG, '\n'+log);
     }
 }
