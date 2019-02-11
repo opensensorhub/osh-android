@@ -80,6 +80,11 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
         
         // create data interfaces for sensors
+        boolean isUsingAccelerometer = false;
+        boolean isUsingGyrscope = false;
+        boolean isUsingMagnetometer = false;
+        boolean isUsingOrientationQuat = false;
+        boolean isUsingOrientationEuler = false;
         this.sensorManager = (SensorManager)androidContext.getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
         for (Sensor sensor: deviceSensors)
@@ -89,25 +94,40 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
             switch (sensor.getType())
             {
                 case Sensor.TYPE_ACCELEROMETER:
-                    if (config.activateAccelerometer)
-                        useSensor(new AndroidAcceleroOutput(this, sensorManager, sensor), sensor);                        
+                    if (config.activateAccelerometer && !isUsingAccelerometer)
+                    {
+                        useSensor(new AndroidAcceleroOutput(this, sensorManager, sensor), sensor);
+                        isUsingAccelerometer = true;
+                    }
                     break;
                     
                 case Sensor.TYPE_GYROSCOPE:
-                    if (config.activateGyrometer)
+                    if (config.activateGyrometer && !isUsingGyrscope)
+                    {
                         useSensor(new AndroidGyroOutput(this, sensorManager, sensor), sensor);
+                        isUsingGyrscope = true;
+                    }
                     break;
                 
                 case Sensor.TYPE_MAGNETIC_FIELD:
-                    if (config.activateMagnetometer)
+                    if (config.activateMagnetometer && !isUsingMagnetometer)
+                    {
                         useSensor(new AndroidMagnetoOutput(this, sensorManager, sensor), sensor);
+                        isUsingMagnetometer = true;
+                    }
                     break;
                     
                 case Sensor.TYPE_ROTATION_VECTOR:
-                    if (config.activateOrientationQuat)
+                    if (config.activateOrientationQuat && !isUsingOrientationQuat)
+                    {
                         useSensor(new AndroidOrientationQuatOutput(this, sensorManager, sensor), sensor);
-                    if (config.activateOrientationEuler)
+                        isUsingOrientationQuat = true;
+                    }
+                    if (config.activateOrientationEuler && !isUsingOrientationEuler)
+                    {
                         useSensor(new AndroidOrientationEulerOutput(this, sensorManager, sensor), sensor);
+                        isUsingOrientationEuler = true;
+                    }
                     break;
             }
         }
