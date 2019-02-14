@@ -171,6 +171,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // SOS Config
         SOSServiceConfig sosConfig = new SOSServiceConfig();
+        sosConfig.id = "SOS_SERVICE";
+        sosConfig.name = "SOS Service";
         sosConfig.autoStart = true;
         sosConfig.enableTransactional = true;
 
@@ -205,7 +207,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         addStorageConfig(androidSensorsConfig, androidStreamStorageConfig);
 
         SensorDataProviderConfig androidDataProviderConfig = createDataProviderConfig(androidSensorsConfig);
-        androidDataProviderConfig.storageID = androidStreamStorageConfig.id;
         addSosServerConfig(sosConfig, androidDataProviderConfig);
 
         // TruPulse sensor
@@ -271,8 +272,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     private SensorDataProviderConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig)
     {
         SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
-        dataProviderConfig.offeringID = sensorConfig.id+":offering";
         dataProviderConfig.sensorID = sensorConfig.id;
+        dataProviderConfig.offeringID = sensorConfig.id + ":offering";
+        dataProviderConfig.storageID = sensorConfig.id + "#storage";
         dataProviderConfig.enabled = true;
         dataProviderConfig.liveDataTimeout = 600.0;
         dataProviderConfig.maxFois = 10;
@@ -312,7 +314,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // Stream Storage Config
         StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
         streamStorageConfig.moduleClass = GenericStreamStorage.class.getCanonicalName();
-        streamStorageConfig.id = sensorConfig.id + ":stream-storage";
+        streamStorageConfig.id = sensorConfig.id + "#storage";
         streamStorageConfig.name = sensorConfig.name + " Storage";
         streamStorageConfig.dataSourceID = sensorConfig.id;
         streamStorageConfig.autoStart = true;
@@ -476,7 +478,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             {
                 case Sensor.TYPE_ACCELEROMETER:
                     if (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("REALTIME")
-                            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE"))
+                        && !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE"))
                     {
                         sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
                         dataProviderConf.excludedOutputs.add(sensorName);
@@ -484,7 +486,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     break;
                 case Sensor.TYPE_GYROSCOPE:
                     if (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("REALTIME")
-                            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("ARCHIVE"))
+                        && !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("ARCHIVE"))
                     {
                         sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
                         dataProviderConf.excludedOutputs.add(sensorName);
@@ -492,7 +494,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     break;
                 case Sensor.TYPE_MAGNETIC_FIELD:
                     if (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("REALTIME")
-                            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("ARCHIVE"))
+                        && !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("ARCHIVE"))
                     {
                         sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
                         dataProviderConf.excludedOutputs.add(sensorName);
@@ -500,7 +502,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     break;
                 case Sensor.TYPE_ROTATION_VECTOR:
                     if (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("REALTIME")
-                            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE"))
+                        && !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE"))
                     {
                         sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
                         dataProviderConf.excludedOutputs.add(sensorName);
@@ -513,7 +515,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             }
         }
         if (!prefs.getStringSet("location_options", Collections.emptySet()).contains("REALTIME")
-                || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE"))
+            && !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE"))
         {
             sensorName = "gps_data";
             dataProviderConf.excludedOutputs.add(sensorName);
@@ -521,7 +523,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             dataProviderConf.excludedOutputs.add(sensorName);
         }
         if (!prefs.getStringSet("video_options", Collections.emptySet()).contains("REALTIME")
-                || !prefs.getStringSet("video_options", Collections.emptySet()).contains("ARCHIVE"))
+            && !prefs.getStringSet("video_options", Collections.emptySet()).contains("ARCHIVE"))
         {
             sensorName = "camera0_MJPEG";
             dataProviderConf.excludedOutputs.add(sensorName);
