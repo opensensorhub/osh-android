@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -43,10 +42,8 @@ import org.sensorhub.android.comm.ble.BleConfig;
 import org.sensorhub.android.comm.ble.BleNetwork;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
-import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleEvent;
-import org.sensorhub.api.persistence.StorageConfig;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
@@ -58,22 +55,12 @@ import org.sensorhub.impl.persistence.GenericStreamStorage;
 import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
-import org.sensorhub.impl.persistence.h2.MVObsStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
-import org.sensorhub.impl.sensor.android.AndroidAcceleroOutput;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
-import org.sensorhub.impl.service.sos.ISOSDataProviderFactory;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
-import org.sensorhub.impl.service.sos.SOSServlet;
-import org.sensorhub.impl.service.sos.SensorDataProvider;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
-import org.sensorhub.impl.service.sos.StorageDataProvider;
-import org.sensorhub.impl.service.sos.StorageDataProviderConfig;
-import org.sensorhub.impl.service.sos.StreamDataProviderConfig;
-import org.sensorhub.impl.service.sos.video.MP4Serializer;
-import org.sensorhub.impl.service.sos.video.MJPEGSerializer;
 import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
 import org.sensorhub.impl.service.HttpServerConfig;
 import android.annotation.SuppressLint;
@@ -94,8 +81,6 @@ import android.provider.Settings.Secure;
 import android.text.Html;
 import android.widget.EditText;
 import android.widget.TextView;
-
-import static android.content.ContentValues.TAG;
 
 public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener
 {
@@ -266,6 +251,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
         */
 
+        // TODO
+        //  - Derive a new class from SOS service in the same package as sos service.
+        //  - This is a class that instantiates the servlet.
+        //  - Derive from that and add IPC receiver logic.
         sensorhubConfig.add(sosConfig);
     }
 
@@ -305,6 +294,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         storageConfig.memoryCacheSize = 102400;
         storageConfig.autoCommitBufferSize = 1024;
 
+        // TODO: Base this on size instead of time. This might error when earliest record is purged and then requested. Test if the capabilities updates...
         // Auto Purge Config
         MaxAgeAutoPurgeConfig autoPurgeConfig = new MaxAgeAutoPurgeConfig();
         autoPurgeConfig.enabled = true;
