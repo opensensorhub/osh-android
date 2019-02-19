@@ -15,16 +15,16 @@ public class IPCReciever extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        String action = intent.getAction();
-        Bundle extras = intent.getExtras();
+        StringBuilder sb = new StringBuilder();
 
-        String origin = extras.getString("src");
-        String payload = extras.getString("SOS");
+        sb.append('\n');
+        sb.append("Action: " + intent.getAction());
+        sb.append('\n');
+        sb.append("URI: " + intent.toUri(Intent.URI_INTENT_SCHEME));
+        sb.append('\n');
 
-        String log;
-        log = origin;
-        Log.d(TAG, '\n'+log);
-        log = payload;
-        Log.d(TAG, '\n'+log);
+        String log = sb.toString();
+        Log.d(TAG, log);
+        Toast.makeText(context, log, Toast.LENGTH_LONG).show();
     }
 }
