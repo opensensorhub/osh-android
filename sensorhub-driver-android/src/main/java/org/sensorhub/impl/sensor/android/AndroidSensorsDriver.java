@@ -94,8 +94,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
             switch (sensor.getType())
             {
                 case Sensor.TYPE_ACCELEROMETER:
-                    if (config.activateAccelerometer && !isUsingAccelerometer
-                            && !sensor.getName().toLowerCase().contains("non-wakeup"))
+                    if (config.activateAccelerometer && !isUsingAccelerometer && sensor.isWakeUpSensor())
                     {
                         useSensor(new AndroidAcceleroOutput(this, sensorManager, sensor), sensor);
                         isUsingAccelerometer = true;
@@ -103,8 +102,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
                     break;
                     
                 case Sensor.TYPE_GYROSCOPE:
-                    if (config.activateGyrometer && !isUsingGyrscope
-                            && !sensor.getName().toLowerCase().contains("non-wakeup"))
+                    if (config.activateGyrometer && !isUsingGyrscope && sensor.isWakeUpSensor())
                     {
                         useSensor(new AndroidGyroOutput(this, sensorManager, sensor), sensor);
                         isUsingGyrscope = true;
@@ -112,8 +110,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
                     break;
                 
                 case Sensor.TYPE_MAGNETIC_FIELD:
-                    if (config.activateMagnetometer && !isUsingMagnetometer
-                            && !sensor.getName().toLowerCase().contains("non-wakeup"))
+                    if (config.activateMagnetometer && !isUsingMagnetometer && sensor.isWakeUpSensor())
                     {
                         useSensor(new AndroidMagnetoOutput(this, sensorManager, sensor), sensor);
                         isUsingMagnetometer = true;
@@ -121,14 +118,12 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
                     break;
                     
                 case Sensor.TYPE_ROTATION_VECTOR:
-                    if (config.activateOrientationQuat && !isUsingOrientationQuat
-                            && !sensor.getName().toLowerCase().contains("non-wakeup"))
+                    if (config.activateOrientationQuat && !isUsingOrientationQuat && sensor.isWakeUpSensor())
                     {
                         useSensor(new AndroidOrientationQuatOutput(this, sensorManager, sensor), sensor);
                         isUsingOrientationQuat = true;
                     }
-                    if (config.activateOrientationEuler && !isUsingOrientationEuler
-                            && !sensor.getName().toLowerCase().contains("non-wakeup"))
+                    if (config.activateOrientationEuler && !isUsingOrientationEuler && sensor.isWakeUpSensor())
                     {
                         useSensor(new AndroidOrientationEulerOutput(this, sensorManager, sensor), sensor);
                         isUsingOrientationEuler = true;
