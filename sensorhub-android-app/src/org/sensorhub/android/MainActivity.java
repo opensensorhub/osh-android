@@ -403,6 +403,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     {
         if (sensorConf instanceof AndroidSensorsConfig)
         {
+            /*
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
             SensorManager sensorManager = (SensorManager)getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
             List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
@@ -460,6 +461,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 sensorName = "camera0_H264";
                 storageConf.excludedOutputs.add(sensorName);
             }
+            */
         }
 
         sensorhubConfig.add(storageConf);
