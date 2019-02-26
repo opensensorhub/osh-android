@@ -45,6 +45,9 @@ import android.location.LocationProvider;
 import android.os.Build;
 import android.os.Looper;
 import android.provider.Settings.Secure;
+import android.util.Log;
+
+import static android.content.ContentValues.TAG;
 
 
 public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsConfig>
@@ -80,53 +83,48 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
         
         // create data interfaces for sensors
-        boolean isUsingAccelerometer = false;
-        boolean isUsingGyrscope = false;
-        boolean isUsingMagnetometer = false;
-        boolean isUsingOrientationQuat = false;
-        boolean isUsingOrientationEuler = false;
         this.sensorManager = (SensorManager)androidContext.getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
         for (Sensor sensor: deviceSensors)
         {
-            log.debug("Detected sensor " + sensor.getName());
-            
+            if (sensor.isWakeUpSensor())
+            {
+                continue;
+            }
+
+            Log.d(TAG, "init: Detected sensor: " + sensor.getName());
+
             switch (sensor.getType())
             {
                 case Sensor.TYPE_ACCELEROMETER:
-                    if (config.activateAccelerometer && !isUsingAccelerometer && sensor.isWakeUpSensor())
+                    if (config.activateAccelerometer)
                     {
                         useSensor(new AndroidAcceleroOutput(this, sensorManager, sensor), sensor);
-                        isUsingAccelerometer = true;
                     }
                     break;
                     
                 case Sensor.TYPE_GYROSCOPE:
-                    if (config.activateGyrometer && !isUsingGyrscope && sensor.isWakeUpSensor())
+                    if (config.activateGyrometer)
                     {
                         useSensor(new AndroidGyroOutput(this, sensorManager, sensor), sensor);
-                        isUsingGyrscope = true;
                     }
                     break;
                 
                 case Sensor.TYPE_MAGNETIC_FIELD:
-                    if (config.activateMagnetometer && !isUsingMagnetometer && sensor.isWakeUpSensor())
+                    if (config.activateMagnetometer)
                     {
                         useSensor(new AndroidMagnetoOutput(this, sensorManager, sensor), sensor);
-                        isUsingMagnetometer = true;
                     }
                     break;
                     
                 case Sensor.TYPE_ROTATION_VECTOR:
-                    if (config.activateOrientationQuat && !isUsingOrientationQuat && sensor.isWakeUpSensor())
+                    if (config.activateOrientationQuat)
                     {
                         useSensor(new AndroidOrientationQuatOutput(this, sensorManager, sensor), sensor);
-                        isUsingOrientationQuat = true;
                     }
-                    if (config.activateOrientationEuler && !isUsingOrientationEuler && sensor.isWakeUpSensor())
+                    if (config.activateOrientationEuler)
                     {
                         useSensor(new AndroidOrientationEulerOutput(this, sensorManager, sensor), sensor);
-                        isUsingOrientationEuler = true;
                     }
                     break;
             }
