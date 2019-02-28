@@ -26,12 +26,14 @@ import android.view.Gravity;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.common.EventBus;
 import org.sensorhub.impl.module.ModuleRegistry;
+import org.sensorhub.impl.service.HttpServer;
 import org.vast.xml.XMLImplFinder;
 import android.app.Service;
 import android.content.Intent;
@@ -125,6 +127,14 @@ public class SensorHubService extends Service
                 sensorhub.stop();
                 SensorHub.clearInstance();
                 sensorhub = null;
+
+                try {
+                    if (HttpServer.getInstance() != null) {
+                        HttpServer.getInstance().cleanup();
+                    }
+                } catch (SensorHubException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }    
