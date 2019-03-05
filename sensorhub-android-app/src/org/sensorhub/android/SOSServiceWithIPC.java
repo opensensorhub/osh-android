@@ -8,7 +8,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.service.sos.SOSService;
+import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.vast.ows.OWSException;
 import org.vast.ows.OWSRequest;
 import org.vast.ows.OWSUtils;
@@ -22,7 +24,8 @@ import java.io.IOException;
 
 import static android.content.ContentValues.TAG;
 
-class SOSServiceWithIPC extends SOSService {
+class SOSServiceWithIPC extends SOSService
+{
     @Override
     public void start() throws SensorHubException
     {
@@ -30,7 +33,7 @@ class SOSServiceWithIPC extends SOSService {
         // FUTURE: If we don't want to use HTTPServlet don't call this.
         // Could be set as a preference in the sharedPreference
 
-        Context androidContext = config.androidContext;
+        Context androidContext = ((SOSServiceWithIPCConfig) config).androidContext;
 
         BroadcastReceiver receiver = new BroadcastReceiver()
         {
@@ -46,6 +49,7 @@ class SOSServiceWithIPC extends SOSService {
                 sb.append('\n');
 
                 String sosPayload = intent.getStringExtra("SOS");
+                Log.d(TAG, "onReceive: sosPayload: "+sosPayload);
                 ipcHandler(sosPayload);
 
                 String log = sb.toString();
@@ -58,7 +62,8 @@ class SOSServiceWithIPC extends SOSService {
         androidContext.registerReceiver(receiver, filter);
     }
 
-    private void ipcHandler(String body) {
+    private void ipcHandler(String body)
+    {
         OWSUtils owsUtils = new OWSUtils();
 
         ByteArrayInputStream is = new ByteArrayInputStream(body.getBytes());
@@ -76,12 +81,27 @@ class SOSServiceWithIPC extends SOSService {
 
             // send response
             // convert back outputstream 'os'  into something you can broadcast via IPC
-        } catch (DOMHelperException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (OWSException e) {
+        }
+        catch (DOMHelperException e)
+        {
             e.printStackTrace();
         }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        catch (OWSException e)
+        {
+            e.printStackTrace();
+        }
+    }
+}
+
+class SOSServiceWithIPCConfig extends SOSServiceConfig
+{
+    Context androidContext;
+
+    public SOSServiceWithIPCConfig() {
+        super();
     }
 }
