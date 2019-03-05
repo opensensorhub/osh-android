@@ -40,16 +40,14 @@
     </string-array>
 
     <string-array name="sos_option_list">
-        <item>Real-time</item>
-        <item>Archive</item>
-        <item>Push</item>
+        <item>Store Local</item>
+        <item>Push Remote</item>
     </string-array>
     <string-array name="sos_option_values">
-        <item>REALTIME</item>
-        <item>ARCHIVE</item>
-        <item>PUSH</item>
+        <item>STORE_LOCAL</item>
+        <item>PUSH_REMOTE</item>
     </string-array>
     <string-array name="sos_option_defaults">
-        <item>PUSH</item>
+        <item>PUSH_REMOTE</item>
     </string-array>
 </resources>

@@ -14,10 +14,14 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.android;
 
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -42,6 +46,7 @@ import org.sensorhub.android.comm.ble.BleConfig;
 import org.sensorhub.android.comm.ble.BleNetwork;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
@@ -59,10 +64,18 @@ import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
+import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
 import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
 import org.sensorhub.impl.service.HttpServerConfig;
+import org.vast.ows.OWSException;
+import org.vast.ows.OWSRequest;
+import org.vast.ows.OWSUtils;
+import org.vast.xml.DOMHelper;
+import org.vast.xml.DOMHelperException;
+import org.w3c.dom.Element;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -81,6 +94,7 @@ import android.provider.Settings.Secure;
 import android.text.Html;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import static android.content.ContentValues.TAG;
 
@@ -163,6 +177,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.name = "SOS Service";
         sosConfig.autoStart = true;
         sosConfig.enableTransactional = true;
+        sosConfig.moduleClass = SOSServiceWithIPC.class.getCanonicalName();
 
         // Push Sensors Config
         AndroidSensorsConfig androidSensorsConfig = (AndroidSensorsConfig) createSensorConfig(Sensors.Android);
@@ -279,8 +294,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // Auto Purge Config
         MaxAgeAutoPurgeConfig autoPurgeConfig = new MaxAgeAutoPurgeConfig();
         autoPurgeConfig.enabled = true;
-        autoPurgeConfig.purgePeriod = 600.0;
-        autoPurgeConfig.maxRecordAge = 864000;
+        autoPurgeConfig.purgePeriod = 24.0 * 60.0 * 60.0;
+        autoPurgeConfig.maxRecordAge = 24.0 * 60.0 * 60.0;
 
         // Stream Storage Config
         StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
@@ -417,7 +432,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 {
                     case Sensor.TYPE_ACCELEROMETER:
                         if (!prefs.getBoolean("accelerometer_enable", false)
-                            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE"))
+                            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("STORE_LOCAL"))
                         {
 
                             Log.d(TAG, "addStorageConfig: excluding accelerometer");
@@ -430,7 +445,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         break;
                     case Sensor.TYPE_GYROSCOPE:
                         if (!prefs.getBoolean("gyroscope_enable", false)
-                            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("ARCHIVE"))
+                            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("STORE_LOCAL"))
                         {
 
                             Log.d(TAG, "addStorageConfig: excluding gyroscope");
@@ -443,7 +458,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         break;
                     case Sensor.TYPE_MAGNETIC_FIELD:
                         if (!prefs.getBoolean("magnetometer_enable", false)
-                            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("ARCHIVE"))
+                            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("STORE_LOCAL"))
                         {
 
                             Log.d(TAG, "addStorageConfig: excluding magnetometer");
@@ -456,7 +471,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         break;
                     case Sensor.TYPE_ROTATION_VECTOR:
                         if (!prefs.getBoolean("orientation_enable", false)
-                            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE"))
+                            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("STORE_LOCAL"))
                         {
 
                             Log.d(TAG, "addStorageConfig: excluding orientation");
@@ -474,7 +489,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 }
             }
             if (!prefs.getBoolean("location_enable", false)
-                || !prefs.getStringSet("location_options", Collections.emptySet()).contains("ARCHIVE"))
+                || !prefs.getStringSet("location_options", Collections.emptySet()).contains("STORE_LOCAL"))
             {
 
                 Log.d(TAG, "addStorageConfig: excluding location");
@@ -487,7 +502,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 Log.d(TAG, "addStorageConfig: NOT excluding location");
             }
             if (!prefs.getBoolean("video_enable", false)
-                || !prefs.getStringSet("video_options", Collections.emptySet()).contains("ARCHIVE"))
+                || !prefs.getStringSet("video_options", Collections.emptySet()).contains("STORE_LOCAL"))
             {
 
                 Log.d(TAG, "addStorageConfig: excluding video");
@@ -524,8 +539,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             {
                 case Sensor.TYPE_ACCELEROMETER:
                     if (!prefs.getBoolean("accelerometer_enable", false)
-                        || (!prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("REALTIME")
-                            && !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("ARCHIVE")))
+                        || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("STORE_LOCAL"))
                     {
 
                         Log.d(TAG, "addSosServerConfig: excluding accelerometer");
@@ -538,8 +552,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     break;
                 case Sensor.TYPE_GYROSCOPE:
                     if (!prefs.getBoolean("gyroscope_enable", false)
-                        || (!prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("REALTIME")
-                            && !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("ARCHIVE")))
+                        || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("STORE_LOCAL"))
                     {
 
                         Log.d(TAG, "addSosServerConfig: excluding gyroscope");
@@ -552,8 +565,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     break;
                 case Sensor.TYPE_MAGNETIC_FIELD:
                     if (!prefs.getBoolean("magnetometer_enable", false)
-                        || (!prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("REALTIME")
-                            && !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("ARCHIVE")))
+                        || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("STORE_LOCAL"))
                     {
 
                         Log.d(TAG, "addSosServerConfig: excluding magnetometer");
@@ -566,8 +578,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     break;
                 case Sensor.TYPE_ROTATION_VECTOR:
                     if (!prefs.getBoolean("orientation_enable", false)
-                        || (!prefs.getStringSet("orientation_options", Collections.emptySet()).contains("REALTIME")
-                            && !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("ARCHIVE")))
+                        || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("STORE_LOCAL"))
                     {
 
                         Log.d(TAG, "addSosServerConfig: excluding orientation");
@@ -585,8 +596,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             }
         }
         if (!prefs.getBoolean("location_enable", false)
-            || (!prefs.getStringSet("location_options", Collections.emptySet()).contains("REALTIME")
-                && !prefs.getStringSet("location_options", Collections.emptySet()).contains("ARCHIVE")))
+            || !prefs.getStringSet("location_options", Collections.emptySet()).contains("STORE_LOCAL"))
         {
 
             Log.d(TAG, "addSosServerConfig: excluding location");
@@ -599,8 +609,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             Log.d(TAG, "addSosServerConfig: NOT excluding location");
         }
         if (!prefs.getBoolean("video_enable", false)
-            || (!prefs.getStringSet("video_options", Collections.emptySet()).contains("REALTIME")
-                && !prefs.getStringSet("video_options", Collections.emptySet()).contains("ARCHIVE")))
+            || !prefs.getStringSet("video_options", Collections.emptySet()).contains("STORE_LOCAL"))
         {
 
             Log.d(TAG, "addSosServerConfig: excluding video");
@@ -656,7 +665,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 {
                     case Sensor.TYPE_ACCELEROMETER:
                         if (!prefs.getBoolean("accelerometer_enable", false)
-                            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH"))
+                            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                         {
 
                             Log.d(TAG, "addSosTConfig: excluding accelerometer");
@@ -669,7 +678,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         break;
                     case Sensor.TYPE_GYROSCOPE:
                         if (!prefs.getBoolean("gyroscope_enable", false)
-                            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH"))
+                            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                         {
 
                             Log.d(TAG, "addSosTConfig: excluding gyroscope");
@@ -682,7 +691,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         break;
                     case Sensor.TYPE_MAGNETIC_FIELD:
                         if (!prefs.getBoolean("magnetometer_enable", false)
-                            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH"))
+                            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                         {
 
                             Log.d(TAG, "addSosTConfig: excluding magnetometer");
@@ -695,7 +704,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         break;
                     case Sensor.TYPE_ROTATION_VECTOR:
                         if (!prefs.getBoolean("orientation_enable", false)
-                            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH"))
+                            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                         {
 
                             Log.d(TAG, "addSosTConfig: excluding orientation");
@@ -713,7 +722,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 }
             }
             if (!prefs.getBoolean("location_enable", false)
-                || !prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH"))
+                || !prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH_REMOTE"))
             {
 
                 Log.d(TAG, "addSosTConfig: excluding location");
@@ -726,7 +735,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 Log.d(TAG, "addSosTConfig: NOT excluding location");
             }
             if (!prefs.getBoolean("video_enable", false)
-                || !prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH"))
+                || !prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH_REMOTE"))
             {
 
                 Log.d(TAG, "addSosTConfig: excluding video");
