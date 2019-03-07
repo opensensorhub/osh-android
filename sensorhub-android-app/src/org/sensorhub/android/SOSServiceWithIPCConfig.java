@@ -6,9 +6,10 @@ import org.sensorhub.impl.service.sos.SOSServiceConfig;
 
 public class SOSServiceWithIPCConfig extends SOSServiceConfig
 {
-    Context androidContext;
+    public transient Context androidContext;
 
-    public SOSServiceWithIPCConfig() {
+    public SOSServiceWithIPCConfig()
+    {
         super();
     }
 }
