@@ -8,9 +8,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.service.sos.SOSService;
-import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.vast.ows.OWSException;
 import org.vast.ows.OWSRequest;
 import org.vast.ows.OWSUtils;
@@ -24,7 +22,7 @@ import java.io.IOException;
 
 import static android.content.ContentValues.TAG;
 
-class SOSServiceWithIPC extends SOSService
+public class SOSServiceWithIPC extends SOSService
 {
     @Override
     public void start() throws SensorHubException
@@ -97,11 +95,3 @@ class SOSServiceWithIPC extends SOSService
     }
 }
 
-class SOSServiceWithIPCConfig extends SOSServiceConfig
-{
-    Context androidContext;
-
-    public SOSServiceWithIPCConfig() {
-        super();
-    }
-}
