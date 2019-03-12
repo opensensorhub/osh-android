@@ -9,7 +9,7 @@ def repos = [
         'osh-addons/sensors/health':['sensorhub-driver-angelsensor'],
         'osh-addons/sensors/video':['sensorhub-driver-videocam', 'sensorhub-service-video'],
         'osh-addons/sensors/positioning':['sensorhub-driver-trupulse'],
-        'osh-addons/processing':['sensorhub-process-vecmath', 'sensorhub-process-geoloc']]
+        'osh-addons/processing':['sensorhub-process-vecmath', 'sensorhub-process-geoloc', 'sensorhub-process-basicmath']]
 
 repos.each { repoName, modules ->
   File repoDir = new File(oshMainDir, repoName).getCanonicalFile()
