@@ -5,7 +5,7 @@ def oshMainDir = "$rootDir/.."
 def repos = [
         'osh-core':['lib-swe-common', 'lib-sensorml', 'lib-ows', 'sensorhub-core', 'sensorhub-service-swe', 'sensorhub-storage-perst', 'sensorhub-storage-h2'],
         'osh-persistence':['sensorhub-storage-h2'],
-        'osh-comm':['sensorhub-comm-ble'],
+        'osh-comm':['sensorhub-comm-ble', 'sensorhub-comm-ble-dbus'],
         'osh-sensors':['sensorhub-driver-angelsensor'],
         'osh-video':['sensorhub-driver-videocam', 'sensorhub-service-video'],
         'osh-positioning':['sensorhub-driver-trupulse'],

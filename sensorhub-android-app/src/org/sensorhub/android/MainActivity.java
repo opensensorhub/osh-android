@@ -61,6 +61,7 @@ import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
+import org.sensorhub.impl.persistence.perst.BasicStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
@@ -174,7 +175,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // SOS Config
         SOSServiceConfig sosConfig = new SOSServiceWithIPCConfig();
         sosConfig.moduleClass = SOSServiceWithIPC.class.getCanonicalName();
-        ((SOSServiceWithIPCConfig) sosConfig).androidContext = getApplicationContext();
+//        ((SOSServiceWithIPCConfig) sosConfig).androidContext = getApplicationContext();
         /*
         SOSServiceConfig sosConfig = new SOSServiceConfig();
         */
@@ -182,6 +183,18 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.name = "SOS Service";
         sosConfig.autoStart = true;
         sosConfig.enableTransactional = true;
+
+
+        File dbFile = new File(getApplicationContext().getFilesDir()+"/db/");
+        dbFile.mkdirs();
+        MVStorageConfig basicStorageConfig = new MVStorageConfig();
+        basicStorageConfig.moduleClass = "org.sensorhub.impl.persistence.h2.MVObsStorageImpl";
+        basicStorageConfig.storagePath = dbFile.getAbsolutePath() + "/${STORAGE_ID}.dat";
+        basicStorageConfig.autoStart = true;
+        sosConfig.newStorageConfig = basicStorageConfig;
+        Log.d(TAG, "updateConfig: storagePath: " + basicStorageConfig.storagePath);
+        Log.d(TAG, "updateConfig: canWrite: " + dbFile.canWrite());
+
 
         // Push Sensors Config
         AndroidSensorsConfig androidSensorsConfig = (AndroidSensorsConfig) createSensorConfig(Sensors.Android);

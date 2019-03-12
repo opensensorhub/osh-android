@@ -31,7 +31,7 @@ public class SOSServiceWithIPC extends SOSService
         // FUTURE: If we don't want to use HTTPServlet don't call this.
         // Could be set as a preference in the sharedPreference
 
-        Context androidContext = ((SOSServiceWithIPCConfig) config).androidContext;
+//        Context androidContext = ((SOSServiceWithIPCConfig) config).androidContext;
 
         BroadcastReceiver receiver = new BroadcastReceiver()
         {
@@ -57,7 +57,7 @@ public class SOSServiceWithIPC extends SOSService
         };
         IntentFilter filter = new IntentFilter();
         filter.addAction("org.sofwerx.ogc.ACTION_SOS");
-        androidContext.registerReceiver(receiver, filter);
+//        androidContext.registerReceiver(receiver, filter);
     }
 
     private void ipcHandler(String body)
