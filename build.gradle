@@ -47,7 +47,8 @@ subprojects {
       // force use of local projects
       substitute module('org.sensorhub:sensorhub-core') with project(':sensorhub-core')
       substitute module('org.sensorhub:sensorhub-comm-ble') with project(':sensorhub-comm-ble')
-      substitute module('org.sensorhub:sensorhub-process-geoloc') with project(':sensorhub-process-geoloc')
+      substitute module('org.sensorhub:sensorhub-service-swe') with project(':sensorhub-service-swe')
+      substitute module('org.sensorhub:sensorhub-service-video') with project(':sensorhub-service-video')
       substitute module('org.vast.opengis:ogc-services-sps') with project(':ogc-services-sps')
 
       // override objenesis version to get new android instantiatiors
