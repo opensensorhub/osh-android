@@ -27,7 +27,7 @@ But also other sensors connected via USB, Bluetooth or Bluetooth Smart:
 
 Building the latest version of the App has been successfully tested with Gradle 4.7 and Android Studio 3.2.1.
 
-You'll need to install an up-to-date Android SDK and set its path in the [local.properties](local.properties) file. Also make sure you pulled source code from the following repos: `osh-core`, `osh-comm`, `osh-processing`, `osh-positioning`, `osh-sensors` and `osh-video` in the same location as this repo.
+You'll need to install an up-to-date Android SDK and set its path in the [local.properties](local.properties) file. Also make sure you pulled source code from the `osh-core` and `osh-addons` repositories, in the same location as this repo.
 
 To build using command line gradle, `cd` in the `sensorhub-android-app` folder and just run `../gradlew build`. You'll find the resulting APK in `sensorhub-android-app/build/outputs/apk`
 
