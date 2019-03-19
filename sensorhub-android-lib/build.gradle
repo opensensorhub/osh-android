@@ -11,7 +11,7 @@ dependencies {
   //compile 'org.sensorhub:sensorhub-driver-angelsensor:[0.1,2.0)'
   api project(':sensorhub-core')
   api project(':sensorhub-service-swe')
-  api project(':sensorhub-storage-perst')
+//  api project(':sensorhub-storage-perst')
   api project(':sensorhub-storage-h2')
   api project(':sensorhub-service-video')
   api project(':sensorhub-comm-ble')

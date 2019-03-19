@@ -151,10 +151,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig = new InMemoryConfigDb();
 
         // get SOS URL from config
-        // TODO: Undo hardcoding
         String sosUriConfig = prefs.getString("sos_uri", "http://127.0.0.1:8080/sensorhub/sos");
-        String sosUser = prefs.getString("sos_username", "admin");
-        String sosPwd = prefs.getString("sos_password", "admin");
+        String sosUser = prefs.getString("sos_username", "");
+        String sosPwd = prefs.getString("sos_password", "");
         if (sosUriConfig != null && sosUriConfig.trim().length() > 0)
         {
             try
@@ -173,17 +172,16 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig.add(serverConfig);
 
         // SOS Config
+        /*
         SOSServiceConfig sosConfig = new SOSServiceWithIPCConfig();
         sosConfig.moduleClass = SOSServiceWithIPC.class.getCanonicalName();
-//        ((SOSServiceWithIPCConfig) sosConfig).androidContext = getApplicationContext();
-        /*
-        SOSServiceConfig sosConfig = new SOSServiceConfig();
+        ((SOSServiceWithIPCConfig) sosConfig).androidContext = this;
         */
+        SOSServiceConfig sosConfig = new SOSServiceConfig();
         sosConfig.id = "SOS_SERVICE";
         sosConfig.name = "SOS Service";
         sosConfig.autoStart = true;
         sosConfig.enableTransactional = true;
-
 
         File dbFile = new File(getApplicationContext().getFilesDir()+"/db/");
         dbFile.mkdirs();
@@ -192,9 +190,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         basicStorageConfig.storagePath = dbFile.getAbsolutePath() + "/${STORAGE_ID}.dat";
         basicStorageConfig.autoStart = true;
         sosConfig.newStorageConfig = basicStorageConfig;
-        Log.d(TAG, "updateConfig: storagePath: " + basicStorageConfig.storagePath);
-        Log.d(TAG, "updateConfig: canWrite: " + dbFile.canWrite());
-
 
         // Push Sensors Config
         AndroidSensorsConfig androidSensorsConfig = (AndroidSensorsConfig) createSensorConfig(Sensors.Android);
