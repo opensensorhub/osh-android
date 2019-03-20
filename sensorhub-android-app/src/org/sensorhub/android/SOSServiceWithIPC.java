@@ -48,11 +48,11 @@ public class SOSServiceWithIPC extends SOSService
 
                 String sosPayload = intent.getStringExtra("SOS");
                 Log.d(TAG, "onReceive: sosPayload: "+sosPayload);
-                ipcHandler(sosPayload);
-
                 String log = sb.toString();
                 Log.d(TAG, log);
                 Toast.makeText(context, log, Toast.LENGTH_LONG).show();
+
+//                ipcHandler(sosPayload);
             }
         };
         IntentFilter filter = new IntentFilter();
