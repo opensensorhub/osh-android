@@ -51,11 +51,13 @@ public class SensorHubService extends Service
     private HandlerThread msgThread;
     private Handler msgHandler;
     SensorHub sensorhub;
-    SurfaceTexture videoTex;
     boolean hasVideo;
+    static Context context;
+    static SurfaceTexture videoTex;
 
 
-    public class LocalBinder extends Binder {
+    public class LocalBinder extends Binder
+    {
         SensorHubService getService() {
             return SensorHubService.this;
         }
@@ -67,6 +69,13 @@ public class SensorHubService extends Service
         
         try
         {
+            // keep handle to Android context so it can be retrieved by OSH components
+            SensorHubService.context = getApplicationContext();
+
+            // create video surface texture here so it's not destroyed when pausing the app
+            SensorHubService.videoTex = new SurfaceTexture(1);
+            SensorHubService.videoTex.detachFromGLContext();
+
             // load external dex file containing stax API
             //Dexter.loadFromAssets(this.getApplicationContext(), "stax-api-1.0-2.dex");
             
@@ -78,10 +87,6 @@ public class SensorHubService extends Service
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             dbf.setNamespaceAware(true);
             XMLImplFinder.setDOMImplementation(dbf.newDocumentBuilder().getDOMImplementation());
-
-            // create video surface texture here so it's not destroyed when pausing the app
-            videoTex = new SurfaceTexture(1);
-            videoTex.detachFromGLContext();
 
             // start handler thread
             msgThread = new HandlerThread("SensorHubService", Process.THREAD_PRIORITY_BACKGROUND);
@@ -145,7 +150,9 @@ public class SensorHubService extends Service
     {
         stopSensorHub();
         msgThread.quitSafely();
-        videoTex.release();
+        SensorHubService.videoTex.release();
+        SensorHubService.videoTex = null;
+        SensorHubService.context = null;
     }
 
 
@@ -162,15 +169,21 @@ public class SensorHubService extends Service
     }
 
 
-    public SurfaceTexture getVideoTexture()
+    public boolean hasVideo()
+    {
+        return hasVideo;
+    }
+
+
+    public static SurfaceTexture getVideoTexture()
     {
         return videoTex;
     }
 
 
-    public boolean hasVideo()
+    public static Context getContext()
     {
-        return hasVideo;
+        return context;
     }
     
 }

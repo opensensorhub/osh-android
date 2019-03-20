@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.namespace.QName;
 
+import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import android.os.HandlerThread;
 import net.opengis.gml.v32.AbstractFeature;
@@ -25,6 +26,8 @@ import net.opengis.sensorml.v20.PhysicalComponent;
 import net.opengis.sensorml.v20.PhysicalSystem;
 import net.opengis.sensorml.v20.SpatialFrame;
 import net.opengis.sensorml.v20.impl.SpatialFrameImpl;
+
+import org.sensorhub.android.SensorHubService;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorException;
@@ -71,7 +74,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     @Override
     public synchronized void init() throws SensorHubException
     {
-        Context androidContext = config.androidContext;
+        Context androidContext = SensorHubService.getContext();
         
         // generate identifiers
         String deviceID = Secure.getString(androidContext.getContentResolver(), Secure.ANDROID_ID);
@@ -185,10 +188,11 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
                 if ( (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_BACK && config.activateBackCamera) ||
                      (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT && config.activateFrontCamera))
                 {
+                    SurfaceTexture camPreviewTexture = SensorHubService.getVideoTexture();
                     if (AndroidSensorsConfig.JPEG_CODEC.equals(config.videoCodec))
-                        useCamera(new AndroidCameraOutputMJPEG(this, cameraId, config.camPreviewTexture), cameraId);
+                        useCamera(new AndroidCameraOutputMJPEG(this, cameraId, camPreviewTexture), cameraId);
                     else if (AndroidSensorsConfig.H264_CODEC.equals(config.videoCodec))
-                        useCamera(new AndroidCameraOutputH264(this, cameraId, config.camPreviewTexture), cameraId);
+                        useCamera(new AndroidCameraOutputH264(this, cameraId, camPreviewTexture), cameraId);
                     else
                         throw new SensorException("Unsupported codec " + config.videoCodec);
                 }

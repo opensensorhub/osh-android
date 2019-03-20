@@ -51,7 +51,7 @@ subprojects {
       substitute module('org.sensorhub:sensorhub-service-video') with project(':sensorhub-service-video')
       substitute module('org.vast.opengis:ogc-services-sps') with project(':ogc-services-sps')
 
-      // override objenesis version to get new android instantiatiors
+      // override objenesis version to get new android instantiators
       substitute module('uk.com.robust-it:cloning:1.9.1') with module('uk.com.robust-it:cloning:1.9.10')
     }
   }

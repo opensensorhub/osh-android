@@ -1,16 +1,16 @@
 apply plugin: 'com.android.library'
 
-description = 'Android Sensors'
-ext.details = 'Driver for sensors accessible through Android API'
+description = 'OSH Android Service'
+ext.details = 'Android service encapsulating an OSH instance'
 
 dependencies {
   //api 'org.sensorhub:sensorhub-core:' + oshCoreVersion
   //api 'org.sensorhub:sensorhub-driver-videocam:[1.0,2.0)'
   //api 'org.sensorhub:sensorhub-process-vecmath:[1.0,2.0)'
   api project(':sensorhub-core')
-  api project(':sensorhub-driver-videocam')
-  api project(':sensorhub-process-vecmath')
-  api project(':sensorhub-android-service')
+  api project(':sensorhub-comm-ble')
+  api project(':sensorhub-service-swe')
+  api 'javax.xml.stream:stax-api:1.0-2'
 }
 
 android {
@@ -29,11 +29,9 @@ android {
   sourceSets {
     main {
       manifest.srcFile 'AndroidManifest.xml'
-      java.srcDirs = ['src/main/java']
-      resources.srcDirs = ['src/main/resources']
+      java.srcDirs = ['src']
       res.srcDirs = ['res']
       assets.srcDirs = ['assets']
-      jniLibs.srcDirs = ['libs']
     }
   }
 }

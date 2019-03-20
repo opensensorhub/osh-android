@@ -31,7 +31,7 @@ import android.content.Context;
 public class AndroidSensorsConfig extends SensorConfig
 {     
     public final static String JPEG_CODEC = "JPEG";
-    public final static String H264_CODEC = "H264";    
+    public final static String H264_CODEC = "H264";
     
     public boolean activateAccelerometer = false;
     public boolean activateGyrometer = false;
@@ -46,22 +46,11 @@ public class AndroidSensorsConfig extends SensorConfig
     
     public String deviceName;
     public String runName;
-    public String runDescription; 
-    
-    public transient Context androidContext;
-    public transient SurfaceTexture camPreviewTexture;
-       
+    public String runDescription;
     
     
     public AndroidSensorsConfig()
     {
         this.moduleClass = AndroidSensorsDriver.class.getCanonicalName();
-    }
-
-
-    @Override
-    public ModuleConfig clone()
-    {
-        return this; // disable clone for now as it crashes Android app
     }
 }
