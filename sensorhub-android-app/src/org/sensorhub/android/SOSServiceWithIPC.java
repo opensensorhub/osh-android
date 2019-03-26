@@ -4,8 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.util.Log;
-import android.widget.Toast;
 
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.impl.service.sos.SOSService;
@@ -20,10 +18,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import static android.content.ContentValues.TAG;
-
 public class SOSServiceWithIPC extends SOSService
 {
+    public static final String ACTION_SOS = "org.sofwerx.ogc.ACTION_SOS";
+    private static final String EXTRA_PAYLOAD = "SOS";
+    private static final String EXTRA_ORIGIN = "src";
+
     @Override
     public void start() throws SensorHubException
     {
@@ -38,26 +38,12 @@ public class SOSServiceWithIPC extends SOSService
             @Override
             public void onReceive(Context context, Intent intent)
             {
-                StringBuilder sb = new StringBuilder();
-
-                sb.append('\n');
-                sb.append("Action: " + intent.getAction());
-                sb.append('\n');
-                sb.append("URI: " + intent.toUri(Intent.URI_INTENT_SCHEME));
-                sb.append('\n');
-
-                String sosPayload = intent.getStringExtra("SOS");
-                Log.d(TAG, "onReceive: sosPayload: "+sosPayload);
-                String log = sb.toString();
-                Log.d(TAG, log);
-                Toast.makeText(context, log, Toast.LENGTH_LONG).show();
-
-//                ipcHandler(sosPayload);
+                String sosPayload = intent.getStringExtra(EXTRA_PAYLOAD);
+                ipcHandler(sosPayload);
             }
         };
         IntentFilter filter = new IntentFilter();
-        filter.addAction("org.sofwerx.ogc.ACTION_SOS");
-
+        filter.addAction(ACTION_SOS);
         androidContext.registerReceiver(receiver, filter);
     }
 
