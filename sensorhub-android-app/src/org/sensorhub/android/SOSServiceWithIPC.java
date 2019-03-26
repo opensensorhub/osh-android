@@ -60,12 +60,13 @@ public class SOSServiceWithIPC extends SOSService
             // Subclass of OWSRequest (InsertSensor Object)
 
             // process request and get response
-            ByteArrayOutputStream requestOutputStream = new ByteArrayOutputStream();
-            request.setResponseStream(requestOutputStream);
+            ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+            request.setResponseStream(responseStream);
             servlet.handleRequest(request);
 
             // send response
             // convert back outputstream 'os'  into something you can broadcast via IPC
+            String responsePayload = responseStream.toString();
         }
         catch (DOMHelperException e)
         {
