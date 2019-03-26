@@ -23,6 +23,7 @@ public class SOSServiceWithIPC extends SOSService
     public static final String ACTION_SOS = "org.sofwerx.ogc.ACTION_SOS";
     private static final String EXTRA_PAYLOAD = "SOS";
     private static final String EXTRA_ORIGIN = "src";
+    private Context androidContext;
 
     @Override
     public void start() throws SensorHubException
@@ -31,15 +32,19 @@ public class SOSServiceWithIPC extends SOSService
         // FUTURE: If we don't want to use HTTPServlet don't call this.
         // Could be set as a preference in the sharedPreference
 
-        Context androidContext = ((SOSServiceWithIPCConfig) config).androidContext;
+        androidContext = ((SOSServiceWithIPCConfig) config).androidContext;
 
         BroadcastReceiver receiver = new BroadcastReceiver()
         {
             @Override
             public void onReceive(Context context, Intent intent)
             {
-                String sosPayload = intent.getStringExtra(EXTRA_PAYLOAD);
-                ipcHandler(sosPayload);
+                String origin = intent.getStringExtra(EXTRA_ORIGIN);
+                if (!context.getPackageName().equalsIgnoreCase(origin))
+                {
+                    String requestPayload = intent.getStringExtra(EXTRA_PAYLOAD);
+                    handleIPCRequest(requestPayload);
+                }
             }
         };
         IntentFilter filter = new IntentFilter();
@@ -47,10 +52,9 @@ public class SOSServiceWithIPC extends SOSService
         androidContext.registerReceiver(receiver, filter);
     }
 
-    private void ipcHandler(String body)
+    private void handleIPCRequest(String body)
     {
         OWSUtils owsUtils = new OWSUtils();
-
         ByteArrayInputStream is = new ByteArrayInputStream(body.getBytes());
 
         try {
@@ -64,9 +68,13 @@ public class SOSServiceWithIPC extends SOSService
             request.setResponseStream(responseStream);
             servlet.handleRequest(request);
 
-            // send response
-            // convert back outputstream 'os'  into something you can broadcast via IPC
+            // send response;
             String responsePayload = responseStream.toString();
+            Intent responseIntent = new Intent();
+            responseIntent.setAction(ACTION_SOS);
+            responseIntent.putExtra(EXTRA_ORIGIN, androidContext.getPackageName());
+            responseIntent.putExtra(EXTRA_PAYLOAD, responsePayload);
+            androidContext.sendBroadcast(responseIntent);
         }
         catch (DOMHelperException e)
         {
