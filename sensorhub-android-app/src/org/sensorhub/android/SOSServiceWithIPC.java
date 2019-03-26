@@ -56,13 +56,13 @@ public class SOSServiceWithIPC extends SOSService
         try {
             DOMHelper dom = new DOMHelper(is, false);
             Element requestElt = dom.getBaseElement();
-            OWSRequest req = owsUtils.readXMLQuery(dom, requestElt);
+            OWSRequest request = owsUtils.readXMLQuery(dom, requestElt);
             // Subclass of OWSRequest (InsertSensor Object)
 
             // process request and get response
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            req.setResponseStream(os);
-            servlet.handleRequest(req);
+            ByteArrayOutputStream requestOutputStream = new ByteArrayOutputStream();
+            request.setResponseStream(requestOutputStream);
+            servlet.handleRequest(request);
 
             // send response
             // convert back outputstream 'os'  into something you can broadcast via IPC
