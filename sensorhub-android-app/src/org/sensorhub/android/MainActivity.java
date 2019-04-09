@@ -193,7 +193,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // Push Sensors Config
         AndroidSensorsConfig androidSensorsConfig = (AndroidSensorsConfig) createSensorConfig(Sensors.Android);
         sensorhubConfig.add(androidSensorsConfig);
-        addSosTConfig(androidSensorsConfig, sosUser, sosPwd);
+        if (isPushingSensor()) {
+            Log.d(TAG, "updateConfig: HERE");
+            addSosTConfig(androidSensorsConfig, sosUser, sosPwd);
+        }
 
         StreamStorageConfig androidStreamStorageConfig = createStreamStorageConfig(androidSensorsConfig);
         addStorageConfig(androidSensorsConfig, androidStreamStorageConfig);
@@ -258,11 +261,33 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
         */
 
-        // TODO
-        //  - Derive a new class from SOS service in the same package as sos service.
-        //  - This is a class that instantiates the servlet.
-        //  - Derive from that and add IPC receiver logic.
         sensorhubConfig.add(sosConfig);
+    }
+
+    private boolean isPushingSensor()
+    {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+
+        if (prefs.getBoolean("accelerometer_enable", false)
+                && prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+            return true;
+        if (prefs.getBoolean("gyroscope_enable", false)
+                && prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+            return true;
+        if (prefs.getBoolean("magnetometer_enable", false)
+                && prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+            return true;
+        if (!prefs.getBoolean("orientation_enable", false)
+                && prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+            return true;
+        if (!prefs.getBoolean("location_enable", false)
+                && prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+            return true;
+        if (!prefs.getBoolean("video_enable", false)
+                && prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+            return true;
+
+        return false;
     }
 
     private SensorDataProviderConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig)
