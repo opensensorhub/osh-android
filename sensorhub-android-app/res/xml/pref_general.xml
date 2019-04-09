@@ -17,7 +17,7 @@
         android:summary="" />
 
     <EditTextPreference
-        android:defaultValue="http://127.0.0.1:8080/sensorhub/sos"
+        android:defaultValue="http://127.0.0.1:8585/sensorhub/sos"
         android:inputType="textUri"
         android:key="sos_uri"
         android:maxLines="1"

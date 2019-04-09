@@ -150,7 +150,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig = new InMemoryConfigDb();
 
         // get SOS URL from config
-        String sosUriConfig = prefs.getString("sos_uri", "http://127.0.0.1:8080/sensorhub/sos");
+        String sosUriConfig = prefs.getString("sos_uri", "http://127.0.0.1:8585/sensorhub/sos");
         String sosUser = prefs.getString("sos_username", "");
         String sosPwd = prefs.getString("sos_password", "");
         if (sosUriConfig != null && sosUriConfig.trim().length() > 0)
@@ -167,6 +167,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // HTTP Server Config
         HttpServerConfig serverConfig = new HttpServerConfig();
+        serverConfig.httpPort = 8585;
         serverConfig.autoStart = true;
         sensorhubConfig.add(serverConfig);
 
