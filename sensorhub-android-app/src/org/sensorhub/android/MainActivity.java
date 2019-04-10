@@ -23,10 +23,13 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.view.*;
 import org.sensorhub.android.comm.BluetoothCommProvider;
 import org.sensorhub.android.comm.BluetoothCommProviderConfig;
@@ -44,9 +47,11 @@ import org.sensorhub.impl.client.sost.SOSTClientConfig;
 //import org.sensorhub.impl.driver.dji.DjiConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
+import org.sensorhub.impl.sensor.android.AndroidLocationOutput;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
+import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
 import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -147,6 +152,28 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if (enabled)
         {
             TruPulseConfig trupulseConfig = new TruPulseConfig();
+
+            // add target geolocation processing if GPS is enabled
+            if (sensorsConfig.activateGpsLocation)
+            {
+                String gpsOutputName = null;
+                if (getApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION))
+                {
+                    LocationManager locationManager = (LocationManager)getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+                    List<String> locProviders = locationManager.getAllProviders();
+                    for (String provName: locProviders)
+                    {
+                        LocationProvider locProvider = locationManager.getProvider(provName);
+                        if (locProvider.requiresSatellite())
+                            gpsOutputName = locProvider.getName().replaceAll(" ", "_") + "_data";
+                    }
+                }
+
+                trupulseConfig = new TruPulseWithGeolocConfig();
+                ((TruPulseWithGeolocConfig)trupulseConfig).locationSourceID = sensorsConfig.id;
+                ((TruPulseWithGeolocConfig)trupulseConfig).locationOutputName = gpsOutputName;
+            }
+
             trupulseConfig.id = "TRUPULSE_SENSOR";
             trupulseConfig.name = "TruPulse Range Finder [" + deviceName + "]";
             trupulseConfig.autoStart = true;
