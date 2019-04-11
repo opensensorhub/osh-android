@@ -255,7 +255,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.autoStart = true;
         sosConfig.sensorID = sensorConf.id;
         sosConfig.sos.remoteHost = sosUrl.getHost();
-        sosConfig.sos.remotePort = sosUrl.getPort();
+        sosConfig.sos.remotePort = sosUrl.getPort() < 0 ? sosUrl.getDefaultPort() : sosUrl.getPort();
         sosConfig.sos.resourcePath = sosUrl.getPath();
         sosConfig.sos.enableTLS = sosUrl.getProtocol().equals("https");
         sosConfig.sos.user = sosUser;
