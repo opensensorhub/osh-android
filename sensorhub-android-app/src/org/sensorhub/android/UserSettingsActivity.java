@@ -219,6 +219,17 @@ public class UserSettingsActivity extends PreferenceActivity
                 videoCodec.setEnabled((boolean) newValue);
                 return true;
             });
+
+            Preference trupulseEnable = getPreferenceScreen().findPreference("trupulse_enable");
+            Preference trupulseOptions = getPreferenceScreen().findPreference("trupulse_options");
+            Preference trupulseDatasource = getPreferenceScreen().findPreference("trupulse_datasource");
+            trupulseOptions.setEnabled(prefs.getBoolean(trupulseEnable.getKey(), false));
+            trupulseDatasource.setEnabled(prefs.getBoolean(trupulseEnable.getKey(), false));
+            trupulseEnable.setOnPreferenceChangeListener((preference, newValue) -> {
+                trupulseOptions.setEnabled((boolean) newValue);
+                trupulseDatasource.setEnabled((boolean) newValue);
+                return true;
+            });
         }
     }
 

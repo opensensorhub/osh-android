@@ -50,4 +50,14 @@
     <string-array name="sos_option_defaults">
         <item>PUSH_REMOTE</item>
     </string-array>
+
+    <string-array name="trupulse_datasource_list">
+        <item>Streaming Physical Device</item>
+        <item>Simulate Virtual Device</item>
+    </string-array>
+    <string-array name="trupulse_datasource_values">
+        <item>STREAM</item>
+        <item>SIMULATE</item>
+    </string-array>
+    <string name="trupulse_datasource_default">STREAM</string>
 </resources>

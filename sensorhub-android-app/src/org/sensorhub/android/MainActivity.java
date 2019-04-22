@@ -194,8 +194,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // Push Sensors Config
         AndroidSensorsConfig androidSensorsConfig = (AndroidSensorsConfig) createSensorConfig(Sensors.Android);
         sensorhubConfig.add(androidSensorsConfig);
-        if (isPushingSensor()) {
-            Log.d(TAG, "updateConfig: HERE");
+        if (isPushingSensor(Sensors.Android))
+        {
             addSosTConfig(androidSensorsConfig, sosUser, sosPwd);
         }
 
@@ -206,14 +206,18 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         addSosServerConfig(sosConfig, androidDataProviderConfig);
 
         // TruPulse sensor
-        boolean enabled = prefs.getBoolean("trupulse_enabled", false);
+        boolean enabled = prefs.getBoolean("trupulse_enable", false);
         if (enabled)
         {
-            TruPulseConfig truPulseConfig= prefs.getBoolean("trupulse_simu", false)
-                    ? (TruPulseConfig) createSensorConfig(Sensors.TruPulse)
+            String truPulseDevice = prefs.getString("trupulse_datasource", "SIMULATED");
+            TruPulseConfig truPulseConfig = truPulseDevice == "SIMULATED"
+                    ? (TruPulseConfig) createSensorConfig(Sensors.TruPulseSim)
                     : (TruPulseConfig) createSensorConfig(Sensors.TruPulse);
             sensorhubConfig.add(truPulseConfig);
-            addSosTConfig(truPulseConfig, sosUser, sosPwd);
+            if (isPushingSensor(Sensors.TruPulse))
+            {
+                addSosTConfig(truPulseConfig, sosUser, sosPwd);
+            }
         }
 
         // AngelSensor
@@ -265,28 +269,37 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig.add(sosConfig);
     }
 
-    private boolean isPushingSensor()
+    private boolean isPushingSensor(Sensors sensor)
     {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
 
-        if (prefs.getBoolean("accelerometer_enable", false)
-                && prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-            return true;
-        if (prefs.getBoolean("gyroscope_enable", false)
-                && prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-            return true;
-        if (prefs.getBoolean("magnetometer_enable", false)
-                && prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-            return true;
-        if (!prefs.getBoolean("orientation_enable", false)
-                && prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-            return true;
-        if (!prefs.getBoolean("location_enable", false)
-                && prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-            return true;
-        if (!prefs.getBoolean("video_enable", false)
-                && prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-            return true;
+        if (Sensors.Android.equals(sensor))
+        {
+            if (prefs.getBoolean("accelerometer_enable", false)
+                    && prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            if (prefs.getBoolean("gyroscope_enable", false)
+                    && prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            if (prefs.getBoolean("magnetometer_enable", false)
+                    && prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            if (prefs.getBoolean("orientation_enable", false)
+                    && prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            if (prefs.getBoolean("location_enable", false)
+                    && prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            if (prefs.getBoolean("video_enable", false)
+                    && prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+        }
+        else if (Sensors.TruPulse.equals(sensor) || Sensors.TruPulseSim.equals(sensor))
+        {
+            if (prefs.getBoolean("trupulse_enable", false)
+                    && prefs.getStringSet("trupulse_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+        }
 
         return false;
     }

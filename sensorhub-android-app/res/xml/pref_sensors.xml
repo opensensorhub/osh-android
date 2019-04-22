@@ -180,17 +180,28 @@
 
     <PreferenceCategory
         android:title="@string/sensor_trupulse">
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="trupulse_enabled"
-            android:summary="Enable streaming of TruPulse range finder data (sensor must be connected via Bluetooth on startup)"
-            android:title="TruPulse Range Finder Data" />
+        <SwitchPreference
+            android:key="trupulse_enable"
+            android:title="TruPulse"
+            android:defaultValue="false" />
 
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="trupulse_simu"
-            android:summary="Use simulated TruPulse data instead of the actual sensor data"
-            android:title="Use Simulated TruPulse Data" />
+        <ListPreference
+            android:key="trupulse_datasource"
+            android:enabled="false"
+            android:title="TruPulse Data Source"
+            android:summary="%s"
+            android:entries="@array/trupulse_datasource_list"
+            android:entryValues="@array/trupulse_datasource_values"
+            android:defaultValue="@string/trupulse_datasource_default" />
+
+        <MultiSelectListPreference
+            android:key="trupulse_options"
+            android:enabled="false"
+            android:title="TruPulse Output Options"
+            android:summary="Options for pushing data"
+            android:entries="@array/sos_option_list"
+            android:entryValues="@array/sos_option_values"
+            android:defaultValue="@array/sos_option_defaults" />
     </PreferenceCategory>
 
     <PreferenceCategory
