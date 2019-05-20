@@ -167,6 +167,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // HTTP Server Config
         HttpServerConfig serverConfig = new HttpServerConfig();
+        serverConfig.proxyBaseUrl = "";
         serverConfig.httpPort = 8585;
         serverConfig.autoStart = true;
         sensorhubConfig.add(serverConfig);

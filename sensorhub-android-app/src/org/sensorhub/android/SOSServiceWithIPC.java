@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.impl.service.sos.SOSService;
@@ -18,8 +19,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import static android.content.ContentValues.TAG;
+
 public class SOSServiceWithIPC extends SOSService
 {
+    public static final String SQAN_TEST = "SA";
+    private static final String SQAN_EXTRA = "channel";
     public static final String ACTION_SOS = "org.sofwerx.ogc.ACTION_SOS";
     private static final String EXTRA_PAYLOAD = "SOS";
     private static final String EXTRA_ORIGIN = "src";
@@ -43,6 +48,12 @@ public class SOSServiceWithIPC extends SOSService
                 if (!context.getPackageName().equalsIgnoreCase(origin))
                 {
                     String requestPayload = intent.getStringExtra(EXTRA_PAYLOAD);
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.append('\n' + requestPayload + '\n');
+                    String log = sb.toString();
+                    Log.d(TAG, "onReceive: " + log);
+
                     handleIPCRequest(requestPayload);
                 }
             }
@@ -50,6 +61,24 @@ public class SOSServiceWithIPC extends SOSService
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_SOS);
         androidContext.registerReceiver(receiver, filter);
+
+        BroadcastReceiver testReceiver = new BroadcastReceiver()
+        {
+            @Override
+            public void onReceive(Context context, Intent intent)
+            {
+                Log.d(TAG, "onReceive: SQAN");
+                String channel = intent.getStringExtra(SQAN_EXTRA);
+                StringBuilder sb = new StringBuilder();
+                sb.append('\n' + channel + '\n');
+                String log = sb.toString();
+                Log.d(TAG, "testReceive: " + log);
+            }
+        };
+        IntentFilter testFilter = new IntentFilter();
+        testFilter.addAction(SQAN_TEST);
+        androidContext.registerReceiver(testReceiver, testFilter);
+        Log.d(TAG, "start: ");
     }
 
     private void handleIPCRequest(String body)
@@ -68,6 +97,11 @@ public class SOSServiceWithIPC extends SOSService
             request.setResponseStream(responseStream);
             servlet.handleRequest(request);
 
+            Log.d(TAG, "handleIPCRequest: " + request.toString());
+
+            /**
+             * request are small usually, but responses can be really large. There is a limit to the size of response
+             */
             // send response;
             String responsePayload = responseStream.toString();
             Intent responseIntent = new Intent();
@@ -88,6 +122,10 @@ public class SOSServiceWithIPC extends SOSService
         {
             e.printStackTrace();
         }
+        // OGCException e
+        /**
+         * TODO: Look how server is handling the this exception
+         */
     }
 }
 
