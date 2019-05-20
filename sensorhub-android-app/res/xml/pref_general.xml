@@ -16,29 +16,56 @@
         android:title="Current IP Address"
         android:summary="" />
 
-    <EditTextPreference
-        android:defaultValue="http://127.0.0.1:8585/sensorhub/sos"
-        android:inputType="textUri"
-        android:key="sos_uri"
-        android:maxLines="1"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:title="SOS Endpoint URL" />
-    
-    <EditTextPreference
-        android:inputType="text"
-        android:key="sos_username"
-        android:maxLines="1"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:title="SOS Username"
-        android:summary="Enter your username or leave blank" />
-    
-    <EditTextPreference
-        android:inputType="textPassword"
-        android:key="sos_password"
-        android:selectAllOnFocus="true"
-        android:title="SOS Password"
-        android:summary="Enter your password or leave blank" />
+    <PreferenceCategory
+        android:title="@string/sos_settings">
+        <EditTextPreference
+            android:defaultValue="http://127.0.0.1:8585/sensorhub/sos"
+            android:inputType="textUri"
+            android:key="sos_uri"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="SOS Endpoint URL" />
+
+        <EditTextPreference
+            android:inputType="text"
+            android:key="sos_username"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="SOS Username"
+            android:summary="Enter your username or leave blank" />
+
+        <EditTextPreference
+            android:inputType="textPassword"
+            android:key="sos_password"
+            android:selectAllOnFocus="true"
+            android:title="SOS Password"
+            android:summary="Enter your password or leave blank" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/sost_settings">
+        <EditTextPreference
+            android:defaultValue="http://127.0.0.1:8585/sensorhub/sos"
+            android:inputType="textUri"
+            android:key="sost_uri"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="SOS-T Endpoint URL" />
+        <EditTextPreference
+            android:inputType="text"
+            android:key="sost_username"
+            android:selectAllOnFocus="true"
+            android:title="SOS-T Username"
+            android:summary="Enter sos-t username or leave blank" />
+        <EditTextPreference
+            android:inputType="textPassword"
+            android:key="sost_password"
+            android:selectAllOnFocus="true"
+            android:title="SOS-T Password"
+            android:summary="Enter SOS-T password or leave blank" />
+    </PreferenceCategory>
 
 </PreferenceScreen>

@@ -123,6 +123,8 @@ public class UserSettingsActivity extends PreferenceActivity
             bindPreferenceSummaryToValue(findPreference("device_name"));
             bindPreferenceSummaryToValue(findPreference("sos_uri"));
             bindPreferenceSummaryToValue(findPreference("sos_username"));
+            bindPreferenceSummaryToValue(findPreference("sost_uri"));
+            bindPreferenceSummaryToValue(findPreference("sost_username"));
 
             WifiManager wifiManager = (WifiManager) getActivity().getApplicationContext().getSystemService(WIFI_SERVICE);
             int ipAddress = wifiManager.getConnectionInfo().getIpAddress();

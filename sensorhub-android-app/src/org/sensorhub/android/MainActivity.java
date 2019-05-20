@@ -54,6 +54,7 @@ import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
+import org.sensorhub.impl.comm.HTTPConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.persistence.GenericStreamStorage;
@@ -122,6 +123,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     boolean oshStarted = false;
     ArrayList<SOSTClient> sostClients = new ArrayList<SOSTClient>();
     URL sosUrl = null;
+    URL sostUrl = null;
     boolean showVideo;
 
     private ServiceConnection sConn = new ServiceConnection()
@@ -176,9 +178,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         SOSServiceConfig sosConfig = new SOSServiceWithIPCConfig();
         sosConfig.moduleClass = SOSServiceWithIPC.class.getCanonicalName();
         ((SOSServiceWithIPCConfig) sosConfig).androidContext = this.getApplicationContext();
-        /*
-        SOSServiceConfig sosConfig = new SOSServiceConfig();
-        */
         sosConfig.id = "SOS_SERVICE";
         sosConfig.name = "SOS Service";
         sosConfig.autoStart = true;
@@ -268,6 +267,51 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         */
 
         sensorhubConfig.add(sosConfig);
+
+        // Get SOS-T URL from config
+        String sostUriConfig = prefs.getString("sost_uri", "");
+        String sostUser = prefs.getString("sost_username", "");
+        String sostPwd = prefs.getString("sost_password", "");
+        if (sostUriConfig != null && sostUriConfig.trim().length() > 0)
+        {
+            try {
+                sostUrl = new URL(sostUriConfig);
+            }
+            catch (MalformedURLException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        if (!sostUriConfig.contentEquals("")) {
+            // SOS-T Client Config
+            SOSTClientConfig sostConfig = new SOSTClientConfig();
+            sostConfig.sensorID = androidSensorsConfig.id;
+            sostConfig.moduleClass = SOSTClient.class.getCanonicalName();
+            sostConfig.id = "SOST_CLIENT";
+            sostConfig.name = "SOS-T Client";
+            sostConfig.autoStart = true;
+
+            // SOS-T Client HTTP Config
+            sostConfig.sos = new HTTPConfig();
+            sostConfig.sos.enableTLS = sostUrl.getProtocol().toUpperCase().contains("HTTPS") ? true : false;
+            sostConfig.sos.remoteHost = sostUrl.getHost();
+            sostConfig.sos.remotePort = sostUrl.getPort();
+            sostConfig.sos.resourcePath = sostUrl.getPath();
+            sostConfig.sos.user = sostUser;
+            sostConfig.sos.password = sostPwd;
+
+            sostConfig.connection = new SOSTClientConfig.SOSConnectionConfig();
+            sostConfig.connection.usePersistentConnection = true;
+            sostConfig.connection.maxQueueSize = 10;
+            sostConfig.connection.maxConnectErrors = 10;
+            sostConfig.connection.checkReachability = true;
+            sostConfig.connection.connectTimeout = 3000;
+            sostConfig.connection.reconnectPeriod = 10000;
+            sostConfig.connection.reconnectAttempts = 10;
+
+            sensorhubConfig.add(sostConfig);
+        }
     }
 
     private boolean isPushingSensor(Sensors sensor)
@@ -365,10 +409,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     private SensorConfig createSensorConfig(Sensors sensor)
     {
         SensorConfig sensorConfig;
+
         if (Sensors.Android.equals(sensor))
         {
-            Log.d(TAG, "createSensorConfig: Creating android sensor");
-            
             sensorConfig = new AndroidSensorsConfig();
             sensorConfig.id = "urn:device:android:" + deviceID;
             sensorConfig.name = "Android Sensors [" + deviceName + "]";

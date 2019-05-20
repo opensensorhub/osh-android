@@ -6,6 +6,8 @@
     <string name="action_start">Start SensorHub</string>
     <string name="action_stop">Stop SensorHub</string>
     <string name="action_about">About</string>
+    <string name="sos_settings">SOS Settings (Required)</string>
+    <string name="sost_settings">SOS-T Settings (Optional)</string>
     <string name="sensor_android">Android Sensor</string>
     <string name="sensor_trupulse">TruPulse Range Finder Sensor</string>
     <string name="sensor_angel">Angel Sensor</string>
