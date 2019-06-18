@@ -64,10 +64,14 @@ import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
+import org.sensorhub.impl.sensor.swe.SWEVirtualSensor;
+import org.sensorhub.impl.sensor.swe.SWEVirtualSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
+import org.sensorhub.impl.service.sos.SOSProviderConfig;
 import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
+import org.sensorhub.impl.service.swe.OfferingList;
 import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.vast.ows.OWSException;
@@ -101,6 +105,8 @@ import static android.content.ContentValues.TAG;
 
 public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener
 {
+    public static final String ACTION_BROADCAST_RECEIVER = "org.sensorhub.android.BROADCAST_RECEIVER";
+
     String deviceID;
     String deviceName;
     String runName;
@@ -111,7 +117,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         TruPulseSim,
         Angel,
         FlirOne,
-        DJIDrone
+        DJIDrone,
+        SWEVirtualSensor
     }
 
     TextView textArea;
@@ -122,6 +129,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     StringBuffer displayText = new StringBuffer();
     boolean oshStarted = false;
     ArrayList<SOSTClient> sostClients = new ArrayList<SOSTClient>();
+    ArrayList<SWEVirtualSensorConfig> sweVirtualSensorConfigs = new ArrayList<SWEVirtualSensorConfig>();
     URL sosUrl = null;
     URL sostUrl = null;
     boolean showVideo;
@@ -266,8 +274,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
         */
 
-        sensorhubConfig.add(sosConfig);
-
+        /*
         // Get SOS-T URL from config
         String sostUriConfig = prefs.getString("sost_uri", "");
         String sostUser = prefs.getString("sost_username", "");
@@ -283,7 +290,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             }
         }
 
-        if (!sostUriConfig.contentEquals("")) {
+        if (!sostUriConfig.contentEquals(""))
+        {
             // SOS-T Client Config
             SOSTClientConfig sostConfig = new SOSTClientConfig();
             sostConfig.sensorID = androidSensorsConfig.id;
@@ -312,6 +320,22 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
             sensorhubConfig.add(sostConfig);
         }
+        */
+
+        // SOS Data Providers
+        for (SWEVirtualSensorConfig sweVirtualSensorConfig : sweVirtualSensorConfigs) {
+            sensorhubConfig.add(sweVirtualSensorConfig);
+
+            SensorDataProviderConfig sweVirtualSensorDataProviderConfig = new SensorDataProviderConfig();
+            sweVirtualSensorDataProviderConfig.name = sweVirtualSensorConfig.id;
+            sweVirtualSensorDataProviderConfig.sensorID = sweVirtualSensorConfig.id;
+            sweVirtualSensorDataProviderConfig.offeringID = sweVirtualSensorConfig.id+"-sos";
+            sweVirtualSensorDataProviderConfig.enabled = true;
+
+            sosConfig.dataProviders.add(sweVirtualSensorDataProviderConfig);
+        }
+
+        sensorhubConfig.add(sosConfig);
     }
 
     private boolean isPushingSensor(Sensors sensor)
@@ -495,6 +519,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
             ((FlirOneCameraConfig) sensorConfig).androidContext = this.getApplicationContext();
             ((FlirOneCameraConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
+        }
+        else if (Sensors.SWEVirtualSensor.equals(sensor))
+        {
+            sensorConfig = new SWEVirtualSensorConfig();
         }
         else
         {
@@ -865,6 +893,65 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // handler to refresh sensor status in UI
         displayHandler = new Handler(Looper.getMainLooper());
+
+        setupBroadcastReceivers();
+    }
+
+
+    private void setupBroadcastReceivers() {
+        BroadcastReceiver receiver = new BroadcastReceiver()
+        {
+            @Override
+            public void onReceive(Context context, Intent intent)
+            {
+                String origin = intent.getStringExtra("src");
+                if (!context.getPackageName().equalsIgnoreCase(origin))
+                {
+                    String sosEndpointUrl = intent.getStringExtra("sosEndpointUrl");
+                    String name = intent.getStringExtra("name");
+                    String sensorId = intent.getStringExtra("sensorId");
+                    ArrayList<String> properties = intent.getStringArrayListExtra("properties");
+
+                    if (sosEndpointUrl== null || name == null || sensorId == null || properties.size() == 0)
+                    {
+                        return;
+                    }
+
+                    SWEVirtualSensorConfig sweVirtualSensorConfig = (SWEVirtualSensorConfig) createSensorConfig(Sensors.SWEVirtualSensor);
+                    sweVirtualSensorConfig.sosEndpointUrl = sosEndpointUrl;
+                    sweVirtualSensorConfig.name = name;
+                    sweVirtualSensorConfig.id = sensorId;
+                    sweVirtualSensorConfig.sensorUID = sensorId;
+                    for (String property : properties)
+                    {
+                        sweVirtualSensorConfig.observedProperties.add(property);
+                    }
+                    sweVirtualSensorConfig.sosUseWebsockets = true;
+                    sweVirtualSensorConfig.autoStart = true;
+                    sweVirtualSensorConfigs.add(sweVirtualSensorConfig);
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_BROADCAST_RECEIVER);
+
+        registerReceiver(receiver, filter);
+    }
+
+
+    private void testBroadcastReceiver() {
+        ArrayList<String> testProperties = new ArrayList<String>();
+        testProperties.add("http://sensorml.com/ont/swe/property/Acceleration");
+        testProperties.add("http://sensorml.com/ont/swe/property/MagneticField");
+        testProperties.add("http://sensorml.com/ont/swe/property/AngularRate");
+
+        Intent testIntent = new Intent();
+        testIntent.setAction(ACTION_BROADCAST_RECEIVER);
+        testIntent.putExtra("sosEndpointUrl", "http://192.168.0.43:8585/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
+        testIntent.putExtra("name", "Android Sensors [Pocophone]");
+        testIntent.putExtra("sensorId", "urn:android:device:a0b0515feaa872a4");
+        testIntent.putStringArrayListExtra("properties", testProperties);
+        sendBroadcast(testIntent);
     }
 
 
@@ -935,7 +1022,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             public void onClick(DialogInterface dialog, int whichButton)
             {
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                String runName = input.getText().toString();
+                runName = input.getText().toString();
                 newStatusMessage("Starting SensorHub...");
 
                 updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);

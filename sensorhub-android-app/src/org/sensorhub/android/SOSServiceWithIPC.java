@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.util.Log;
 
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.impl.service.sos.SOSService;
@@ -34,9 +33,6 @@ public class SOSServiceWithIPC extends SOSService
     public void start() throws SensorHubException
     {
         super.start();
-        // FUTURE: If we don't want to use HTTPServlet don't call this.
-        // Could be set as a preference in the sharedPreference
-
         androidContext = ((SOSServiceWithIPCConfig) config).androidContext;
 
         BroadcastReceiver receiver = new BroadcastReceiver()
@@ -48,37 +44,14 @@ public class SOSServiceWithIPC extends SOSService
                 if (!context.getPackageName().equalsIgnoreCase(origin))
                 {
                     String requestPayload = intent.getStringExtra(EXTRA_PAYLOAD);
-
-                    StringBuilder sb = new StringBuilder();
-                    sb.append('\n' + requestPayload + '\n');
-                    String log = sb.toString();
-                    Log.d(TAG, "onReceive: " + log);
-
                     handleIPCRequest(requestPayload);
                 }
             }
         };
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_SOS);
-        androidContext.registerReceiver(receiver, filter);
 
-        BroadcastReceiver testReceiver = new BroadcastReceiver()
-        {
-            @Override
-            public void onReceive(Context context, Intent intent)
-            {
-                Log.d(TAG, "onReceive: SQAN");
-                String channel = intent.getStringExtra(SQAN_EXTRA);
-                StringBuilder sb = new StringBuilder();
-                sb.append('\n' + channel + '\n');
-                String log = sb.toString();
-                Log.d(TAG, "testReceive: " + log);
-            }
-        };
-        IntentFilter testFilter = new IntentFilter();
-        testFilter.addAction(SQAN_TEST);
-        androidContext.registerReceiver(testReceiver, testFilter);
-        Log.d(TAG, "start: ");
+        androidContext.registerReceiver(receiver, filter);
     }
 
     private void handleIPCRequest(String body)
@@ -90,24 +63,20 @@ public class SOSServiceWithIPC extends SOSService
             DOMHelper dom = new DOMHelper(is, false);
             Element requestElt = dom.getBaseElement();
             OWSRequest request = owsUtils.readXMLQuery(dom, requestElt);
-            // Subclass of OWSRequest (InsertSensor Object)
 
-            // process request and get response
             ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
             request.setResponseStream(responseStream);
             servlet.handleRequest(request);
 
-            Log.d(TAG, "handleIPCRequest: " + request.toString());
-
             /**
              * request are small usually, but responses can be really large. There is a limit to the size of response
              */
-            // send response;
             String responsePayload = responseStream.toString();
             Intent responseIntent = new Intent();
             responseIntent.setAction(ACTION_SOS);
             responseIntent.putExtra(EXTRA_ORIGIN, androidContext.getPackageName());
             responseIntent.putExtra(EXTRA_PAYLOAD, responsePayload);
+
             androidContext.sendBroadcast(responseIntent);
         }
         catch (DOMHelperException e)
