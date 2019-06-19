@@ -20,8 +20,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -46,7 +44,6 @@ import org.sensorhub.android.comm.ble.BleConfig;
 import org.sensorhub.android.comm.ble.BleNetwork;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
-import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
@@ -54,7 +51,6 @@ import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
-import org.sensorhub.impl.comm.HTTPConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.persistence.GenericStreamStorage;
@@ -64,22 +60,12 @@ import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
-import org.sensorhub.impl.sensor.swe.SWEVirtualSensor;
-import org.sensorhub.impl.sensor.swe.SWEVirtualSensorConfig;
+import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
-import org.sensorhub.impl.service.sos.SOSProviderConfig;
-import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
-import org.sensorhub.impl.service.swe.OfferingList;
 import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
 import org.sensorhub.impl.service.HttpServerConfig;
-import org.vast.ows.OWSException;
-import org.vast.ows.OWSRequest;
-import org.vast.ows.OWSUtils;
-import org.vast.xml.DOMHelper;
-import org.vast.xml.DOMHelperException;
-import org.w3c.dom.Element;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -99,7 +85,6 @@ import android.provider.Settings.Secure;
 import android.text.Html;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import static android.content.ContentValues.TAG;
 
@@ -118,7 +103,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         Angel,
         FlirOne,
         DJIDrone,
-        SWEVirtualSensor
+        ProxySensor
     }
 
     TextView textArea;
@@ -128,8 +113,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     Runnable displayCallback;
     StringBuffer displayText = new StringBuffer();
     boolean oshStarted = false;
-    ArrayList<SOSTClient> sostClients = new ArrayList<SOSTClient>();
-    ArrayList<SWEVirtualSensorConfig> sweVirtualSensorConfigs = new ArrayList<SWEVirtualSensorConfig>();
+    ArrayList<SOSTClient> sostClients = new ArrayList<>();
+    ArrayList<ProxySensorConfig> proxySensorConfigs = new ArrayList<>();
     URL sosUrl = null;
     URL sostUrl = null;
     boolean showVideo;
@@ -323,16 +308,16 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         */
 
         // SOS Data Providers
-        for (SWEVirtualSensorConfig sweVirtualSensorConfig : sweVirtualSensorConfigs) {
-            sensorhubConfig.add(sweVirtualSensorConfig);
+        for (ProxySensorConfig proxySensorConfig : proxySensorConfigs) {
+            sensorhubConfig.add(proxySensorConfig);
 
-            SensorDataProviderConfig sweVirtualSensorDataProviderConfig = new SensorDataProviderConfig();
-            sweVirtualSensorDataProviderConfig.name = sweVirtualSensorConfig.id;
-            sweVirtualSensorDataProviderConfig.sensorID = sweVirtualSensorConfig.id;
-            sweVirtualSensorDataProviderConfig.offeringID = sweVirtualSensorConfig.id+"-sos";
-            sweVirtualSensorDataProviderConfig.enabled = true;
+            SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
+            dataProviderConfig.name = proxySensorConfig.id;
+            dataProviderConfig.sensorID = proxySensorConfig.id;
+            dataProviderConfig.offeringID = proxySensorConfig.id+"-sos";
+            dataProviderConfig.enabled = true;
 
-            sosConfig.dataProviders.add(sweVirtualSensorDataProviderConfig);
+            sosConfig.dataProviders.add(dataProviderConfig);
         }
 
         sensorhubConfig.add(sosConfig);
@@ -520,9 +505,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             ((FlirOneCameraConfig) sensorConfig).androidContext = this.getApplicationContext();
             ((FlirOneCameraConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
         }
-        else if (Sensors.SWEVirtualSensor.equals(sensor))
+        else if (Sensors.ProxySensor.equals(sensor))
         {
-            sensorConfig = new SWEVirtualSensorConfig();
+            sensorConfig = new ProxySensorConfig();
         }
         else
         {
@@ -917,18 +902,18 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         return;
                     }
 
-                    SWEVirtualSensorConfig sweVirtualSensorConfig = (SWEVirtualSensorConfig) createSensorConfig(Sensors.SWEVirtualSensor);
-                    sweVirtualSensorConfig.sosEndpointUrl = sosEndpointUrl;
-                    sweVirtualSensorConfig.name = name;
-                    sweVirtualSensorConfig.id = sensorId;
-                    sweVirtualSensorConfig.sensorUID = sensorId;
+                    ProxySensorConfig proxySensorConfig = (ProxySensorConfig) createSensorConfig(Sensors.ProxySensor);
+                    proxySensorConfig.sosEndpointUrl = sosEndpointUrl;
+                    proxySensorConfig.name = name;
+                    proxySensorConfig.id = sensorId;
+                    proxySensorConfig.sensorUID = sensorId;
                     for (String property : properties)
                     {
-                        sweVirtualSensorConfig.observedProperties.add(property);
+                        proxySensorConfig.observedProperties.add(property);
                     }
-                    sweVirtualSensorConfig.sosUseWebsockets = true;
-                    sweVirtualSensorConfig.autoStart = true;
-                    sweVirtualSensorConfigs.add(sweVirtualSensorConfig);
+                    proxySensorConfig.sosUseWebsockets = true;
+                    proxySensorConfig.autoStart = true;
+                    proxySensorConfigs.add(proxySensorConfig);
                 }
             }
         };
