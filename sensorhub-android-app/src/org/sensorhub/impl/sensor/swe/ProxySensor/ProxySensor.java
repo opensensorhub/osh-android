@@ -2,9 +2,12 @@ package org.sensorhub.impl.sensor.swe.ProxySensor;
 
 import android.util.Log;
 import org.sensorhub.api.common.SensorHubException;
+import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.impl.sensor.swe.SWEVirtualSensor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractPhysicalProcess;
 import net.opengis.swe.v20.DataBlock;
@@ -36,7 +39,7 @@ public class ProxySensor extends SWEVirtualSensor {
     AbstractFeature currentFoi;
     List<SOSClient> sosClients;
     SPSClient spsClient;
-
+    Map<String, SOSRecordListener> recordListeners;
 
     public ProxySensor() {
         super();
@@ -44,6 +47,8 @@ public class ProxySensor extends SWEVirtualSensor {
 
     @Override
     public void start() throws SensorHubException {
+        Log.d(TAG, "Starting Proxy Sensor");
+
         checkConfig();
         removeAllOutputs();
         removeAllControlInputs();
@@ -102,13 +107,20 @@ public class ProxySensor extends SWEVirtualSensor {
                             final ProxySensorOutput output = new ProxySensorOutput(this, recordDef, sos.getRecommendedEncoding());
                             this.addOutput(output, false);
 
-                            // TODO: Move to event based start
-                            sos.startStream(new SOSRecordListener() {
+                            recordListeners.put(sos.toString(), new SOSRecordListener() {
                                 @Override
                                 public void newRecord(DataBlock data) {
                                     output.publishNewRecord(data);
                                 }
                             });
+
+//                            // TODO: Move to event based start
+//                            sos.startStream(new SOSRecordListener() {
+//                                @Override
+//                                public void newRecord(DataBlock data) {
+//                                    output.publishNewRecord(data);
+//                                }
+//                            });
 
                             outputNum++;
                         }
@@ -121,5 +133,11 @@ public class ProxySensor extends SWEVirtualSensor {
                         ". Check Sensor UID and observed properties have valid values.");
         }
 
+    }
+
+    public void startSOSStreams() throws SensorHubException {
+        for (SOSClient client: sosClients){
+            client.startStream(recordListeners.get(client.toString()));
+        }
     }
 }

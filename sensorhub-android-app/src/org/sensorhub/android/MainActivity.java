@@ -981,7 +981,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
         else if (id == R.id.action_about)
         {
-            showAboutPopup();
+//            showAboutPopup();
+            testBroadcastReceiver();
         }
 
         return super.onOptionsItemSelected(item);
