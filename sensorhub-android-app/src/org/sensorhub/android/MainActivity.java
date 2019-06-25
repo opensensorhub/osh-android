@@ -924,22 +924,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     }
 
 
-    private void testBroadcastReceiver() {
-        ArrayList<String> testProperties = new ArrayList<String>();
-        testProperties.add("http://sensorml.com/ont/swe/property/Acceleration");
-        testProperties.add("http://sensorml.com/ont/swe/property/MagneticField");
-        testProperties.add("http://sensorml.com/ont/swe/property/AngularRate");
-
-        Intent testIntent = new Intent();
-        testIntent.setAction(ACTION_BROADCAST_RECEIVER);
-        testIntent.putExtra("sosEndpointUrl", "http://192.168.0.43:8585/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
-        testIntent.putExtra("name", "Android Sensors [Pocophone]");
-        testIntent.putExtra("sensorId", "urn:android:device:a0b0515feaa872a4");
-        testIntent.putStringArrayListExtra("properties", testProperties);
-        sendBroadcast(testIntent);
-    }
-
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
@@ -981,8 +965,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
         else if (id == R.id.action_about)
         {
-//            showAboutPopup();
-            testBroadcastReceiver();
+            showAboutPopup();
+        }
+        else if (id == R.id.action_proxy)
+        {
+            testProxyBroadcast();
         }
 
         return super.onOptionsItemSelected(item);
@@ -1052,6 +1039,22 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         alert.show();
     }
 
+
+    protected void testProxyBroadcast()
+    {
+        ArrayList<String> testProperties = new ArrayList<String>();
+        testProperties.add("http://sensorml.com/ont/swe/property/Acceleration");
+        testProperties.add("http://sensorml.com/ont/swe/property/MagneticField");
+        testProperties.add("http://sensorml.com/ont/swe/property/AngularRate");
+
+        Intent testIntent = new Intent();
+        testIntent.setAction(ACTION_BROADCAST_RECEIVER);
+        testIntent.putExtra("sosEndpointUrl", "http://192.168.0.43:8585/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
+        testIntent.putExtra("name", "Android Sensors [Pocophone]");
+        testIntent.putExtra("sensorId", "urn:android:device:a0b0515feaa872a4");
+        testIntent.putStringArrayListExtra("properties", testProperties);
+        sendBroadcast(testIntent);
+    }
 
     @Override
     public void handleEvent(Event<?> e)
