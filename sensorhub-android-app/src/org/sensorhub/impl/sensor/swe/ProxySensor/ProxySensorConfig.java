@@ -6,6 +6,6 @@ public class ProxySensorConfig extends SWEVirtualSensorConfig
 {
     public ProxySensorConfig()
     {
-        this.moduleClass = ProxySensorConfig.class.getCanonicalName();
+        super();
     }
 }
