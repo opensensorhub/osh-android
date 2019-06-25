@@ -16,9 +16,4 @@ public class ProxySensorOutput extends SWEVirtualSensorOutput
     public ProxySensorOutput(SWEVirtualSensor sensor, DataComponent recordStructure, DataEncoding recordEncoding) {
         super(sensor, recordStructure, recordEncoding);
     }
-
-    @Override
-    public void publishNewRecord(DataBlock dataBlock) {
-        Log.d(TAG, "publishNewRecord");
-    }
 }

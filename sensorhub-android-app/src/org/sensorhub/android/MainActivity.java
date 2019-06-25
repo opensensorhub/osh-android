@@ -422,7 +422,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if (Sensors.Android.equals(sensor))
         {
             sensorConfig = new AndroidSensorsConfig();
-            sensorConfig.id = "urn:device:android:" + deviceID;
+            sensorConfig.id = "urn:android:device:" + deviceID;
             sensorConfig.name = "Android Sensors [" + deviceName + "]";
             sensorConfig.autoStart = true;
 
@@ -981,7 +981,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
         else if (id == R.id.action_about)
         {
-            showAboutPopup();
+//            showAboutPopup();
+            testBroadcastReceiver();
         }
 
         return super.onOptionsItemSelected(item);
