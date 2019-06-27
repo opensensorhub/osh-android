@@ -44,6 +44,7 @@ import org.sensorhub.android.comm.ble.BleConfig;
 import org.sensorhub.android.comm.ble.BleNetwork;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
@@ -53,6 +54,7 @@ import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
+import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.GenericStreamStorage;
 import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
@@ -914,6 +916,45 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     proxySensorConfig.sosUseWebsockets = true;
                     proxySensorConfig.autoStart = true;
                     proxySensorConfigs.add(proxySensorConfig);
+
+                    // register and "start" new sensor, data stream doesn't begin until someone requests data
+                    ModuleRegistry mr = boundService.sensorhub.getInstance().getModuleRegistry();
+
+                    try {
+                        mr.loadModule(proxySensorConfig);
+                        Log.d("OSHApp", "Loading Proxy Sensor " + proxySensorConfig.name);
+                        sensorhubConfig.add(proxySensorConfig);
+                        SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
+                        dataProviderConfig.name = proxySensorConfig.name;
+                        dataProviderConfig.sensorID = proxySensorConfig.id;
+                        dataProviderConfig.offeringID = proxySensorConfig.id + "-sos";
+                        dataProviderConfig.enabled = true;
+
+                        SOSServiceWithIPCConfig sosConf = (SOSServiceWithIPCConfig) mr.getModuleById("SOS_SERVICE").getConfiguration();
+                        sosConf.dataProviders.add(dataProviderConfig);
+
+//                        mr.loadModule(proxySensorConfig);
+//                        mr.startModule(proxySensorConfig.id);
+
+                        // reload SOS?
+//                        mr.stopModule(sosConf.id);
+//                        mr.loadModule(sosConf);
+//                        mr.startModule(sosConf.id);
+
+                        boundService.stopSensorHub();
+                        Thread.sleep(2000);
+                        Log.d("OSHApp", "Starting Sensorhub Again");
+                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                        updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
+                        sostClients.clear();
+                        boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
+                        if (boundService.hasVideo())
+                            textArea.setBackgroundColor(0x80FFFFFF);
+//                        showRunNamePopup();
+                    } catch (SensorHubException | InterruptedException e) {
+                        Log.e("OSHApp", "Error Loading Proxy Sensor", e);
+                    }
+
                 }
             }
         };
@@ -1044,14 +1085,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     {
         ArrayList<String> testProperties = new ArrayList<String>();
         testProperties.add("http://sensorml.com/ont/swe/property/Acceleration");
-        testProperties.add("http://sensorml.com/ont/swe/property/MagneticField");
-        testProperties.add("http://sensorml.com/ont/swe/property/AngularRate");
+//        testProperties.add("http://sensorml.com/ont/swe/property/MagneticField");
+//        testProperties.add("http://sensorml.com/ont/swe/property/AngularRate");
 
         Intent testIntent = new Intent();
         testIntent.setAction(ACTION_BROADCAST_RECEIVER);
-        testIntent.putExtra("sosEndpointUrl", "http://192.168.0.43:8585/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
-        testIntent.putExtra("name", "Android Sensors [Pocophone]");
-        testIntent.putExtra("sensorId", "urn:android:device:a0b0515feaa872a4");
+        testIntent.putExtra("sosEndpointUrl", "http://192.168.1.195:8585/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
+        testIntent.putExtra("name", "Android Sensors [S9]");
+        testIntent.putExtra("sensorId", "urn:android:device:aa3de549fc5ae2c3");
         testIntent.putStringArrayListExtra("properties", testProperties);
         sendBroadcast(testIntent);
     }
@@ -1081,8 +1122,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             }
         }
     }
-    
-    
+
+
     protected void startRefreshingStatus()
     {
         if (displayCallback != null)
@@ -1101,8 +1142,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         displayHandler.post(displayCallback);
     }
-    
-    
+
+
     protected void stopRefreshingStatus()
     {
         if (displayCallback != null)
@@ -1112,18 +1153,18 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
     }
 
-    
+
     protected synchronized void displayStatus()
     {
         displayText.setLength(0);
-        
+
         // first display error messages if any
         for (SOSTClient client: sostClients)
         {
             Map<ISensorDataInterface, StreamInfo> dataStreams = client.getDataStreams();
             boolean showError = (client.getCurrentError() != null);
             boolean showMsg = (dataStreams.size() == 0) && (client.getStatusMessage() != null);
-            
+
             if (showError || showMsg)
             {
                 displayText.append("<p>" + client.getName() + ":<br/>");
@@ -1142,14 +1183,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 displayText.append("</p>");
             }
         }
-        
+
         // then display streams status
         displayText.append("<p>");
         for (SOSTClient client: sostClients)
         {
-            Map<ISensorDataInterface, StreamInfo> dataStreams = client.getDataStreams();            
+            Map<ISensorDataInterface, StreamInfo> dataStreams = client.getDataStreams();
             long now = System.currentTimeMillis();
-            
+
             for (Entry<ISensorDataInterface, StreamInfo> stream : dataStreams.entrySet())
             {
                 displayText.append("<b>" + stream.getKey().getName() + " : </b>");
@@ -1169,7 +1210,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     displayText.append(stream.getValue().errorCount);
                     displayText.append(")</font>");
                 }
-                
+
                 displayText.append("<br/>");
             }
         }
@@ -1178,15 +1219,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             displayText.setLength(displayText.length()-5); // remove last </br>
         displayText.append("</p>");
     }
-    
-    
+
+
     protected synchronized void newStatusMessage(String msg)
     {
         displayText.setLength(0);
         appendStatusMessage(msg);
     }
-    
-    
+
+
     protected synchronized void appendStatusMessage(String msg)
     {
         displayText.append(msg);
@@ -1199,17 +1240,17 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             }
         });
     }
-    
-    
+
+
     protected void startListeningForEvents()
     {
         if (boundService == null || boundService.getSensorHub() == null)
             return;
-        
+
         boundService.getSensorHub().getModuleRegistry().registerListener(this);
     }
-    
-    
+
+
     protected void stopListeningForEvents()
     {
         if (boundService == null || boundService.getSensorHub() == null)
