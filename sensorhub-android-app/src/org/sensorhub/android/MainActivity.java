@@ -937,11 +937,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 //                        mr.startModule(proxySensorConfig.id);
 
                         // reload SOS?
+                        mr.updateModuleConfigAsync(sosConf);
 //                        mr.stopModule(sosConf.id);
+//                        Thread.sleep(2000);
+//                        sensorhubConfig.update(sosConf);
 //                        mr.loadModule(sosConf);
 //                        mr.startModule(sosConf.id);
 
-                        boundService.stopSensorHub();
+                        // Stop and Restart SensorHub
+                        /*boundService.stopSensorHub();
                         Thread.sleep(2000);
                         Log.d("OSHApp", "Starting Sensorhub Again");
                         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -949,9 +953,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         sostClients.clear();
                         boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
                         if (boundService.hasVideo())
-                            textArea.setBackgroundColor(0x80FFFFFF);
+                            textArea.setBackgroundColor(0x80FFFFFF);*/
 //                        showRunNamePopup();
-                    } catch (SensorHubException | InterruptedException e) {
+                    } catch (SensorHubException e) {
                         Log.e("OSHApp", "Error Loading Proxy Sensor", e);
                     }
 
