@@ -933,14 +933,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         SOSServiceWithIPCConfig sosConf = (SOSServiceWithIPCConfig) mr.getModuleById("SOS_SERVICE").getConfiguration();
                         sosConf.dataProviders.add(dataProviderConfig);
 
-//                        mr.loadModule(proxySensorConfig);
-//                        mr.startModule(proxySensorConfig.id);
-
-                        // reload SOS?
-//                        mr.stopModule(sosConf.id);
-//                        mr.loadModule(sosConf);
-//                        mr.startModule(sosConf.id);
-
                         boundService.stopSensorHub();
                         Thread.sleep(2000);
                         Log.d("OSHApp", "Starting Sensorhub Again");
@@ -950,7 +942,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
                         if (boundService.hasVideo())
                             textArea.setBackgroundColor(0x80FFFFFF);
-//                        showRunNamePopup();
                     } catch (SensorHubException | InterruptedException e) {
                         Log.e("OSHApp", "Error Loading Proxy Sensor", e);
                     }
@@ -1090,7 +1081,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         Intent testIntent = new Intent();
         testIntent.setAction(ACTION_BROADCAST_RECEIVER);
-        testIntent.putExtra("sosEndpointUrl", "http://192.168.1.195:8585/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
+        testIntent.putExtra("sosEndpointUrl", "http://192.168.0.46:8585/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
         testIntent.putExtra("name", "Android Sensors [S9]");
         testIntent.putExtra("sensorId", "urn:android:device:aa3de549fc5ae2c3");
         testIntent.putStringArrayListExtra("properties", testProperties);
