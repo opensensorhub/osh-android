@@ -62,6 +62,7 @@ import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
+import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensor;
 import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
@@ -311,6 +312,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // SOS Data Providers
         for (ProxySensorConfig proxySensorConfig : proxySensorConfigs) {
+//            proxySensorConfig.androidContext = this.getApplicationContext();
             sensorhubConfig.add(proxySensorConfig);
 
             SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
@@ -905,6 +907,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     }
 
                     ProxySensorConfig proxySensorConfig = (ProxySensorConfig) createSensorConfig(Sensors.ProxySensor);
+                    proxySensorConfig.androidContext = getApplicationContext();
                     proxySensorConfig.sosEndpointUrl = sosEndpointUrl;
                     proxySensorConfig.name = name;
                     proxySensorConfig.id = sensorId;
@@ -1003,6 +1006,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         {
             testProxyBroadcast();
         }
+        else if(id == R.id.action_stop_proxy){
+            testStopProxyBroadcast();
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -1085,6 +1091,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         testIntent.putExtra("name", "Android Sensors [S9]");
         testIntent.putExtra("sensorId", "urn:android:device:aa3de549fc5ae2c3");
         testIntent.putStringArrayListExtra("properties", testProperties);
+        sendBroadcast(testIntent);
+    }
+
+    protected void testStopProxyBroadcast(){
+        Intent testIntent = new Intent();
+        testIntent.setAction("org.sofwerx.ogc.ACTION_PROXY");
         sendBroadcast(testIntent);
     }
 

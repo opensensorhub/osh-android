@@ -1,7 +1,12 @@
 package org.sensorhub.impl.sensor.swe.ProxySensor;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.util.Log;
 
+import org.sensorhub.android.SOSServiceWithIPCConfig;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.impl.sensor.swe.SWEVirtualSensor;
@@ -47,12 +52,41 @@ public class ProxySensor extends SWEVirtualSensor {
     List<SOSClient> sosClients;
     SPSClient spsClient;
 
+    public static final String ACTION_PROXY = "org.sofwerx.ogc.ACTION_PROXY";
+    private static final String EXTRA_PAYLOAD = "PROXY";
+    private static final String EXTRA_ORIGIN = "src";
+    private Context androidContext;
+
     public ProxySensor() {
         super();
     }
 
     @Override
     public void start() throws SensorHubException {
+        androidContext = ((ProxySensorConfig) config).androidContext;
+
+        BroadcastReceiver receiver = new BroadcastReceiver()
+        {
+            @Override
+            public void onReceive(Context context, Intent intent)
+            {
+                String origin = intent.getStringExtra(EXTRA_ORIGIN);
+                if (!context.getPackageName().equalsIgnoreCase(origin))
+                {
+                    String requestPayload = intent.getStringExtra(EXTRA_PAYLOAD);   // TODO: Can be observable property string
+                    try {
+                        stopSOSStreams();
+                    } catch (SensorHubException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_PROXY);
+
+        androidContext.registerReceiver(receiver, filter);
+
         Log.d(TAG, "Starting Proxy Sensor");
 
         checkConfig();
@@ -136,6 +170,12 @@ public class ProxySensor extends SWEVirtualSensor {
                 }
             };
             sosClients.get(i).startStream(rl);
+        }
+    }
+
+    public void stopSOSStreams() throws SensorHubException {
+        for (int i = 0; i < sosClients.size(); i++) {
+            sosClients.get(i).stopStream();
         }
     }
 }
