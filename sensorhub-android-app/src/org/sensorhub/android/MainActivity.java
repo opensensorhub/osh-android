@@ -62,6 +62,7 @@ import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
+import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensor;
 import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
@@ -905,6 +906,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     }
 
                     ProxySensorConfig proxySensorConfig = (ProxySensorConfig) createSensorConfig(Sensors.ProxySensor);
+                    proxySensorConfig.androidContext = getApplicationContext();
                     proxySensorConfig.sosEndpointUrl = sosEndpointUrl;
                     proxySensorConfig.name = name;
                     proxySensorConfig.id = sensorId;
@@ -917,47 +919,35 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     proxySensorConfig.autoStart = true;
                     proxySensorConfigs.add(proxySensorConfig);
 
+                    // TODO: clean up later to fix restarting the hub on proxy sensor insert
                     // register and "start" new sensor, data stream doesn't begin until someone requests data
-                    ModuleRegistry mr = boundService.sensorhub.getInstance().getModuleRegistry();
+//                    ModuleRegistry mr = boundService.sensorhub.getInstance().getModuleRegistry();
 
-                    try {
-                        mr.loadModule(proxySensorConfig);
-                        Log.d("OSHApp", "Loading Proxy Sensor " + proxySensorConfig.name);
-                        sensorhubConfig.add(proxySensorConfig);
-                        SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
-                        dataProviderConfig.name = proxySensorConfig.name;
-                        dataProviderConfig.sensorID = proxySensorConfig.id;
-                        dataProviderConfig.offeringID = proxySensorConfig.id + "-sos";
-                        dataProviderConfig.enabled = true;
-
-                        SOSServiceWithIPCConfig sosConf = (SOSServiceWithIPCConfig) mr.getModuleById("SOS_SERVICE").getConfiguration();
-                        sosConf.dataProviders.add(dataProviderConfig);
-
+//                    try {
 //                        mr.loadModule(proxySensorConfig);
-//                        mr.startModule(proxySensorConfig.id);
-
-                        // reload SOS?
-                        mr.updateModuleConfigAsync(sosConf);
-//                        mr.stopModule(sosConf.id);
+//                        Log.d("OSHApp", "Loading Proxy Sensor " + proxySensorConfig.name);
+//                        sensorhubConfig.add(proxySensorConfig);
+//                        SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
+//                        dataProviderConfig.name = proxySensorConfig.name;
+//                        dataProviderConfig.sensorID = proxySensorConfig.id;
+//                        dataProviderConfig.offeringID = proxySensorConfig.id + "-sos";
+//                        dataProviderConfig.enabled = true;
+//
+//                        SOSServiceWithIPCConfig sosConf = (SOSServiceWithIPCConfig) mr.getModuleById("SOS_SERVICE").getConfiguration();
+//                        sosConf.dataProviders.add(dataProviderConfig);
+//
+//                        boundService.stopSensorHub();
 //                        Thread.sleep(2000);
-//                        sensorhubConfig.update(sosConf);
-//                        mr.loadModule(sosConf);
-//                        mr.startModule(sosConf.id);
-
-                        // Stop and Restart SensorHub
-                        /*boundService.stopSensorHub();
-                        Thread.sleep(2000);
-                        Log.d("OSHApp", "Starting Sensorhub Again");
-                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                        updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
-                        sostClients.clear();
-                        boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
-                        if (boundService.hasVideo())
-                            textArea.setBackgroundColor(0x80FFFFFF);*/
-//                        showRunNamePopup();
-                    } catch (SensorHubException e) {
-                        Log.e("OSHApp", "Error Loading Proxy Sensor", e);
-                    }
+//                        Log.d("OSHApp", "Starting Sensorhub Again");
+//                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+//                        updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
+//                        sostClients.clear();
+//                        boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
+//                        if (boundService.hasVideo())
+//                            textArea.setBackgroundColor(0x80FFFFFF);
+//                    } catch (SensorHubException | InterruptedException e) {
+//                        Log.e("OSHApp", "Error Loading Proxy Sensor", e);
+//                    }
 
                 }
             }
@@ -1015,6 +1005,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         else if (id == R.id.action_proxy)
         {
             testProxyBroadcast();
+        }
+        else if(id == R.id.action_stop_proxy){
+            testStopProxyBroadcast();
         }
 
         return super.onOptionsItemSelected(item);
@@ -1094,10 +1087,16 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         Intent testIntent = new Intent();
         testIntent.setAction(ACTION_BROADCAST_RECEIVER);
-        testIntent.putExtra("sosEndpointUrl", "http://192.168.1.195:8585/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
+        testIntent.putExtra("sosEndpointUrl", "http://192.168.0.46:8585/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
         testIntent.putExtra("name", "Android Sensors [S9]");
         testIntent.putExtra("sensorId", "urn:android:device:aa3de549fc5ae2c3");
         testIntent.putStringArrayListExtra("properties", testProperties);
+        sendBroadcast(testIntent);
+    }
+
+    protected void testStopProxyBroadcast(){
+        Intent testIntent = new Intent();
+        testIntent.setAction("org.sofwerx.ogc.ACTION_PROXY");
         sendBroadcast(testIntent);
     }
 

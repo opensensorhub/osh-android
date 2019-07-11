@@ -1,18 +1,30 @@
 package org.sensorhub.impl.sensor.swe.ProxySensor;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.util.Log;
+
+import org.sensorhub.android.SOSServiceWithIPCConfig;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.impl.sensor.swe.SWEVirtualSensor;
+
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractPhysicalProcess;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataChoice;
 import net.opengis.swe.v20.DataComponent;
+
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.impl.client.sos.SOSClient;
 import org.sensorhub.impl.client.sos.SOSClient.SOSRecordListener;
@@ -30,7 +42,7 @@ import org.vast.ows.sos.SOSUtils;
 import org.vast.util.TimeExtent;
 
 public class ProxySensor extends SWEVirtualSensor {
-//    protected static final Logger log = LoggerFactory.getLogger(ProxySensor.class);
+    //    protected static final Logger log = LoggerFactory.getLogger(ProxySensor.class);
     private static final String TAG = "OSHProxySensor";
     private static final String SOS_VERSION = "2.0";
     private static final String SPS_VERSION = "2.0";
@@ -39,7 +51,11 @@ public class ProxySensor extends SWEVirtualSensor {
     AbstractFeature currentFoi;
     List<SOSClient> sosClients;
     SPSClient spsClient;
-    Map<String, SOSRecordListener> recordListeners;
+
+    public static final String ACTION_PROXY = "org.sofwerx.ogc.ACTION_PROXY";
+    private static final String EXTRA_PAYLOAD = "PROXY";
+    private static final String EXTRA_ORIGIN = "src";
+    private Context androidContext;
 
     public ProxySensor() {
         super();
@@ -47,6 +63,30 @@ public class ProxySensor extends SWEVirtualSensor {
 
     @Override
     public void start() throws SensorHubException {
+        androidContext = ((ProxySensorConfig) config).androidContext;
+
+        BroadcastReceiver receiver = new BroadcastReceiver()
+        {
+            @Override
+            public void onReceive(Context context, Intent intent)
+            {
+                String origin = intent.getStringExtra(EXTRA_ORIGIN);
+                if (!context.getPackageName().equalsIgnoreCase(origin))
+                {
+                    String requestPayload = intent.getStringExtra(EXTRA_PAYLOAD);   // TODO: Can be observable property string
+                    try {
+                        stopSOSStreams();
+                    } catch (SensorHubException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_PROXY);
+
+        androidContext.registerReceiver(receiver, filter);
+
         Log.d(TAG, "Starting Proxy Sensor");
 
         checkConfig();
@@ -99,7 +139,6 @@ public class ProxySensor extends SWEVirtualSensor {
                                 if (outputNum == 1 && config.sensorML == null)
                                     this.sensorDescription = (AbstractPhysicalProcess) sos.getSensorDescription(config.sensorUID);
                             } catch (SensorHubException e) {
-//                                log.warn("Cannot get remote sensor description", e);
                                 Log.d(TAG, "Cannot get remote sensor description.", e);
                             }
 
@@ -107,20 +146,14 @@ public class ProxySensor extends SWEVirtualSensor {
                             final ProxySensorOutput output = new ProxySensorOutput(this, recordDef, sos.getRecommendedEncoding());
                             this.addOutput(output, false);
 
-                            recordListeners.put(sos.toString(), new SOSRecordListener() {
-                                @Override
-                                public void newRecord(DataBlock data) {
-                                    output.publishNewRecord(data);
-                                }
-                            });
-
-//                            // TODO: Move to event based start
-//                            sos.startStream(new SOSRecordListener() {
-//                                @Override
-//                                public void newRecord(DataBlock data) {
-//                                    output.publishNewRecord(data);
-//                                }
-//                            });
+                            // HACK TO PREVENT GETRESULT TIME ERROR
+                            sos.startStream((data) -> output.publishNewRecord(data));
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            sos.stopStream();
 
                             outputNum++;
                         }
@@ -136,8 +169,22 @@ public class ProxySensor extends SWEVirtualSensor {
     }
 
     public void startSOSStreams() throws SensorHubException {
-        for (SOSClient client: sosClients){
-            client.startStream(recordListeners.get(client.toString()));
+        for (int i = 0; i < sosClients.size(); i++) {
+            String name = sosClients.get(i).getRecordDescription().getName();
+            SOSRecordListener rl = new SOSRecordListener() {
+                @Override
+                public void newRecord(DataBlock data) {
+                    ProxySensorOutput output = (ProxySensorOutput)getObservationOutputs().get(name);
+                    output.publishNewRecord(data);
+                }
+            };
+            sosClients.get(i).startStream(rl);
+        }
+    }
+
+    public void stopSOSStreams() throws SensorHubException {
+        for (int i = 0; i < sosClients.size(); i++) {
+            sosClients.get(i).stopStream();
         }
     }
 }

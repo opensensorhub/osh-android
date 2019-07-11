@@ -19,25 +19,30 @@ public class ProxySensorOutput extends SWEVirtualSensorOutput
     DataComponent recordStructure;
     DataEncoding recordEncoding;
 
-    public ProxySensorOutput(SWEVirtualSensor sensor, DataComponent recordStructure, DataEncoding recordEncoding) {
+    public ProxySensorOutput(ProxySensor sensor, DataComponent recordStructure, DataEncoding recordEncoding) {
         super(sensor, recordStructure, recordEncoding);
-    }
-
-    @Override
-    public void publishNewRecord(DataBlock dataBlock) {
-        Log.d(TAG, "publishNewRecord");
+        this.parentSensor = sensor;
+        this.recordStructure = recordStructure;
+        this.recordEncoding = recordEncoding;
     }
 
     @Override
     public void registerListener(IEventListener listener)
     {
+//        super.registerListener(listener);
         Log.d(TAG, "Registering Proxy Sensor Listener");
         //TODO: How to start the SOS stream at this point?
         try {
-            this.parentSensor.startSOSStreams();
-        } catch (SensorHubException e) {
-            Log.d(TAG, "Error Starting Stream while registering Proxy Sensor", e);
-        }
+        this.parentSensor.startSOSStreams();
+    } catch (SensorHubException e) {
+        Log.d(TAG, "Error Starting Stream while registering Proxy Sensor", e);
+    }
         eventHandler.registerListener(listener);
+    }
+
+    @Override
+    public void publishNewRecord(DataBlock dataBlock) {
+        super.publishNewRecord(dataBlock);
+        Log.d(TAG, "publishNewRecord: ");
     }
 }
