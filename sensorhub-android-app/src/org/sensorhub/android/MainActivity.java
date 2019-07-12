@@ -911,43 +911,25 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     proxySensorConfig.name = name;
                     proxySensorConfig.id = sensorId;
                     proxySensorConfig.sensorUID = sensorId;
-                    for (String property : properties)
-                    {
-                        proxySensorConfig.observedProperties.add(property);
-                    }
+                    proxySensorConfig.observedProperties.addAll(properties);
                     proxySensorConfig.sosUseWebsockets = true;
                     proxySensorConfig.autoStart = true;
                     proxySensorConfigs.add(proxySensorConfig);
 
-                    // TODO: clean up later to fix restarting the hub on proxy sensor insert
-                    // register and "start" new sensor, data stream doesn't begin until someone requests data
-//                    ModuleRegistry mr = boundService.sensorhub.getInstance().getModuleRegistry();
-
-//                    try {
-//                        mr.loadModule(proxySensorConfig);
-//                        Log.d("OSHApp", "Loading Proxy Sensor " + proxySensorConfig.name);
-//                        sensorhubConfig.add(proxySensorConfig);
-//                        SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
-//                        dataProviderConfig.name = proxySensorConfig.name;
-//                        dataProviderConfig.sensorID = proxySensorConfig.id;
-//                        dataProviderConfig.offeringID = proxySensorConfig.id + "-sos";
-//                        dataProviderConfig.enabled = true;
-//
-//                        SOSServiceWithIPCConfig sosConf = (SOSServiceWithIPCConfig) mr.getModuleById("SOS_SERVICE").getConfiguration();
-//                        sosConf.dataProviders.add(dataProviderConfig);
-//
-//                        boundService.stopSensorHub();
-//                        Thread.sleep(2000);
-//                        Log.d("OSHApp", "Starting Sensorhub Again");
-//                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-//                        updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
-//                        sostClients.clear();
-//                        boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
-//                        if (boundService.hasVideo())
-//                            textArea.setBackgroundColor(0x80FFFFFF);
-//                    } catch (SensorHubException | InterruptedException e) {
-//                        Log.e("OSHApp", "Error Loading Proxy Sensor", e);
-//                    }
+                    // register and "start" new sensor, data stream doesn't begin until someone requests data;
+                    try {
+                        boundService.stopSensorHub();
+                        Thread.sleep(2000);
+                        Log.d("OSHApp", "Starting Sensorhub Again");
+                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                        updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
+                        sostClients.clear();
+                        boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
+                        if (boundService.hasVideo())
+                            textArea.setBackgroundColor(0x80FFFFFF);
+                    } catch (InterruptedException e) {
+                        Log.e("OSHApp", "Error Loading Proxy Sensor", e);
+                    }
 
                 }
             }

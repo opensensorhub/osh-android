@@ -40,9 +40,8 @@ public class ProxySensorOutput extends SWEVirtualSensorOutput
     @Override
     public void registerListener(IEventListener listener)
     {
-//        super.registerListener(listener);
+        // TODO: Start the SOS Stream of only requested data
         Log.d(TAG, "Registering Proxy Sensor Listener");
-        //TODO: How to start the SOS stream at this point?
         try {
             this.parentSensor.startSOSStreams();
         } catch (SensorHubException e) {
