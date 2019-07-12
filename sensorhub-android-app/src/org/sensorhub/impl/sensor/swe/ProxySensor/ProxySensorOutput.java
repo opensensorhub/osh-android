@@ -40,10 +40,9 @@ public class ProxySensorOutput extends SWEVirtualSensorOutput
     @Override
     public void registerListener(IEventListener listener)
     {
-        // TODO: Start the SOS Stream of only requested data
-        Log.d(TAG, "Registering Proxy Sensor Listener");
+        Log.d(TAG, "Registering Proxy Sensor Listener for: " + this.name);
         try {
-            this.parentSensor.startSOSStreams();
+            this.parentSensor.startSOSStream(this.name);
         } catch (SensorHubException e) {
             Log.d(TAG, "Error Starting Stream while registering Proxy Sensor", e);
         }
@@ -53,8 +52,8 @@ public class ProxySensorOutput extends SWEVirtualSensorOutput
     @Override
     public void unregisterListener(IEventListener listener) {
         try {
-            this.parentSensor.stopSOSStreams();
-            Log.d(TAG, "unregisterListener: Stopping streams");
+            this.parentSensor.stopSOSStream(this.name);
+            Log.d(TAG, "unregisterListener: Stopping stream: " + this.name);
         } catch (SensorHubException e) {
             e.printStackTrace();
         }

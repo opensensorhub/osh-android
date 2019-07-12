@@ -1064,7 +1064,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     {
         ArrayList<String> testProperties = new ArrayList<String>();
         testProperties.add("http://sensorml.com/ont/swe/property/Acceleration");
-//        testProperties.add("http://sensorml.com/ont/swe/property/MagneticField");
+        testProperties.add("http://sensorml.com/ont/swe/property/MagneticField");
 //        testProperties.add("http://sensorml.com/ont/swe/property/AngularRate");
 
         Intent testIntent = new Intent();

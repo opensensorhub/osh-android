@@ -65,14 +65,11 @@ public class ProxySensor extends SWEVirtualSensor {
     public void start() throws SensorHubException {
         androidContext = ((ProxySensorConfig) config).androidContext;
 
-        BroadcastReceiver receiver = new BroadcastReceiver()
-        {
+        BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override
-            public void onReceive(Context context, Intent intent)
-            {
+            public void onReceive(Context context, Intent intent) {
                 String origin = intent.getStringExtra(EXTRA_ORIGIN);
-                if (!context.getPackageName().equalsIgnoreCase(origin))
-                {
+                if (!context.getPackageName().equalsIgnoreCase(origin)) {
                     String requestPayload = intent.getStringExtra(EXTRA_PAYLOAD);   // TODO: Can be observable property string
                     try {
                         stopSOSStreams();
@@ -174,7 +171,7 @@ public class ProxySensor extends SWEVirtualSensor {
             SOSRecordListener rl = new SOSRecordListener() {
                 @Override
                 public void newRecord(DataBlock data) {
-                    ProxySensorOutput output = (ProxySensorOutput)getObservationOutputs().get(name);
+                    ProxySensorOutput output = (ProxySensorOutput) getObservationOutputs().get(name);
                     output.publishNewRecord(data);
                 }
             };
@@ -182,9 +179,34 @@ public class ProxySensor extends SWEVirtualSensor {
         }
     }
 
+    public void startSOSStream(String outputName) throws SensorHubException {
+        for (SOSClient client : sosClients) {
+            if (client.getRecordDescription().getName().equals(outputName)) {
+                SOSRecordListener recordListener = new SOSRecordListener() {
+                    @Override
+                    public void newRecord(DataBlock data) {
+                        ProxySensorOutput output = (ProxySensorOutput) getObservationOutputs().get(outputName);
+                        output.publishNewRecord(data);
+                    }
+                };
+                client.startStream(recordListener);
+                break;
+            }
+        }
+    }
+
     public void stopSOSStreams() throws SensorHubException {
         for (int i = 0; i < sosClients.size(); i++) {
             sosClients.get(i).stopStream();
+        }
+    }
+
+    public void stopSOSStream(String outputName) throws SensorHubException {
+        for (SOSClient client : sosClients) {
+            if (client.getRecordDescription().getName().equals(outputName)) {
+                client.stopStream();
+                break;
+            }
         }
     }
 }
