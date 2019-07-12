@@ -1087,7 +1087,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         Intent testIntent = new Intent();
         testIntent.setAction(ACTION_BROADCAST_RECEIVER);
-        testIntent.putExtra("sosEndpointUrl", "http://192.168.0.46:8585/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
+//        testIntent.putExtra("sosEndpointUrl", "http://192.168.0.46:8585/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
+        testIntent.putExtra("sosEndpointUrl", "http://192.168.1.195:8585/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
         testIntent.putExtra("name", "Android Sensors [S9]");
         testIntent.putExtra("sensorId", "urn:android:device:aa3de549fc5ae2c3");
         testIntent.putStringArrayListExtra("properties", testProperties);

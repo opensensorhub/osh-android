@@ -27,22 +27,37 @@ public class ProxySensorOutput extends SWEVirtualSensorOutput
     }
 
     @Override
+    public void publishNewRecord(DataBlock dataBlock) {
+        super.publishNewRecord(dataBlock);
+        Log.d(TAG, "publishNewRecord: ");
+    }
+
+    @Override
+    public long getLatestRecordTime() {
+        return System.currentTimeMillis();
+    }
+
+    @Override
     public void registerListener(IEventListener listener)
     {
 //        super.registerListener(listener);
         Log.d(TAG, "Registering Proxy Sensor Listener");
         //TODO: How to start the SOS stream at this point?
         try {
-        this.parentSensor.startSOSStreams();
-    } catch (SensorHubException e) {
-        Log.d(TAG, "Error Starting Stream while registering Proxy Sensor", e);
-    }
+            this.parentSensor.startSOSStreams();
+        } catch (SensorHubException e) {
+            Log.d(TAG, "Error Starting Stream while registering Proxy Sensor", e);
+        }
         eventHandler.registerListener(listener);
     }
 
     @Override
-    public void publishNewRecord(DataBlock dataBlock) {
-        super.publishNewRecord(dataBlock);
-        Log.d(TAG, "publishNewRecord: ");
+    public void unregisterListener(IEventListener listener) {
+        try {
+            this.parentSensor.stopSOSStreams();
+            Log.d(TAG, "unregisterListener: Stopping streams");
+        } catch (SensorHubException e) {
+            e.printStackTrace();
+        }
     }
 }

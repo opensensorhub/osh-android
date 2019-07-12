@@ -147,13 +147,13 @@ public class ProxySensor extends SWEVirtualSensor {
                             this.addOutput(output, false);
 
                             // HACK TO PREVENT GETRESULT TIME ERROR
-                            sos.startStream((data) -> output.publishNewRecord(data));
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            sos.stopStream();
+//                            sos.startStream((data) -> output.publishNewRecord(data));
+//                            try {
+//                                Thread.sleep(1000);
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+//                            sos.stopStream();
 
                             outputNum++;
                         }
