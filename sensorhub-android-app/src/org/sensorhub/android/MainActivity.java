@@ -68,6 +68,7 @@ import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
+import org.sensorhub.impl.sensor.blebeacon.BLEBeaconConfig;
 import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensor;
 import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
@@ -479,6 +480,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             ((FlirOneCameraConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
         } else if (Sensors.ProxySensor.equals(sensor)) {
             sensorConfig = new ProxySensorConfig();
+        }else if(true){
+            // TODO: Add option to UI after testing
+            // Add the BLE Beacon Scanner
+            sensorConfig = new BLEBeaconConfig();
+            sensorConfig.id = "BLE_BEACON_SCANNER";
+            sensorConfig.name = "BLE Beacon Scanner [" + deviceName + "]";
+            sensorConfig.autoStart = true;
+            Log.d(TAG, "createSensorConfig: Added BLE Beacon Scanner");
         } else {
             sensorConfig = new SensorConfig();
         }
