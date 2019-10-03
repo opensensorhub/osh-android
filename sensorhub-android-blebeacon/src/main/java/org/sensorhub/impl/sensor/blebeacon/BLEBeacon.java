@@ -21,7 +21,7 @@ import java.util.Map;
 
 public class BLEBeacon implements BeaconConsumer, RangeNotifier {
     private Context parentContext;
-    private String TAG = "BLEBeacon-DeafultTAG";
+    private String TAG = "BLEBeacon-DefaultTAG";
     private BeaconManager mBeaconManager;
     private Map<Identifier, Beacon> beacons;
 
