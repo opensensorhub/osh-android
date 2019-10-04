@@ -13,18 +13,65 @@
 
 package org.sensorhub.android;
 
-import android.app.ListActivity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Looper;
+import android.preference.PreferenceManager;
+import android.provider.Settings.Secure;
+import android.text.Html;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.TextureView;
+import android.view.WindowManager;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import org.sensorhub.android.comm.BluetoothCommProvider;
+import org.sensorhub.android.comm.BluetoothCommProviderConfig;
+import org.sensorhub.android.comm.ble.BleConfig;
+import org.sensorhub.android.comm.ble.BleNetwork;
+import org.sensorhub.api.common.Event;
+import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.module.IModuleConfigRepository;
+import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.sensor.ISensorDataInterface;
+import org.sensorhub.api.sensor.SensorConfig;
+import org.sensorhub.impl.client.sost.SOSTClient;
+import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
+import org.sensorhub.impl.client.sost.SOSTClientConfig;
+import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
+import org.sensorhub.impl.module.InMemoryConfigDb;
+import org.sensorhub.impl.persistence.GenericStreamStorage;
+import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
+import org.sensorhub.impl.persistence.StreamStorageConfig;
+import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
+import org.sensorhub.impl.persistence.h2.MVStorageConfig;
+import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
+import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
+import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensorConfig;
+import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
+import org.sensorhub.impl.service.HttpServerConfig;
+import org.sensorhub.impl.service.sos.SOSServiceConfig;
+import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
+import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,64 +85,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
-import android.util.Log;
-import android.view.*;
-
-import org.sensorhub.android.comm.BluetoothCommProvider;
-import org.sensorhub.android.comm.BluetoothCommProviderConfig;
-import org.sensorhub.android.comm.ble.BleConfig;
-import org.sensorhub.android.comm.ble.BleNetwork;
-import org.sensorhub.api.common.Event;
-import org.sensorhub.api.common.IEventListener;
-import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.module.IModuleConfigRepository;
-import org.sensorhub.api.module.ModuleEvent;
-import org.sensorhub.api.sensor.ISensorDataInterface;
-import org.sensorhub.api.sensor.SensorConfig;
-import org.sensorhub.impl.client.sost.SOSTClient;
-import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
-import org.sensorhub.impl.client.sost.SOSTClientConfig;
-import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
-import org.sensorhub.impl.module.InMemoryConfigDb;
-import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.persistence.GenericStreamStorage;
-import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
-import org.sensorhub.impl.persistence.StreamStorageConfig;
-import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
-import org.sensorhub.impl.persistence.h2.MVStorageConfig;
-import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
-import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
-import org.sensorhub.impl.sensor.blebeacon.BLEBeaconConfig;
-import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensor;
-import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensorConfig;
-import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
-import org.sensorhub.impl.service.sos.SOSServiceConfig;
-import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
-import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
-import org.sensorhub.impl.service.HttpServerConfig;
-
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Looper;
-import android.preference.PreferenceManager;
-import android.provider.Settings.Secure;
-import android.text.Html;
-import android.widget.BaseAdapter;
-import android.widget.EditText;
-import android.widget.TextView;
 
 import static android.content.ContentValues.TAG;
 
@@ -339,13 +328,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             if (prefs.getBoolean("location_enable", false)
                     && prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                 return true;
-            if (prefs.getBoolean("video_enable", false)
-                    && prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-                return true;
+            return prefs.getBoolean("video_enable", false)
+                    && prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH_REMOTE");
         } else if (Sensors.TruPulse.equals(sensor) || Sensors.TruPulseSim.equals(sensor)) {
-            if (prefs.getBoolean("trupulse_enable", false)
-                    && prefs.getStringSet("trupulse_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-                return true;
+            return prefs.getBoolean("trupulse_enable", false)
+                    && prefs.getStringSet("trupulse_options", Collections.emptySet()).contains("PUSH_REMOTE");
         }
 
         return false;
@@ -480,14 +467,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             ((FlirOneCameraConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
         } else if (Sensors.ProxySensor.equals(sensor)) {
             sensorConfig = new ProxySensorConfig();
-        }else if(true){
-            // TODO: Add option to UI after testing
-            // Add the BLE Beacon Scanner
-            sensorConfig = new BLEBeaconConfig();
-            sensorConfig.id = "BLE_BEACON_SCANNER";
-            sensorConfig.name = "BLE Beacon Scanner [" + deviceName + "]";
-            sensorConfig.autoStart = true;
-            Log.d(TAG, "createSensorConfig: Added BLE Beacon Scanner");
         } else {
             sensorConfig = new SensorConfig();
         }
@@ -825,63 +804,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         displayHandler = new Handler(Looper.getMainLooper());
 
         setupBroadcastReceivers();
-
-        // TODO: Integrate into BLEBeacon Sensor after POC
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        Log.d(TAG, bluetoothAdapter.getName());
-        BluetoothLeScanner bleScanner = bluetoothAdapter.getBluetoothLeScanner();
-        ScanCallback scb = new ScanCallback() {
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                super.onScanResult(callbackType, result);
-                Log.d(TAG, result.toString());
-            }
-        };
-        bleScanner.startScan(scb);
-
-
-        // Listen to and Log from nearby BLE beacons
-        /*int REQUEST_ENABLE_BT = 1;      // Make sure this is the correct usage
-
-        BluetoothAdapter bluetoothAdapter;
-        // Initializes Bluetooth adapter.
-        final BluetoothManager bluetoothManager =
-                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        bluetoothAdapter = bluetoothManager.getAdapter();
-
-        // Ensures Bluetooth is available on the device and it is enabled. If not,
-        // displays a dialog requesting user permission to enable Bluetooth.
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
-
-        final boolean[] mScanning = new boolean[1];
-        Handler handler = new Handler();
-        LeDeviceListAdapter leDeviceListAdapter;
-        BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
-            @Override
-            public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        leDe
-                    }
-                });
-            }
-        };
-
-        final long SCAN_PERIOD = 10000;
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mScanning[0] = false;
-                bluetoothAdapter.stopLeScan(leScanCallback);
-            }
-        }, SCAN_PERIOD);
-
-        mScanning[0] = true;
-        bluetoothAdapter.startLeScan(leScanCallback);*/
     }
 
 
@@ -1279,72 +1201,3 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
     }
 }
-
-
-// TODO: Deal with this in BLEBeacon's own module later
-
-
-/*
-public class LeDeviceListAdapter extends BaseAdapter {
-    private ArrayList<BluetoothDevice> mLeDevices;
-    private LayoutInflater mInflator;
-
-
-    public LeDeviceListAdapter() {
-        super();
-        mLeDevices = new ArrayList<BluetoothDevice>();
-        mInflator = this.getLayoutInflater();
-    }
-
-    public void addDevice(BluetoothDevice device) {
-        if (!mLeDevices.contains(device)) {
-            mLeDevices.add(device);
-        }
-    }
-
-    public BluetoothDevice getDevice(int position) {
-        return mLeDevices.get(position);
-    }
-
-    public void clear() {
-        mLeDevices.clear();
-    }
-
-    @Override
-    public int getCount() {
-        return mLeDevices.size();
-    }
-
-    @Override
-    public Object getItem(int i) {
-        return mLeDevices.get(i);
-    }
-
-    @Override
-    public long getItemId(int i) {
-        return i;
-    }
-
-    @Override
-    public View getView(int i, View view, ViewGroup viewGroup) {
-        ViewHolder viewHolder;
-        // General ListView optimization code.
-        if (view == null) {
-            view = mInflator.inflate(R.layout.listitem_device, null);
-            viewHolder = new ViewHolder();
-            viewHolder.deviceAddress = (TextView) view.findViewById(R.id.device_address);
-            viewHolder.deviceName = (TextView) view.findViewById(R.id.device_name);
-            view.setTag(viewHolder);
-        } else {
-            viewHolder = (ViewHolder) view.getTag();
-        }
-        BluetoothDevice device = mLeDevices.get(i);
-        final String deviceName = device.getName();
-        if (deviceName != null && deviceName.length() > 0)
-            viewHolder.deviceName.setText(deviceName);
-        else
-            viewHolder.deviceName.setText(R.string.unknown_device);
-        viewHolder.deviceAddress.setText(device.getAddress());
-        return view;
-    }
-}*/
