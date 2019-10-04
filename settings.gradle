@@ -4,7 +4,7 @@ def oshMainDir = "$rootDir/.."
 
 // include builds from other repos
 def repos = [
-        'osh-core':['lib-swe-common', 'lib-sensorml', 'lib-ows', 'sensorhub-core', 'sensorhub-service-swe', 'sensorhub-storage-h2'],
+        'osh-core':['lib-swe-common', 'lib-sensorml', 'lib-ows', 'sensorhub-core', 'sensorhub-service-swe', 'sensorhub-storage-perst'],
         'osh-addons/persistence':['sensorhub-storage-h2'],
         'osh-addons/comm':['sensorhub-comm-ble', 'sensorhub-comm-ble-dbus'],
         'osh-addons/sensors/health':['sensorhub-driver-angelsensor'],
