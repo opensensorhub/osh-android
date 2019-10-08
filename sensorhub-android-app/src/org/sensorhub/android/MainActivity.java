@@ -66,6 +66,9 @@ import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
+import org.sensorhub.impl.sensor.blebeacon.BLEBeacon;
+import org.sensorhub.impl.sensor.blebeacon.BLEBeaconConfig;
+import org.sensorhub.impl.sensor.blebeacon.BLEBeaconDriver;
 import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import org.sensorhub.impl.service.HttpServerConfig;
@@ -788,6 +791,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate: Should appear in logs");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textArea = (TextView) findViewById(R.id.text);
@@ -804,6 +808,17 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         displayHandler = new Handler(Looper.getMainLooper());
 
         setupBroadcastReceivers();
+
+        Log.d(TAG, "onCreate: Creating BLE Config");
+        BLEBeaconConfig beaconConfig = new BLEBeaconConfig();
+        beaconConfig.id =  "BLE_BEACON_SCANNER";
+        beaconConfig.name = "BLE Scanner [" + deviceName + "]";
+//        beaconConfig.moduleClass = BLEBeaconDriver.class.getCanonicalName();
+        beaconConfig.androidContext = this.getApplicationContext();
+        beaconConfig.autoStart = true;
+        Log.d(TAG, "onCreate: Adding config to sensorhub config");
+//        sensorhubConfig.add(beaconConfig);
+        Log.d(TAG, "onCreate: BLE Config Added");
     }
 
 

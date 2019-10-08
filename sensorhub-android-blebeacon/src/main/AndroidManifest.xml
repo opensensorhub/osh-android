@@ -1,2 +1,3 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.sensorhub.impl.sensor.blebeacon" />
+    package="org.sensorhub.impl.sensor.blebeacon">
+</manifest>
