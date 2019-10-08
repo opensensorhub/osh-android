@@ -38,7 +38,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> {
 
         String deviceID = Settings.Secure.getString(androidContext.getContentResolver(), Settings.Secure.ANDROID_ID);
         this.xmlID = "ANDROID_SENSORS_" + Build.SERIAL;     // Deprecated in API level 26
-        this.uniqueID = "urn:android:device:" + deviceID;
+        this.uniqueID = "urn:android:device:" + "ble_beacon";
         this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
 
         rawOutput = new BLEBeaconRawOutput(this);

@@ -225,6 +225,19 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             addSosTConfig(flironeConfig, sosUser, sosPwd);
         }
 
+        if(true){
+            Log.d(TAG, "onCreate: Creating BLE Config");
+            BLEBeaconConfig beaconConfig = new BLEBeaconConfig();
+            beaconConfig.id =  "BLE_BEACON_SCANNER";
+            beaconConfig.name = "BLE Scanner [" + deviceName + "]";
+//        beaconConfig.moduleClass = BLEBeaconDriver.class.getCanonicalName();
+            beaconConfig.androidContext = this.getApplicationContext();
+            beaconConfig.autoStart = true;
+            Log.d(TAG, "onCreate: Adding config to sensorhub config");
+            sensorhubConfig.add(beaconConfig);
+            Log.d(TAG, "onCreate: BLE Config Added");
+        }
+
         /*
         // DJI Drone
         enabled = prefs.getBoolean("dji_enabled", false);
@@ -809,16 +822,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         setupBroadcastReceivers();
 
-        Log.d(TAG, "onCreate: Creating BLE Config");
-        BLEBeaconConfig beaconConfig = new BLEBeaconConfig();
-        beaconConfig.id =  "BLE_BEACON_SCANNER";
-        beaconConfig.name = "BLE Scanner [" + deviceName + "]";
-//        beaconConfig.moduleClass = BLEBeaconDriver.class.getCanonicalName();
-        beaconConfig.androidContext = this.getApplicationContext();
-        beaconConfig.autoStart = true;
-        Log.d(TAG, "onCreate: Adding config to sensorhub config");
-//        sensorhubConfig.add(beaconConfig);
-        Log.d(TAG, "onCreate: BLE Config Added");
+
     }
 
 
