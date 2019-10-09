@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+<PreferenceScreen xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android" >
     <!--
         TODO: list of sensors and each item goes to a sub menu. Once it gets into each sensor, ask Alex for things like orientation.
@@ -115,6 +116,11 @@
             android:entries="@array/sos_option_list"
             android:entryValues="@array/sos_option_values"
             android:defaultValue="@array/sos_option_defaults" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="ble_enable"
+            android:title="BLE Beacon Scanning"
+            tools:text="Enable scanning for BLE beacons" />
     </PreferenceCategory>
 
     <PreferenceCategory

@@ -235,6 +235,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             beaconConfig.autoStart = true;
             Log.d(TAG, "onCreate: Adding config to sensorhub config");
             sensorhubConfig.add(beaconConfig);
+            addSosTConfig(beaconConfig, sosUser, sosPwd);
             Log.d(TAG, "onCreate: BLE Config Added");
         }
 
