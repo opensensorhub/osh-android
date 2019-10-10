@@ -1,9 +1,5 @@
 package org.sensorhub.impl.sensor.blebeacon;
 
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.RemoteException;
 import android.util.Log;
 
 import net.opengis.swe.v20.DataBlock;
@@ -11,17 +7,10 @@ import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 
 import org.altbeacon.beacon.Beacon;
-import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
-import org.altbeacon.beacon.BeaconParser;
-import org.altbeacon.beacon.RangeNotifier;
-import org.altbeacon.beacon.Region;
-import org.altbeacon.beacon.utils.UrlBeaconUrlCompressor;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.vast.swe.SWEHelper;
-
-import java.util.Collection;
 
 public class BLEBeaconRawOutput extends AbstractSensorOutput<BLEBeaconDriver>{
     private static final String BLE_BEACON_DEF = "http://sensorml.com/ont/swe/property/BLEBeacon";
@@ -36,12 +25,10 @@ public class BLEBeaconRawOutput extends AbstractSensorOutput<BLEBeaconDriver>{
     long systemTimeOffset = -1L;
 
     BeaconManager mBeaconManager;
-//    private Map<Identifier, Beacon> beacons;
 
 
     protected BLEBeaconRawOutput(BLEBeaconDriver parent) {
         super(parent);
-//        beacons = Collections.<Identifier, Beacon>emptyMap();
 
         // create output structure
         SWEHelper fac = new SWEHelper();
@@ -72,20 +59,11 @@ public class BLEBeaconRawOutput extends AbstractSensorOutput<BLEBeaconDriver>{
     }
 
     public void start() {
-        // BLE Beacon Initialization
-//        mBeaconManager = BeaconManager.getInstanceForApplication(getParentModule().getConfiguration().androidContext);
-//        mBeaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
-//        mBeaconManager.bind(this);
+
     }
 
     public void stop() {
-//        try {
-//            mBeaconManager.stopRangingBeaconsInRegion(new Region("url-beacons-region", null, null, null));
-//        } catch (RemoteException e) {
-//            Log.d(TAG, "unbind: " + e);
-//        }
-//
-//        mBeaconManager.unbind(this);
+
     }
 
     @Override
@@ -108,55 +86,12 @@ public class BLEBeaconRawOutput extends AbstractSensorOutput<BLEBeaconDriver>{
         return 0;   // TODO: implement a calculation for this
     }
 
-    /*// BLE Beacon Consumer/Range Notifier Require Implementations
-    @Override
-    public void onBeaconServiceConnect() {
-        Region region = new Region("all-beacons-region", null, null, null);
-        try {
-            mBeaconManager.startRangingBeaconsInRegion(region);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-        mBeaconManager.setRangeNotifier(this);
-    }
-
-    @Override
-    public Context getApplicationContext() {
-        return getParentModule().getConfiguration().androidContext;
-    }
-
-    @Override
-    public void unbindService(ServiceConnection serviceConnection) {
-
-    }
-
-    @Override
-    public boolean bindService(Intent intent, ServiceConnection serviceConnection, int i) {
-        return false;
-    }
-
-    @Override
-    public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
-        for (Beacon beacon : beacons) {
-            if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x10) {
-                // This is an Eddystone-URL frame
-                String url = UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray());
-                Log.d(TAG, "Beacon ID: " + beacon.getId1() + "Beacon URL: " + url +
-                        " approximately " + beacon.getDistance() + " meters away.");
-                // TODO: Need to improve this to handle non-EsURL beacons that have info in the other ID slots
-//                this.beacons.put(beacon.getId1(), beacon);
-                sendBeaconRecord(beacon);
-            }
-        }
-    }*/
-
     public void sendBeaconRecord(Beacon beacon) {
-        Log.d(TAG, "sendBeaconRecord");
         double time = System.currentTimeMillis() / 1000.;
         DataBlock dataBlock = bleData.createDataBlock();
 
         dataBlock.setDoubleValue(0, time);
-        dataBlock.setStringValue(1, "test-ble-beacon-id");
+        dataBlock.setStringValue(1, parentSensor.getUniqueIdentifier());
         dataBlock.setStringValue(2, beacon.getBluetoothName());
         dataBlock.setStringValue(3, beacon.getId1().toString());
        /* if (beacon.getId2() != null) {

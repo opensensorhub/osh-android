@@ -36,13 +36,10 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     private static final String TAG = "BLEBeaconDriver";
 
     String localFrameURI;
-    HandlerThread eventThread;
-    SensorManager sensorManager;
-    LocationManager locationManager;
-    //    SensorMLBuilder sensorMLBuilder;
     List<PhysicalComponent> smlComponents;
-    BLEBeaconRawOutput rawOutput;
-    BeaconManager mBeaconManager;
+    private BeaconManager mBeaconManager;
+    private BLEBeaconRawOutput rawOutput;
+    private BLEBeaconLocationOutput locOutput;
 
     public BLEBeaconDriver() {
     }
@@ -57,7 +54,9 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
 
         rawOutput = new BLEBeaconRawOutput(this);
+        locOutput = new BLEBeaconLocationOutput(this);
         addOutput(rawOutput, false);
+        addOutput(locOutput, false);
     }
 
     @Override
@@ -68,6 +67,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         mBeaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
         mBeaconManager.bind(this);
         rawOutput.start();
+        locOutput.start();
     }
 
     @Override
@@ -98,7 +98,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     // BLE Beacon Consumer/Range Notifier Require Implementations
     @Override
     public void onBeaconServiceConnect() {
-        Region region = new Region("all-beacons-region", null, null, null);
+        Region region = new Region("url-beacons-region", null, null, null);
         try {
             mBeaconManager.startRangingBeaconsInRegion(region);
         } catch (RemoteException e) {
@@ -128,11 +128,12 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
             if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x10) {
                 // This is an Eddystone-URL frame
                 String url = UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray());
-                Log.d(TAG, "Beacon ID: " + beacon.getId1() + "Beacon URL: " + url +
+                Log.d(TAG, "Beacon ID: " + beacon.getId1() + "\nBeacon URL: " + url +
                         " approximately " + beacon.getDistance() + " meters away.");
                 // TODO: Need to improve this to handle non-EsURL beacons that have info in the other ID slots
 //                this.beacons.put(beacon.getId1(), beacon);
                 rawOutput.sendBeaconRecord(beacon);
+                locOutput.sendMeasurement(beacon);
             }
         }
     }
