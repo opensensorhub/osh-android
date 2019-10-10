@@ -20,7 +20,7 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
 
     protected BLEBeaconLocationOutput(BLEBeaconDriver parentModule) {
         super(parentModule);
-        this.name = parentModule.getName() + "_location_data";
+        this.name = parentModule.getName() + " Location";
 
         // output structure (time + location)
         GeoPosHelper fac = new GeoPosHelper();
@@ -29,11 +29,10 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
        posDataStruct.setDefinition("http://sensorml.com/ont/swe/property/BLEBeaconLocation");
 
        // add fields
-        Time time = fac.newTimeStampIsoUTC();
         Vector vec = fac.newLocationVectorLLA(null);
         vec.setLocalFrame(parentSensor.localFrameURI);
 
-        posDataStruct.addComponent("time", time);
+        posDataStruct.addComponent("time", fac.newTimeStampIsoUTC());
         posDataStruct.addComponent("location", vec);
 
         // output encoding
@@ -64,22 +63,25 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
 
     protected void sendMeasurement(Beacon beacon) {
         DataBlock dataBlock = posDataStruct.createDataBlock();
-        double sampleTime = System.currentTimeMillis();
+        double sampleTime = System.currentTimeMillis()/1000;
 
         if (UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray()).equals("http://cardbeacon")) {
             dataBlock.setDoubleValue(0, sampleTime);
-            dataBlock.setDoubleValue(1, 0.0);
-            dataBlock.setDoubleValue(2, 0.0);
+            dataBlock.setDoubleValue(1, 34.2520745);
+            dataBlock.setDoubleValue(2, -86.2012021);
             dataBlock.setDoubleValue(3, 283.0);
-        } else {
+        } else if (UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray()).equals("http://opensensorhub.org")){
+            dataBlock.setDoubleValue(0, sampleTime);
+            dataBlock.setDoubleValue(1, 34.251943);
+            dataBlock.setDoubleValue(2, -86.201209);
+            dataBlock.setDoubleValue(3, 283.0);
+        }else{
             dataBlock.setDoubleValue(0, sampleTime);
             dataBlock.setDoubleValue(1, 0.0);
             dataBlock.setDoubleValue(2, 0.0);
-            dataBlock.setDoubleValue(3, 283.0);
+            dataBlock.setDoubleValue(3, 0.0);
         }
-
         // update latest record and send event
-        latestRecord = dataBlock;
         latestRecordTime = System.currentTimeMillis();
         eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, BLEBeaconLocationOutput.this, dataBlock));
     }
