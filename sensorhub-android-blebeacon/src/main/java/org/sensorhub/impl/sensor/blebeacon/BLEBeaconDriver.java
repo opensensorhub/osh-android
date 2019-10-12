@@ -27,6 +27,7 @@ import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -136,5 +137,22 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
                 locOutput.sendMeasurement(beacon);
             }
         }
+    }
+
+    private List<Beacon> getBestBeacons(Collection<Beacon> beacons){
+        List<Beacon> bestBeacons = new ArrayList<>();
+        for(Beacon beacon: beacons){
+            if (bestBeacons.size()==0){
+                bestBeacons.add(beacon);
+            }else if (bestBeacons.size() < 3){
+                for(int i =0; i< bestBeacons.size();i++){
+                    if(beacon.getDistance() < bestBeacons.get(i).getDistance()){
+                        bestBeacons.add(i, beacon);
+                        break;
+                    }
+                }
+            }
+        }
+        return bestBeacons;
     }
 }
