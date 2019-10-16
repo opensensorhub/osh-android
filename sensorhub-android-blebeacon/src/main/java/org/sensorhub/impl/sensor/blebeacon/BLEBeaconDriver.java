@@ -42,13 +42,22 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     private BLEBeaconLocationOutput locOutput;
     private List<Beacon> closestBeacons;
     private Map<String, double[]> urlLocations;
+    private Map<String, double[]> urlLocationsCart;
+    private Map<String, Beacon> beaconMap;
     private Triangulation triangulation;
 
     public BLEBeaconDriver() {
         // TODO: implement something better for this down the road
+        beaconMap = new HashMap<>();
         urlLocations = new HashMap<>();
-        urlLocations.put("http://cardbeacon", new double[]{34.2520745, -86.2012021, 283.0});
-        urlLocations.put("http://opensensorhub.org", new double[]{34.251943, -86.201209, 283.0});
+        urlLocationsCart = new HashMap<>();
+        urlLocations.put("http://rpi4-1", new double[]{34.2520736, -86.2012028, 283.0});
+        urlLocations.put("http://opensensorhub.org", new double[]{34.2520221, -86.2012018, 283.0});
+        urlLocations.put("http://cardbeacon", new double[]{34.2520761, -86.2012561, 283.0});
+
+        urlLocationsCart.put("http://rpi4-1", new double[]{349670.211399502, -5266209.53754881, 3569752.24484278});
+        urlLocationsCart.put("http://opensensorhub.org", new double[]{349670.516346565, -5266212.73984997, 3569752.24484278});
+        urlLocationsCart.put("http://cardbeacon", new double[]{349665.302111348, -86.2012561, 3569752.24484278});
     }
 
     @Override
@@ -156,6 +165,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
                 } else if (closestBeacons.size() == 2 || closestBeacons.get(2).getDistance() < beacon.getDistance()) {
                     closestBeacons.add(2, beacon);
                 }
+                beaconMap.put(url, beacon);
             }
         }
         // cut list to closest 3 beacons if too large, might be a better way to deal with this...
@@ -165,6 +175,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         if (closestBeacon != null) {
             locOutput.sendMeasurement(closestBeacon);
         }
+        determineLocation();
     }
 
     private List<Beacon> getBestBeacons(Collection<Beacon> beacons) {
@@ -185,7 +196,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     }
 
     private void determineLocation() {
-        if (closestBeacons.isEmpty()) {
+        /*if (closestBeacons.isEmpty()) {
             return;
         } else if (closestBeacons.size() < 3) {
             closestBeacons.get(0).getDistance();
@@ -201,29 +212,41 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
 
             Triangulation.Vec3d[] locations = new Triangulation.Vec3d[4];
             locations[0] = new Triangulation.Vec3d(urlLocations.get(b1)[0], urlLocations.get(b1)[1], urlLocations.get(b1)[2]);
-            locations[0] = new Triangulation.Vec3d(urlLocations.get(b2)[0], urlLocations.get(b2)[1], urlLocations.get(b2)[2]);
-            locations[0] = new Triangulation.Vec3d(urlLocations.get(b3)[0], urlLocations.get(b3)[1], urlLocations.get(b3)[2]);
+            locations[1] = new Triangulation.Vec3d(urlLocations.get(b2)[0], urlLocations.get(b2)[1], urlLocations.get(b2)[2]);
+            locations[2] = new Triangulation.Vec3d(urlLocations.get(b3)[0], urlLocations.get(b3)[1], urlLocations.get(b3)[2]);
+            locations[3] = new Triangulation.Vec3d(urlLocations.get(b1)[0], urlLocations.get(b1)[1], urlLocations.get(b1)[2]);
             double[] distances = {
                     closestBeacons.get(0).getDistance(),
                     closestBeacons.get(1).getDistance(),
-                    closestBeacons.get(2).getDistance()};
+                    closestBeacons.get(2).getDistance(),
+                    closestBeacons.get(0).getDistance(),
+            };
             Triangulation.Vec3d solution = new Triangulation.Vec3d(0.0, 0.0, 0.0);
-            Log.d(TAG, "determineLocation: " + trilaterationAlgo.getLocation(solution, 0, locations, distances));
+//            Log.d(TAG, "determineLocation: " + trilaterationAlgo.getLocation(solution, 0, locations, distances));
+        }*/
+        if(beaconMap.size() == 3){
+            double[] distances = new double[3];
+            double[][] locations = new double[3][3];
+            int i = 0;
+            for(Beacon beacon: beaconMap.values()){
+                locations[i] = urlLocations.get(UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray()));
+                distances[i] = beacon.getDistance();
+                i++;
+            }
+
+            Triangulation trilaterationAlgo = new Triangulation();
+            Triangulation.Vec3d[] v3Loc = new Triangulation.Vec3d[4];
+            v3Loc[0] = new Triangulation.Vec3d(locations[0][0], locations[0][1], locations[0][2]);
+            v3Loc[1] = new Triangulation.Vec3d(locations[1][0], locations[1][1], locations[1][2]);
+            v3Loc[2] = new Triangulation.Vec3d(locations[2][0], locations[2][1], locations[2][2]);
+            v3Loc[3] = new Triangulation.Vec3d(locations[0][0], locations[0][1], locations[0][2]);
+            double[] triDist = {distances[0], distances[1], distances[2], distances[0]};
+
+            Triangulation.Vec3d solution = new Triangulation.Vec3d(0.0, 0.0, 0.0);
+            Log.d(TAG, "determineLocation: " + trilaterationAlgo.getLocation(solution, 0, v3Loc, triDist));
+
+            double[] estLocation = AdaptedCellTrilateration.trackPhone(locations, distances);
+            Log.d(TAG, "determineLocation: " + estLocation[0] + "," + estLocation[1]);
         }
-    }
-
-    private double haversineDist(String url1, String url2) {
-        double R = 6372.8;  // Approximate Radius of Earth in kilometers
-        double[] coords1 = urlLocations.get(url1);
-        double[] coords2 = urlLocations.get(url2);
-
-        double dLat = Math.toRadians(coords2[0] - coords1[0]);
-        double dLon = Math.toRadians(coords2[1] - coords1[1]);
-        double lat1 = Math.toRadians(coords1[0]);
-        double lat2 = Math.toRadians(coords2[0]);
-
-        double a = Math.pow(Math.sin(dLat / 2), 2) + Math.pow(Math.sin(dLon / 2), 2) * Math.cos(lat1) * Math.cos(lat2);
-        double c = 2 * Math.asin(Math.sqrt(a));
-        return R * c;
     }
 }

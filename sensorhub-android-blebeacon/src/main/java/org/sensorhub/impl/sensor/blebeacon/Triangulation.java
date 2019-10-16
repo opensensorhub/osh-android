@@ -687,10 +687,10 @@ public class Triangulation {
         r3 = distanceArray[2];
         r4 = distanceArray[3];
 
-        /*r1 = (double) distanceArray[0] / 1000.0;
-        r2 = (double) distanceArray[1] / 1000.0;
-        r3 = (double) distanceArray[2] / 1000.0;
-        r4 = (double) distanceArray[3] / 1000.0;*/
+//        r1 = (double) distanceArray[0] / 1000.0;
+//        r2 = (double) distanceArray[1] / 1000.0;
+//        r3 = (double) distanceArray[2] / 1000.0;
+//        r4 = (double) distanceArray[3] / 1000.0;
 
         //qDebug() << "GetLocation" << r1 << r2 << r3 << r4;
 
