@@ -18,6 +18,7 @@ public class AdaptedCellTrilateration {
         computedLocation[0] = xCoord;
         computedLocation[1] = yCoord;
 
+        // returns lon, lat
         return computedLocation;
     }
 }

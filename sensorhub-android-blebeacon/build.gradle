@@ -32,4 +32,6 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     compile project(path: ':sensorhub-core')
     compile 'org.altbeacon:android-beacon-library:2.16.2'
+    compile project(path: ':sensorhub-process-vecmath')
+    compile project(path: ':sensorhub-process-geoloc')
 }
