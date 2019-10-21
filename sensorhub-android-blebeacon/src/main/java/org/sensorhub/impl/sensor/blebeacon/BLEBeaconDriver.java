@@ -18,6 +18,8 @@ import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.utils.UrlBeaconUrlCompressor;
+import org.sensorhub.algo.geoloc.NadirPointing;
+import org.sensorhub.algo.vecmath.Mat3d;
 import org.sensorhub.algo.vecmath.Vect3d;
 import org.sensorhub.algo.geoloc.GeoTransforms;
 import org.sensorhub.api.common.SensorHubException;
@@ -45,7 +47,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     private List<Beacon> closestBeacons;
 //    private Map<String, double[]> urlLocations;
     private Map<String, Vect3d> url2Locations;
-//    private Map<String, double[]> urlLocationsCart;
+    private Map<String, double[]> urlLocationsCart;
     private Map<String, Beacon> beaconMap;
     private Triangulation triangulation;
 
@@ -61,9 +63,12 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
 //        urlLocations.put("http://cardbeacon", new double[]{34.2520761, -86.2012561, 283.0});
 
         // LON, LAT, ALT
-        url2Locations.put("http://rpi4-1", new Vect3d( -86.2012028,34.2520736, 283.0));
+        /*url2Locations.put("http://rpi4-1", new Vect3d( -86.2012028,34.2520736, 283.0));
         url2Locations.put("http://opensensorhub.org", new Vect3d( -86.2012018,34.2520221, 283.0));
-        url2Locations.put("http://cardbeacon", new Vect3d(-86.2012561,34.2520761,  283.0));
+        url2Locations.put("http://cardbeacon", new Vect3d(-86.2012561,34.2520761,  283.0));*/
+        url2Locations.put("http://rpi4-1", new Vect3d( -86.2012028 * Math.PI/180,34.2520736 * Math.PI/180, 283.0 * Math.PI/180));
+        url2Locations.put("http://opensensorhub.org", new Vect3d( -86.2012018 * Math.PI/180,34.2520221 * Math.PI/180, 283.0 * Math.PI/180));
+        url2Locations.put("http://cardbeacon", new Vect3d(-86.2012561 * Math.PI/180,34.2520761 * Math.PI/180,  283.0 * Math.PI/180));
 
 
 //        urlLocationsCart.put("http://rpi4-1", new double[]{349670.211399502, -5266209.53754881, 3569752.24484278});
@@ -219,14 +224,22 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
             double[] distances = new double[3];
 //            double[][] locations = new double[3][3];
             Vect3d[] locations = new Vect3d[3];
+//            Vect3d[] enuLocations = new Vect3d[3];
             double[][] locationArr = new double[3][3];
 
             int i = 0;
             for(Beacon beacon: beaconMap.values()){
                 locations[i] = url2Locations.get(UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray()));
-                GeoTransforms gTrans = new GeoTransforms();
+                GeoTransforms geoTransforms = new GeoTransforms();
+//                NadirPointing nadirPointing = new NadirPointing();
+
                 Vect3d tempVec = new Vect3d();
-                gTrans.LLAtoECEF(locations[i], tempVec);
+                geoTransforms.LLAtoECEF(locations[i], tempVec);
+               /* Mat3d rotMatrix = new Mat3d();
+                nadirPointing.getRotationMatrixENUToECEF(tempVec, rotMatrix);
+                rotMatrix.transpose();
+                enuLocations[i] = MatrixVectorProduct(rotMatrix, tempVec);*/
+
                 locations[i] = tempVec;
                 locationArr[i] = new double[]{locations[i].y, locations[i].x, locations[i].z};
                 distances[i] = beacon.getDistance();
@@ -249,5 +262,15 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
 
             Vect3d vector = new Vect3d();
         }
+    }
+    
+    private Vect3d MatrixVectorProduct(Mat3d mat, Vect3d vec){
+        Vect3d resultVector = new Vect3d();
+
+        resultVector.x = mat.m00 * vec.x + mat.m01 * vec.x + mat.m02 * vec.x;
+        resultVector.y = mat.m10 * vec.y + mat.m11 * vec.y + mat.m12 * vec.y;
+        resultVector.z = mat.m20 * vec.z + mat.m21 * vec.z + mat.m22 * vec.z;
+        
+        return resultVector;
     }
 }

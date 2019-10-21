@@ -15,10 +15,15 @@ public class AdaptedCellTrilateration {
         double xCoord = (C*E - F*B) / (E*A - B*D);
         double yCoord = (C*D - A*F) / (B*D - A*E);
 
-        computedLocation[0] = xCoord;
-        computedLocation[1] = yCoord;
+        computedLocation[0] = yCoord;
+        computedLocation[1] = xCoord;
 
         // returns lon, lat
         return computedLocation;
+    }
+
+    private void ddmToENU(){
+        // convert to ecef
+        // convert ecef to enu
     }
 }
