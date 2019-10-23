@@ -3,12 +3,9 @@ package org.sensorhub.impl.sensor.blebeacon;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import net.opengis.swe.v20.DataRecord;
-import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
 
 import org.altbeacon.beacon.Beacon;
-import org.altbeacon.beacon.utils.UrlBeaconUrlCompressor;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.vast.swe.helper.GeoPosHelper;
@@ -18,7 +15,9 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
 
     String name;
     DataComponent posDataStruct;
-    DataEncoding posEncoding;
+//    DataComponent beaconDataStruct;
+    DataEncoding dataEncoding;
+
 
     protected BLEBeaconLocationOutput(BLEBeaconDriver parentModule) {
         super(parentModule);
@@ -26,31 +25,52 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
 
         // output structure (time + location)
         GeoPosHelper fac = new GeoPosHelper();
-       posDataStruct = fac.newDataRecord();
-       posDataStruct.setName(getName());
-       posDataStruct.setDefinition("http://sensorml.com/ont/swe/property/BLEBeaconLocation");
+        posDataStruct = fac.newDataRecord();
+        posDataStruct.setName(getName());
+        posDataStruct.setDefinition("http://sensorml.com/ont/swe/property/BLEBeaconLocation");
 
-       // add fields
+        // detected beacons structure
+
+
+        // add fields
         Vector vec = fac.newLocationVectorLLA(null);
         vec.setLocalFrame(parentSensor.localFrameURI);
 
+        Vector beaconVec = fac.newVector(URL_DEF + "beacons_data",
+                null,
+                new String[]{"lat", "lon", "alt", "dist"},
+                new String[]{"Geodetic Latitude", "Longitude", "Altitude", "Distance"},
+                new String[] {"deg", "deg", "m", "m"},
+                new String[] {"Lat", "Long", "h", "dist"});
+
+//        Vector vec1 = fac.newLocationVectorLLA(URL_DEF + "beacon_location");
+//        Vector vec2 = fac.newLocationVectorLLA(URL_DEF + "b2_location");
+//        Vector vec3 = fac.newLocationVectorLLA(URL_DEF + "b3_location");
+//
+//        vec1.setLocalFrame(parentSensor.localFrameURI);
+//        vec2.setLocalFrame(parentSensor.localFrameURI);
+//        vec3.setLocalFrame(parentSensor.localFrameURI);
+
         posDataStruct.addComponent("time", fac.newTimeStampIsoUTC());
-        posDataStruct.addComponent("Estimated Location", vec);
-        posDataStruct.addComponent("Beacon 1 Location", vec);
-        posDataStruct.addComponent("Beacon 1 Range", fac.newQuantity(URL_DEF + "distance", null, null, "m"));
-        posDataStruct.addComponent("Beacon 2 Location", vec);
-        posDataStruct.addComponent("Beacon 2 Range", fac.newQuantity(URL_DEF + "distance", null, null, "m"));
-        posDataStruct.addComponent("Beacon 3 Location", vec);
-        posDataStruct.addComponent("Beacon 3 Range", fac.newQuantity(URL_DEF + "distance", null, null, "m"));
+        posDataStruct.addComponent("est_location", vec);
+
+        // TODO: maybe there's a better way to present this data... TESTING new approach
+        posDataStruct.addComponent("beacon_1", beaconVec);
+//        posDataStruct.addComponent("beacon_1_range", fac.newQuantity(URL_DEF + "b1_distance", null, null, "m"));
+        posDataStruct.addComponent("beacon_2", beaconVec);
+//        posDataStruct.addComponent("beacon_2_range", fac.newQuantity(URL_DEF + "b2_distance", null, null, "m"));
+        posDataStruct.addComponent("beacon_3", beaconVec);
+//        posDataStruct.addComponent("beacon_3_range", fac.newQuantity(URL_DEF + "b3_distance", null, null, "m"));
 
         // output encoding
-        posEncoding = fac.newTextEncoding(",", "\n");
+        dataEncoding = fac.newTextEncoding(",", "\n");
     }
 
-    protected void start(){}
+    protected void start() {
+    }
 
     @Override
-    public String getName(){
+    public String getName() {
         return this.name;
     }
 
@@ -61,7 +81,7 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
 
     @Override
     public DataEncoding getRecommendedEncoding() {
-        return posEncoding;
+        return dataEncoding;
     }
 
     @Override
@@ -71,7 +91,7 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
 
     protected void sendMeasurement(double[] estLocation, Beacon[] beacons) {
         DataBlock dataBlock = posDataStruct.createDataBlock();
-        double sampleTime = System.currentTimeMillis()/1000;
+        double sampleTime = System.currentTimeMillis() / 1000;
         double[] b1Loc = parentSensor.getBeaconLocation(beacons[0]);
         double[] b2Loc = parentSensor.getBeaconLocation(beacons[1]);
         double[] b3Loc = parentSensor.getBeaconLocation(beacons[2]);
@@ -95,7 +115,7 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
         dataBlock.setDoubleValue(13, b3Loc[1]);
         dataBlock.setDoubleValue(14, b3Loc[2]);
         dataBlock.setDoubleValue(15, beacons[2].getDistance());
-        
+
         // update latest record and send event
         latestRecordTime = System.currentTimeMillis();
         eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, BLEBeaconLocationOutput.this, dataBlock));
