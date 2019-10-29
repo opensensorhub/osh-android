@@ -193,6 +193,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
             closestBeacons.get(0).getDistance();*/
 
         if (beaconMap.size() == 3) {
+            // TODO: move into a function
             double[] distances = new double[3];
             Vect3d[] locations = new Vect3d[3];
             double[][] locationArr = new double[3][3];
@@ -215,6 +216,10 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
             geoTransforms.ECEFtoLLA(estECEF, estLLA);
             Log.d(TAG, "determineLocation: " + estLocation[0] + "," + estLocation[1]);
             return new double[]{estLLA.y * 180 / Math.PI, estLLA.x * 180 / Math.PI, estLLA.z};
+        }
+        if(beaconMap.size() > 3){
+            // find best three
+            // do the same as above
         }
         return new double[]{0, 0, 0}; // Todo: add better handling of this case
     }
