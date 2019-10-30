@@ -46,12 +46,14 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     private static final Logger log = LoggerFactory.getLogger(BLEBeaconDriver.class.getSimpleName());
     public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
     private static final String TAG = "BLEBeaconDriver";
-
     String localFrameURI;
+
     //    List<PhysicalComponent> smlComponents;
-    private BeaconManager mBeaconManager;
     private BLEBeaconRawOutput rawOutput;
     private BLEBeaconLocationOutput locOutput;
+    private NearestBeaconOutput nearestBeaconOutput;
+
+    private BeaconManager mBeaconManager;
     private List<Beacon> closestBeacons;
     private Map<String, Vect3d> url2Locations;
     private Map<String, Beacon> beaconMap;
@@ -94,8 +96,10 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         closestBeacons = new ArrayList<>();
         rawOutput = new BLEBeaconRawOutput(this);
         locOutput = new BLEBeaconLocationOutput(this);
+        nearestBeaconOutput = new NearestBeaconOutput(this);
         addOutput(rawOutput, false);
         addOutput(locOutput, false);
+        addOutput(nearestBeaconOutput, false);
 
         // TODO: Switch this to SensorThings API if we want to demonstrate that capability
         // Get Beacon data
@@ -228,25 +232,10 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         }
 
         Beacon[] bArr = beaconMap.values().toArray(new Beacon[0]);
-        if (bArr.length >= 3)
-            locOutput.sendMeasurement(determineLocation(), bArr);   // Put better checks in place after testing
-    }
-
-    private List<Beacon> getBestBeacons(Collection<Beacon> beacons) {
-        List<Beacon> bestBeacons = new ArrayList<>();
-        for (Beacon beacon : beacons) {
-            if (bestBeacons.size() == 0) {
-                bestBeacons.add(beacon);
-            } else if (bestBeacons.size() < 3) {
-                for (int i = 0; i < bestBeacons.size(); i++) {
-                    if (beacon.getDistance() < bestBeacons.get(i).getDistance()) {
-                        bestBeacons.add(i, beacon);
-                        break;
-                    }
-                }
-            }
+        double[] estimatedLocation = determineLocation();
+        if (estimatedLocation.length != 0) {
+            locOutput.sendMeasurement(estimatedLocation, bArr);   // Put better checks in place after testing}
         }
-        return bestBeacons;
     }
 
     private double[] determineLocation() {
@@ -259,6 +248,15 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         double[][] locationArr = new double[3][3];
         GeoTransforms geoTransforms = new GeoTransforms();
         int i = 0;
+        if(config.clampToNearest){
+            ArrayList<Beacon> beaconArrayList = new ArrayList<>();
+            beaconArrayList.addAll(beaconMap.values());
+            beaconArrayList.sort(beaconComp);
+            Beacon nearest = beaconArrayList.get(0);
+            Vect3d nearestURL =  url2Locations.get(UrlBeaconUrlCompressor.uncompress(nearest.getId1().toByteArray()));
+            nearestBeaconOutput.sendMeasurement(nearest, nearestURL);
+            return new double[]{};
+        }
         if (beaconMap.size() == 3) {
             // TODO: move into a function
 
@@ -304,7 +302,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
             return new double[]{estLLA.y * 180 / Math.PI, estLLA.x * 180 / Math.PI, estLLA.z};
 
         }
-        return new double[]{0, 0, 0}; // Todo: add better handling of this case
+        return new double[]{}; // Todo: add better handling of this case
     }
 
     private Vect3d MatrixVectorProduct(Mat3d mat, Vect3d vec) {

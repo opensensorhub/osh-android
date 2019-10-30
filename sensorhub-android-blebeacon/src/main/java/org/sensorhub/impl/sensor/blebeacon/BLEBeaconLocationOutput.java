@@ -36,6 +36,13 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
         Vector vec = fac.newLocationVectorLLA(null);
         vec.setLocalFrame(parentSensor.localFrameURI);
 
+        Vector nearBeacon = fac.newVector(URL_DEF + "nearest_beacon",
+                null,
+                new String[]{"lat", "lon", "alt", "dist"},
+                new String[]{"Geodetic Latitude", "Longitude", "Altitude", "Distance"},
+                new String[] {"deg", "deg", "m", "m"},
+                new String[] {"Lat", "Long", "h", "dist"});
+
         Vector beaconVec = fac.newVector(URL_DEF + "beacons_data",
                 null,
                 new String[]{"lat", "lon", "alt", "dist"},
@@ -53,6 +60,7 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
 
         posDataStruct.addComponent("time", fac.newTimeStampIsoUTC());
         posDataStruct.addComponent("est_location", vec);
+        posDataStruct.addComponent("nearest_beacon", nearBeacon);
 
         // TODO: maybe there's a better way to present this data... TESTING new approach
         posDataStruct.addComponent("beacon_1", beaconVec);
