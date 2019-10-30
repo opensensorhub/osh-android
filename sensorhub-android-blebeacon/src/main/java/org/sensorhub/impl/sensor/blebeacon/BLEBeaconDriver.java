@@ -287,7 +287,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
             beaconArrayList.addAll(beaconMap.values());
             beaconArrayList.sort(beaconComp);
             // do the same as above
-            for(Beacon beacon : beaconArrayList.subList(0,2)){
+            for(Beacon beacon : beaconArrayList.subList(0,3)){
                 locations[i] = url2Locations.get(UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray()));
                 Vect3d tempVec = new Vect3d();
                 geoTransforms.LLAtoECEF(locations[i], tempVec);
