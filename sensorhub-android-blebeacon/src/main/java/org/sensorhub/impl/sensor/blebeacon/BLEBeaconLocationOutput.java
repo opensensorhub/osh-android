@@ -92,6 +92,7 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
     protected void sendMeasurement(double[] estLocation, Beacon[] beacons) {
         DataBlock dataBlock = posDataStruct.createDataBlock();
         double sampleTime = System.currentTimeMillis() / 1000;
+        // TODO: Handle null or {0,0,0} better
         double[] b1Loc = parentSensor.getBeaconLocation(beacons[0]);
         double[] b2Loc = parentSensor.getBeaconLocation(beacons[1]);
         double[] b3Loc = parentSensor.getBeaconLocation(beacons[2]);

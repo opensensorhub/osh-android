@@ -34,4 +34,5 @@ dependencies {
     compile 'org.altbeacon:android-beacon-library:2.16.2'
     compile project(path: ':sensorhub-process-vecmath')
     compile project(path: ':sensorhub-process-geoloc')
+    implementation 'com.android.volley:volley:1.1.1'
 }
