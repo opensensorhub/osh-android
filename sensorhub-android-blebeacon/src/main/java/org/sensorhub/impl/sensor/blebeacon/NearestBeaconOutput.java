@@ -74,15 +74,16 @@ public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
         return 0;
     }
 
-    protected void sendMeasurement(Beacon beacon, Vect3d location) {
+    protected void sendMeasurement(Beacon beacon) {
         DataBlock dataBlock = posDataStruct.createDataBlock();
         double sampleTime = System.currentTimeMillis() / 1000;
+        double[] locationDecDeg = parentSensor.getBeaconLocation(beacon);
 
         dataBlock.setDoubleValue(0, sampleTime);
-        dataBlock.setDoubleValue(1, location.x);
-        dataBlock.setDoubleValue(2, location.y);
-        dataBlock.setDoubleValue(3, location.z);
-        dataBlock.setDoubleValue(7, beacon.getDistance());
+        dataBlock.setDoubleValue(1, locationDecDeg[0]);
+        dataBlock.setDoubleValue(2, locationDecDeg[1]);
+        dataBlock.setDoubleValue(3, locationDecDeg[2]);
+        dataBlock.setDoubleValue(4, beacon.getDistance());
 
         // update latest record and send event
         latestRecordTime = System.currentTimeMillis();

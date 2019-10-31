@@ -248,13 +248,13 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         double[][] locationArr = new double[3][3];
         GeoTransforms geoTransforms = new GeoTransforms();
         int i = 0;
-        if(config.clampToNearest){
+        if(config.clampToNearest && !beaconMap.isEmpty()){
             ArrayList<Beacon> beaconArrayList = new ArrayList<>();
             beaconArrayList.addAll(beaconMap.values());
             beaconArrayList.sort(beaconComp);
             Beacon nearest = beaconArrayList.get(0);
-            Vect3d nearestURL =  url2Locations.get(UrlBeaconUrlCompressor.uncompress(nearest.getId1().toByteArray()));
-            nearestBeaconOutput.sendMeasurement(nearest, nearestURL);
+//            Vect3d nearestLoc =  url2Locations.get(UrlBeaconUrlCompressor.uncompress(nearest.getId1().toByteArray()));
+            nearestBeaconOutput.sendMeasurement(nearest);
             return new double[]{};
         }
         if (beaconMap.size() == 3) {
