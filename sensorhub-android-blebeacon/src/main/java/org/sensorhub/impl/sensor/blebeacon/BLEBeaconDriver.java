@@ -49,7 +49,7 @@ import java.util.Map;
         public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
         private static final String TAG = "BLEBeaconDriver";
         private static final double pollTimeMillis = 1000;
-        private static final double purgeTimeMillis = 10000;
+        private static final double purgeTimeMillis = 5000;
     String localFrameURI;
 
     //    List<PhysicalComponent> smlComponents;
@@ -255,6 +255,7 @@ import java.util.Map;
             ArrayList<Beacon> beaconArrayList = new ArrayList<>();
             beaconArrayList.addAll(beaconMap.values());
             beaconArrayList.sort(beaconComp);
+            Log.d(TAG, "determineLocation: " + beaconArrayList);
             Beacon nearest = beaconArrayList.get(0);
 //            Vect3d nearestLoc =  url2Locations.get(UrlBeaconUrlCompressor.uncompress(nearest.getId1().toByteArray()));
             nearestBeaconOutput.sendMeasurement(nearest);
@@ -335,8 +336,12 @@ import java.util.Map;
     }
 
     public double getBeaconDistance(Beacon beacon){
-        double mPower = -71;
-        double n = 4;       // represents the freespace (how obstructed/congested the area is)
+//        Log.d(TAG, "Tx Power" + beacon.getTxPower());
+//        Log.d(TAG, "RSSI: " + beacon.getRssi());
+//        Log.d(TAG, "Avg RSSI: " + beacon.getRunningAverageRssi());
+        double mPower = -75;
+        // represents the freespace (how obstructed/congested the area is)
+        double n = 3.5;
         double rssi = beacon.getRssi();
         return Math.pow(10, (mPower-rssi)/(10 * n));
     }

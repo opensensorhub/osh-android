@@ -108,8 +108,8 @@ public class BLEBeaconRawOutput extends AbstractSensorOutput<BLEBeaconDriver>{
         dataBlock.setStringValue(5, "NONE");
         dataBlock.setDoubleValue(6, beacon.getTxPower());
         dataBlock.setDoubleValue(7, beacon.getRssi());
-//        dataBlock.setDoubleValue(8, beacon.getDistance());
-        dataBlock.setDoubleValue(8, parentSensor.getBeaconDistance(beacon));
+        dataBlock.setDoubleValue(8, beacon.getDistance());
+//        dataBlock.setDoubleValue(8, parentSensor.getBeaconDistance(beacon));
 
         // Push the data
         latestRecordTime = System.currentTimeMillis();
