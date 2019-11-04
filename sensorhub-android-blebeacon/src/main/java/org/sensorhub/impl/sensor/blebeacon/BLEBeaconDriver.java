@@ -34,18 +34,22 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vast.util.DateTime;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> implements BeaconConsumer, RangeNotifier {
-    private static final Logger log = LoggerFactory.getLogger(BLEBeaconDriver.class.getSimpleName());
-    public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
-    private static final String TAG = "BLEBeaconDriver";
+    public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> implements BeaconConsumer, RangeNotifier {
+        private static final Logger log = LoggerFactory.getLogger(BLEBeaconDriver.class.getSimpleName());
+        public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
+        private static final String TAG = "BLEBeaconDriver";
+        private static final double pollTimeMillis = 1000;
+        private static final double purgeTimeMillis = 10000;
     String localFrameURI;
 
     //    List<PhysicalComponent> smlComponents;
@@ -57,17 +61,20 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     private List<Beacon> closestBeacons;
     private Map<String, Vect3d> url2Locations;
     private Map<String, Beacon> beaconMap;
+    private Map<String, Date> lastRanged;
     private Triangulation triangulation;
     Comparator beaconComp;
+    private double lastPoll;
 
     public BLEBeaconDriver() {
         // TODO: implement something better for this down the road (WIP)
         beaconMap = new HashMap<>();
         url2Locations = new HashMap<>();
+        lastRanged = new HashMap<>();
 
-        url2Locations.put("http://rpi4-1", new Vect3d(-86.2012028 * Math.PI / 180, 34.2520736 * Math.PI / 180, 283.0));
-        url2Locations.put("http://opensensorhub.org", new Vect3d(-86.2012018 * Math.PI / 180, 34.2520221 * Math.PI / 180, 283.0));
-        url2Locations.put("http://cardbeacon", new Vect3d(-86.2012561 * Math.PI / 180, 34.2520761 * Math.PI / 180, 283.0));
+//        url2Locations.put("http://rpi4-1", new Vect3d(-86.2012028 * Math.PI / 180, 34.2520736 * Math.PI / 180, 283.0));
+//        url2Locations.put("http://opensensorhub.org", new Vect3d(-86.2012018 * Math.PI / 180, 34.2520221 * Math.PI / 180, 283.0));
+//        url2Locations.put("http://cardbeacon", new Vect3d(-86.2012561 * Math.PI / 180, 34.2520761 * Math.PI / 180, 283.0));
 
         beaconComp = new Comparator() {
             @Override
@@ -91,6 +98,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         this.xmlID = "ANDROID_SENSORS_" + Build.SERIAL;     // Deprecated in API level 26
         this.uniqueID = "urn:android:ble_beacon:" + deviceID;
         this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
+        lastPoll = System.currentTimeMillis() - pollTimeMillis;
 
         triangulation = new Triangulation();
         closestBeacons = new ArrayList<>();
@@ -205,36 +213,29 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
         Beacon closestBeacon = null;
         Log.d(TAG, "didRangeBeaconsInRegion: " + beacons.size());
-        for (Beacon beacon : beacons) {
-            if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x10) {
-                // This is an Eddystone-URL frame
-                String url = UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray());
-                Log.d(TAG, "Beacon ID: " + beacon.getId1() + "\nBeacon URL: " + url +
-                        " approximately " + beacon.getDistance() + " meters away.");
-                // TODO: Need to improve this to handle non-EsURL beacons that have info in the other ID slots
-                rawOutput.sendBeaconRecord(beacon);
-               /* if (closestBeacon == null || beacon.getDistance() < closestBeacon.getDistance()) {
-                    closestBeacon = beacon;
-                }
-                // insert new beacons
-                // TODO: check that we don't duplicate beacons accidentally
-                if (closestBeacons.isEmpty() || closestBeacons.get(0).getDistance() > beacon.getDistance()) {
-                    closestBeacons.add(0, beacon);
-                } else if (closestBeacons.size() == 1 || closestBeacons.get(1).getDistance() < beacon.getDistance()) {
-                    closestBeacons.add(1, beacon);
-                } else if (closestBeacons.size() == 2 || closestBeacons.get(2).getDistance() < beacon.getDistance()) {
-                    closestBeacons.add(2, beacon);
-                }*/
-                if (url2Locations.get(url) != null) {
-                    beaconMap.put(url, beacon);
+        if(System.currentTimeMillis() - lastPoll > pollTimeMillis) {
+            for (Beacon beacon : beacons) {
+                if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x10) {
+                    // This is an Eddystone-URL frame
+                    String url = UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray());
+                    Log.d(TAG, "Beacon ID: " + beacon.getId1() + "\nBeacon URL: " + url +
+                            " approximately " + beacon.getDistance() + " meters away.");
+                    // TODO: Need to improve this to handle non-EsURL beacons that have info in the other ID slots
+                    rawOutput.sendBeaconRecord(beacon);
+                    if (url2Locations.get(url) != null) {
+                        beaconMap.put(url, beacon);
+                        lastRanged.put(url, new Date(System.currentTimeMillis()));
+                    }
                 }
             }
-        }
 
-        Beacon[] bArr = beaconMap.values().toArray(new Beacon[0]);
-        double[] estimatedLocation = determineLocation();
-        if (estimatedLocation.length != 0) {
-            locOutput.sendMeasurement(estimatedLocation, bArr);   // Put better checks in place after testing}
+            checkForOldBeacons();
+            Beacon[] bArr = beaconMap.values().toArray(new Beacon[0]);
+            double[] estimatedLocation = determineLocation();
+            if (estimatedLocation.length != 0) {
+                locOutput.sendMeasurement(estimatedLocation, bArr);   // Put better checks in place after testing}
+            }
+            lastPoll = System.currentTimeMillis();
         }
     }
 
@@ -320,5 +321,13 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         if (locationVec != null)
             return new double[]{locationVec.y * 180 / Math.PI, locationVec.x * 180 / Math.PI, locationVec.z};
         else return new double[]{0, 0, 0};
+    }
+
+    private void checkForOldBeacons(){
+        for(Map.Entry<String, Date> entry : lastRanged.entrySet()){
+            if(entry.getValue().getTime() - lastPoll > purgeTimeMillis){
+                beaconMap.remove(entry.getKey());
+            }
+        }
     }
 }
