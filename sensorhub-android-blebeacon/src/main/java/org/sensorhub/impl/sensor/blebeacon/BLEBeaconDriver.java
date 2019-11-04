@@ -82,7 +82,8 @@ import java.util.Map;
                 if (o1 instanceof Beacon && o2 instanceof Beacon) {
                     Beacon b1 = (Beacon) o1;
                     Beacon b2 = (Beacon) o2;
-                    return (int) (b1.getDistance() - b2.getDistance());
+//                    return (int) (b1.getDistance() - b2.getDistance());
+                    return (int) (getBeaconDistance(b1) - getBeaconDistance(b2));
                 } else {
                     throw new ClassCastException("Arguments must be of type Beacon");
                 }
@@ -219,7 +220,8 @@ import java.util.Map;
                     // This is an Eddystone-URL frame
                     String url = UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray());
                     Log.d(TAG, "Beacon ID: " + beacon.getId1() + "\nBeacon URL: " + url +
-                            " approximately " + beacon.getDistance() + " meters away.");
+//                            " approximately " + beacon.getDistance() + " meters away.");
+                            " approximately " + getBeaconDistance(beacon) + " meters away.");
                     // TODO: Need to improve this to handle non-EsURL beacons that have info in the other ID slots
                     rawOutput.sendBeaconRecord(beacon);
                     if (url2Locations.get(url) != null) {
@@ -269,7 +271,8 @@ import java.util.Map;
 
                 locations[i] = tempVec;
                 locationArr[i] = new double[]{locations[i].y, locations[i].x, locations[i].z};
-                distances[i] = beacon.getDistance();
+//                distances[i] = beacon.getDistance();
+                distances[i] = getBeaconDistance(beacon);
                 i++;
             }
 
@@ -292,7 +295,7 @@ import java.util.Map;
                 geoTransforms.LLAtoECEF(locations[i], tempVec);
                 locations[i] = tempVec;
                 locationArr[i] = new double[]{locations[i].y, locations[i].x, locations[i].z};
-                distances[i] = beacon.getDistance();
+                distances[i] = getBeaconDistance(beacon);
                 i++;
             }
             double[] estLocation = AdaptedCellTrilateration.trackPhone(locationArr, distances);
@@ -329,5 +332,12 @@ import java.util.Map;
                 beaconMap.remove(entry.getKey());
             }
         }
+    }
+
+    public double getBeaconDistance(Beacon beacon){
+        double mPower = -71;
+        double n = 4;       // represents the freespace (how obstructed/congested the area is)
+        double rssi = beacon.getRssi();
+        return Math.pow(10, (mPower-rssi)/(10 * n));
     }
 }

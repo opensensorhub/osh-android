@@ -113,17 +113,20 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
         dataBlock.setDoubleValue(4, b1Loc[0]);
         dataBlock.setDoubleValue(5, b1Loc[1]);
         dataBlock.setDoubleValue(6, b1Loc[2]);
-        dataBlock.setDoubleValue(7, beacons[0].getDistance());
+//        dataBlock.setDoubleValue(7, beacons[0].getDistance());
+        dataBlock.setDoubleValue(7, parentSensor.getBeaconDistance(beacons[0]));
 
         dataBlock.setDoubleValue(8, b2Loc[0]);
         dataBlock.setDoubleValue(9, b2Loc[1]);
         dataBlock.setDoubleValue(10, b2Loc[2]);
-        dataBlock.setDoubleValue(11, beacons[1].getDistance());
+//        dataBlock.setDoubleValue(11, beacons[1].getDistance());
+        dataBlock.setDoubleValue(11, parentSensor.getBeaconDistance(beacons[1]));
 
         dataBlock.setDoubleValue(12, b3Loc[0]);
         dataBlock.setDoubleValue(13, b3Loc[1]);
         dataBlock.setDoubleValue(14, b3Loc[2]);
-        dataBlock.setDoubleValue(15, beacons[2].getDistance());
+//        dataBlock.setDoubleValue(15, beacons[2].getDistance());
+        dataBlock.setDoubleValue(15, parentSensor.getBeaconDistance(beacons[2]));
 
         // update latest record and send event
         latestRecordTime = System.currentTimeMillis();

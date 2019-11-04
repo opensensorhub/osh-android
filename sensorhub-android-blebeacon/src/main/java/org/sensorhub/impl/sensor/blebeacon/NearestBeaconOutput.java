@@ -83,7 +83,8 @@ public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
         dataBlock.setDoubleValue(1, locationDecDeg[0]);
         dataBlock.setDoubleValue(2, locationDecDeg[1]);
         dataBlock.setDoubleValue(3, locationDecDeg[2]);
-        dataBlock.setDoubleValue(4, beacon.getDistance());
+//        dataBlock.setDoubleValue(4, beacon.getDistance());
+        dataBlock.setDoubleValue(4, parentSensor.getBeaconDistance(beacon));
 
         // update latest record and send event
         latestRecordTime = System.currentTimeMillis();
