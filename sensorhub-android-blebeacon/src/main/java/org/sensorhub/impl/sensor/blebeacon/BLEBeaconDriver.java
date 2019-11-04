@@ -44,12 +44,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-    public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> implements BeaconConsumer, RangeNotifier {
-        private static final Logger log = LoggerFactory.getLogger(BLEBeaconDriver.class.getSimpleName());
-        public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
-        private static final String TAG = "BLEBeaconDriver";
-        private static final double pollTimeMillis = 1000;
-        private static final double purgeTimeMillis = 5000;
+public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> implements BeaconConsumer, RangeNotifier {
+    private static final Logger log = LoggerFactory.getLogger(BLEBeaconDriver.class.getSimpleName());
+    public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
+    private static final String TAG = "BLEBeaconDriver";
+    private static final double pollTimeMillis = 1000;
+    private static final double runningAveragePollTimeMillis = 5000;
+    private static final double purgeTimeMillis = 5000;
     String localFrameURI;
 
     //    List<PhysicalComponent> smlComponents;
@@ -62,15 +63,18 @@ import java.util.Map;
     private Map<String, Vect3d> url2Locations;
     private Map<String, Beacon> beaconMap;
     private Map<String, Date> lastRanged;
+    private Map<String, Collection<RSSIMeasurement>> beaconMeasurements;
     private Triangulation triangulation;
     Comparator beaconComp;
     private double lastPoll;
+    private double lastRunningAverageTime;
 
     public BLEBeaconDriver() {
         // TODO: implement something better for this down the road (WIP)
         beaconMap = new HashMap<>();
         url2Locations = new HashMap<>();
         lastRanged = new HashMap<>();
+        beaconMeasurements = new HashMap<>();
 
 //        url2Locations.put("http://rpi4-1", new Vect3d(-86.2012028 * Math.PI / 180, 34.2520736 * Math.PI / 180, 283.0));
 //        url2Locations.put("http://opensensorhub.org", new Vect3d(-86.2012018 * Math.PI / 180, 34.2520221 * Math.PI / 180, 283.0));
@@ -83,7 +87,9 @@ import java.util.Map;
                     Beacon b1 = (Beacon) o1;
                     Beacon b2 = (Beacon) o2;
 //                    return (int) (b1.getDistance() - b2.getDistance());
-                    return (int) (getBeaconDistance(b1) - getBeaconDistance(b2));
+//                    return (int)(b1.getRunningAverageRssi() - b2.getRunningAverageRssi());
+                    return -Double.compare(b1.getRunningAverageRssi(), b2.getRunningAverageRssi());
+//                    return (int) (getBeaconDistance(b1) - getBeaconDistance(b2));
                 } else {
                     throw new ClassCastException("Arguments must be of type Beacon");
                 }
@@ -100,6 +106,7 @@ import java.util.Map;
         this.uniqueID = "urn:android:ble_beacon:" + deviceID;
         this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
         lastPoll = System.currentTimeMillis() - pollTimeMillis;
+        lastRunningAverageTime = System.currentTimeMillis();
 
         triangulation = new Triangulation();
         closestBeacons = new ArrayList<>();
@@ -214,7 +221,7 @@ import java.util.Map;
     public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
         Beacon closestBeacon = null;
         Log.d(TAG, "didRangeBeaconsInRegion: " + beacons.size());
-        if(System.currentTimeMillis() - lastPoll > pollTimeMillis) {
+        if (System.currentTimeMillis() - lastPoll > pollTimeMillis) {
             for (Beacon beacon : beacons) {
                 if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x10) {
                     // This is an Eddystone-URL frame
@@ -227,6 +234,13 @@ import java.util.Map;
                     if (url2Locations.get(url) != null) {
                         beaconMap.put(url, beacon);
                         lastRanged.put(url, new Date(System.currentTimeMillis()));
+                        if(!beaconMeasurements.containsKey(url)){
+                            ArrayList<RSSIMeasurement> measurements = new ArrayList<>();
+                            measurements.add(new RSSIMeasurement(System.currentTimeMillis(), beacon.getRssi()));
+                            beaconMeasurements.put(url, measurements);
+                        } else{
+                            beaconMeasurements.get(url).add(new RSSIMeasurement(System.currentTimeMillis(), beacon.getRssi()));
+                        }
                     }
                 }
             }
@@ -251,11 +265,11 @@ import java.util.Map;
         double[][] locationArr = new double[3][3];
         GeoTransforms geoTransforms = new GeoTransforms();
         int i = 0;
-        if(config.clampToNearest && !beaconMap.isEmpty()){
+        if (config.clampToNearest && !beaconMap.isEmpty()) {
             ArrayList<Beacon> beaconArrayList = new ArrayList<>();
             beaconArrayList.addAll(beaconMap.values());
             beaconArrayList.sort(beaconComp);
-            Log.d(TAG, "determineLocation: " + beaconArrayList);
+//            Log.d(TAG, "determineLocation: " + beaconArrayList);
             Beacon nearest = beaconArrayList.get(0);
 //            Vect3d nearestLoc =  url2Locations.get(UrlBeaconUrlCompressor.uncompress(nearest.getId1().toByteArray()));
             nearestBeaconOutput.sendMeasurement(nearest);
@@ -290,7 +304,7 @@ import java.util.Map;
             beaconArrayList.addAll(beaconMap.values());
             beaconArrayList.sort(beaconComp);
             // do the same as above
-            for(Beacon beacon : beaconArrayList.subList(0,3)){
+            for (Beacon beacon : beaconArrayList.subList(0, 3)) {
                 locations[i] = url2Locations.get(UrlBeaconUrlCompressor.uncompress(beacon.getId1().toByteArray()));
                 Vect3d tempVec = new Vect3d();
                 geoTransforms.LLAtoECEF(locations[i], tempVec);
@@ -327,15 +341,15 @@ import java.util.Map;
         else return new double[]{0, 0, 0};
     }
 
-    private void checkForOldBeacons(){
-        for(Map.Entry<String, Date> entry : lastRanged.entrySet()){
-            if(entry.getValue().getTime() - lastPoll > purgeTimeMillis){
+    private void checkForOldBeacons() {
+        for (Map.Entry<String, Date> entry : lastRanged.entrySet()) {
+            if (entry.getValue().getTime() - lastPoll > purgeTimeMillis) {
                 beaconMap.remove(entry.getKey());
             }
         }
     }
 
-    public double getBeaconDistance(Beacon beacon){
+    public double getBeaconDistance(Beacon beacon) {
 //        Log.d(TAG, "Tx Power" + beacon.getTxPower());
 //        Log.d(TAG, "RSSI: " + beacon.getRssi());
 //        Log.d(TAG, "Avg RSSI: " + beacon.getRunningAverageRssi());
@@ -343,6 +357,39 @@ import java.util.Map;
         // represents the freespace (how obstructed/congested the area is)
         double n = 3.5;
         double rssi = beacon.getRssi();
-        return Math.pow(10, (mPower-rssi)/(10 * n));
+        return Math.pow(10, (mPower - rssi) / (10 * n));
+    }
+
+    class RSSIMeasurement {
+        private int value;
+        private double time;
+
+        RSSIMeasurement(double time, int value) {
+            this.time = time;
+            this.value = value;
+        }
+
+        public double getTime() {
+            return time;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public double AverageRSSI(double since, Collection<RSSIMeasurement> measurements){
+        for(RSSIMeasurement m: measurements){
+            if(m.getValue() < since){
+                measurements.remove(m);
+            }
+        }
+
+        double sum = 0;
+        for(RSSIMeasurement measurement: measurements){
+            sum += measurement.getValue();
+        }
+
+        return sum/measurements.size();
     }
 }
