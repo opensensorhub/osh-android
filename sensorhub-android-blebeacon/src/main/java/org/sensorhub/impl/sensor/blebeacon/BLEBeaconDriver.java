@@ -22,6 +22,7 @@ import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
+import org.altbeacon.beacon.service.RunningAverageRssiFilter;
 import org.altbeacon.beacon.utils.UrlBeaconUrlCompressor;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,7 +35,6 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vast.util.DateTime;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,7 +49,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
     private static final String TAG = "BLEBeaconDriver";
     private static final double pollTimeMillis = 1000;
-    private static final double runningAveragePollTimeMillis = 5000;
+    private static final long runningAveragePollTimeMillis = 5000;
     private static final double purgeTimeMillis = 5000;
     String localFrameURI;
 
@@ -63,7 +63,6 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     private Map<String, Vect3d> url2Locations;
     private Map<String, Beacon> beaconMap;
     private Map<String, Date> lastRanged;
-    private Map<String, Collection<RSSIMeasurement>> beaconMeasurements;
     private Triangulation triangulation;
     Comparator beaconComp;
     private double lastPoll;
@@ -74,7 +73,6 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         beaconMap = new HashMap<>();
         url2Locations = new HashMap<>();
         lastRanged = new HashMap<>();
-        beaconMeasurements = new HashMap<>();
 
 //        url2Locations.put("http://rpi4-1", new Vect3d(-86.2012028 * Math.PI / 180, 34.2520736 * Math.PI / 180, 283.0));
 //        url2Locations.put("http://opensensorhub.org", new Vect3d(-86.2012018 * Math.PI / 180, 34.2520221 * Math.PI / 180, 283.0));
@@ -86,10 +84,10 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
                 if (o1 instanceof Beacon && o2 instanceof Beacon) {
                     Beacon b1 = (Beacon) o1;
                     Beacon b2 = (Beacon) o2;
-//                    return (int) (b1.getDistance() - b2.getDistance());
-//                    return (int)(b1.getRunningAverageRssi() - b2.getRunningAverageRssi());
+                    if((System.currentTimeMillis() - runningAveragePollTimeMillis) >= lastRunningAverageTime ){ // TODO: Make sure this is a reasonable place to check this
+                        lastRunningAverageTime = System.currentTimeMillis();
+                    }
                     return -Double.compare(b1.getRunningAverageRssi(), b2.getRunningAverageRssi());
-//                    return (int) (getBeaconDistance(b1) - getBeaconDistance(b2));
                 } else {
                     throw new ClassCastException("Arguments must be of type Beacon");
                 }
@@ -156,6 +154,9 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
 
     @Override
     public void start() throws SensorHubException {
+        BeaconManager.setRssiFilterImplClass(RunningAverageRssiFilter.class);
+        RunningAverageRssiFilter.setSampleExpirationMilliseconds(runningAveragePollTimeMillis);
+
         // start the BLEBeacon Manager scanning
         // BLE Beacon Initialization
         mBeaconManager = BeaconManager.getInstanceForApplication(getConfiguration().androidContext);
@@ -234,13 +235,6 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
                     if (url2Locations.get(url) != null) {
                         beaconMap.put(url, beacon);
                         lastRanged.put(url, new Date(System.currentTimeMillis()));
-                        if(!beaconMeasurements.containsKey(url)){
-                            ArrayList<RSSIMeasurement> measurements = new ArrayList<>();
-                            measurements.add(new RSSIMeasurement(System.currentTimeMillis(), beacon.getRssi()));
-                            beaconMeasurements.put(url, measurements);
-                        } else{
-                            beaconMeasurements.get(url).add(new RSSIMeasurement(System.currentTimeMillis(), beacon.getRssi()));
-                        }
                     }
                 }
             }
@@ -256,10 +250,6 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     }
 
     private double[] determineLocation() {
-        /*if (closestBeacons.isEmpty()) {
-            return;
-        } else if (closestBeacons.size() < 3) {
-            closestBeacons.get(0).getDistance();*/
         double[] distances = new double[3];
         Vect3d[] locations = new Vect3d[3];
         double[][] locationArr = new double[3][3];
@@ -269,9 +259,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
             ArrayList<Beacon> beaconArrayList = new ArrayList<>();
             beaconArrayList.addAll(beaconMap.values());
             beaconArrayList.sort(beaconComp);
-//            Log.d(TAG, "determineLocation: " + beaconArrayList);
             Beacon nearest = beaconArrayList.get(0);
-//            Vect3d nearestLoc =  url2Locations.get(UrlBeaconUrlCompressor.uncompress(nearest.getId1().toByteArray()));
             nearestBeaconOutput.sendMeasurement(nearest);
             return new double[]{};
         }
@@ -286,7 +274,6 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
 
                 locations[i] = tempVec;
                 locationArr[i] = new double[]{locations[i].y, locations[i].x, locations[i].z};
-//                distances[i] = beacon.getDistance();
                 distances[i] = getBeaconDistance(beacon);
                 i++;
             }
@@ -350,46 +337,10 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     }
 
     public double getBeaconDistance(Beacon beacon) {
-//        Log.d(TAG, "Tx Power" + beacon.getTxPower());
-//        Log.d(TAG, "RSSI: " + beacon.getRssi());
-//        Log.d(TAG, "Avg RSSI: " + beacon.getRunningAverageRssi());
         double mPower = -75;
         // represents the freespace (how obstructed/congested the area is)
         double n = 3.5;
         double rssi = beacon.getRssi();
         return Math.pow(10, (mPower - rssi) / (10 * n));
-    }
-
-    class RSSIMeasurement {
-        private int value;
-        private double time;
-
-        RSSIMeasurement(double time, int value) {
-            this.time = time;
-            this.value = value;
-        }
-
-        public double getTime() {
-            return time;
-        }
-
-        public int getValue() {
-            return value;
-        }
-    }
-
-    public double AverageRSSI(double since, Collection<RSSIMeasurement> measurements){
-        for(RSSIMeasurement m: measurements){
-            if(m.getValue() < since){
-                measurements.remove(m);
-            }
-        }
-
-        double sum = 0;
-        for(RSSIMeasurement measurement: measurements){
-            sum += measurement.getValue();
-        }
-
-        return sum/measurements.size();
     }
 }
