@@ -64,4 +64,16 @@
         <item>SIMULATE</item>
     </string-array>
     <string name="trupulse_datasource_default">STREAM</string>
+
+    <string-array name="ble_location_method_list">
+        <item>Nearest Beacon</item>
+        <item>Trilateration</item>
+    </string-array>
+    <string-array name="ble_location_method_values">
+        <item>NEAREST</item>
+        <item>TRILATERATION</item>
+    </string-array>
+    <string-array name="ble_location_method_defaults">
+        <item>NEAREST</item>
+    </string-array>
 </resources>
