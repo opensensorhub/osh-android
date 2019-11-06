@@ -1162,7 +1162,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
 
     protected void showVideo() {
-        if (boundService.getVideoTexture() != null) {
+        // TODO: need to force bound service's creation before this get's called in the future.
+        if (boundService != null && boundService.getVideoTexture() != null) {
             TextureView textureView = (TextureView) findViewById(R.id.video);
             if (textureView.getSurfaceTexture() != boundService.getVideoTexture())
                 textureView.setSurfaceTexture(boundService.getVideoTexture());
