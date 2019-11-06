@@ -94,7 +94,7 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
 
     @Override
     public double getAverageSamplingPeriod() {
-        return 0;
+        return 1.0;
     }
 
     protected void sendMeasurement(double[] estLocation, Beacon[] beacons) {

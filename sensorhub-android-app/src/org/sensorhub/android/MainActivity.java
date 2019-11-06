@@ -684,6 +684,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         } else {
             Log.d(TAG, "addSosServerConfig: NOT excluding video");
         }
+        if (!prefs.getBoolean("ble_enable", false)
+                || !prefs.getStringSet("ble_location_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+            sensorName = "BLEBeacon";
+            dataProviderConf.excludedOutputs.add(sensorName);
+            sensorName = "BLEBeaconLocation";
+            dataProviderConf.excludedOutputs.add(sensorName);
+            sensorName = "NearestBeacon";
+            dataProviderConf.excludedOutputs.add(sensorName);
+        }
 
         sosConf.dataProviders.add(dataProviderConf);
     }
@@ -798,6 +807,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 sosConfig.excludedOutputs.add(sensorName);
             } else {
                 Log.d(TAG, "addSosTConfig: NOT excluding video");
+            }
+            if (!prefs.getBoolean("ble_enable", false)
+                    || !prefs.getStringSet("ble_location_options", Collections.emptySet()).contains("PUSH_REMOTE")){
+                sensorName = "BLEBeacon";
+                sosConfig.excludedOutputs.add(sensorName);
+                sensorName = "BLEBeaconLocation";
+                sosConfig.excludedOutputs.add(sensorName);
+                sensorName = "NearestBeacon";
+                sosConfig.excludedOutputs.add(sensorName);
             }
         }
 

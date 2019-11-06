@@ -71,7 +71,7 @@ public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
 
     @Override
     public double getAverageSamplingPeriod() {
-        return 0;
+        return 1.0;
     }
 
     protected void sendMeasurement(Beacon beacon) {

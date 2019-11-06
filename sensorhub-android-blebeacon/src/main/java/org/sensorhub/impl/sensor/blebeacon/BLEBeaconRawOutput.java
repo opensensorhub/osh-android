@@ -83,7 +83,7 @@ public class BLEBeaconRawOutput extends AbstractSensorOutput<BLEBeaconDriver>{
 
     @Override
     public double getAverageSamplingPeriod() {
-        return 0;   // TODO: implement a calculation for this
+        return 1.0;   // TODO: implement a calculation for this
     }
 
     public void sendBeaconRecord(Beacon beacon) {
