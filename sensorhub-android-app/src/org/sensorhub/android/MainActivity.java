@@ -226,7 +226,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             addSosTConfig(flironeConfig, sosUser, sosPwd);
         }
 
-        enabled = prefs.getBoolean("ble_enabled", false);
+        enabled = prefs.getBoolean("ble_enable", false);
         if(enabled){
             BLEBeaconConfig beaconConfig = (BLEBeaconConfig)createSensorConfig(Sensors.BLELocation);
             beaconConfig.androidContext = this.getApplicationContext();
