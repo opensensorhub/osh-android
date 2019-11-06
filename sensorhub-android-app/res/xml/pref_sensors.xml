@@ -118,10 +118,9 @@
             android:defaultValue="@array/sos_option_defaults" />
 
         <SwitchPreference
-            android:defaultValue="false"
             android:key="ble_enable"
             android:title="BLE Beacon Scanning"
-            tools:text="Enable scanning for BLE beacons" />
+            android:defaultValue="false"/>
         <MultiSelectListPreference
             android:defaultValue="@array/ble_location_method_defaults"
             android:enabled="false"

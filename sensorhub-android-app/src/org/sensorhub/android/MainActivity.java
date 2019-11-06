@@ -105,7 +105,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         Angel,
         FlirOne,
         DJIDrone,
-        ProxySensor
+        ProxySensor,
+        BLELocation
     }
 
     TextView textArea;
@@ -225,15 +226,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             addSosTConfig(flironeConfig, sosUser, sosPwd);
         }
 
-        if(true){
-            Log.d(TAG, "onCreate: Creating BLE Config");
-            BLEBeaconConfig beaconConfig = new BLEBeaconConfig();
-            beaconConfig.id =  "BLE_BEACON_SCANNER";
-            beaconConfig.name = "BLE Scanner [" + deviceName + "]";
-//        beaconConfig.moduleClass = BLEBeaconDriver.class.getCanonicalName();
+        enabled = prefs.getBoolean("ble_enabled", false);
+        if(enabled){
+            BLEBeaconConfig beaconConfig = (BLEBeaconConfig)createSensorConfig(Sensors.BLELocation);
             beaconConfig.androidContext = this.getApplicationContext();
-            beaconConfig.autoStart = true;
-            Log.d(TAG, "onCreate: Adding config to sensorhub config");
             sensorhubConfig.add(beaconConfig);
             addSosTConfig(beaconConfig, sosUser, sosPwd);
             Log.d(TAG, "onCreate: BLE Config Added");
@@ -350,6 +346,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         } else if (Sensors.TruPulse.equals(sensor) || Sensors.TruPulseSim.equals(sensor)) {
             return prefs.getBoolean("trupulse_enable", false)
                     && prefs.getStringSet("trupulse_options", Collections.emptySet()).contains("PUSH_REMOTE");
+        } else if(Sensors.BLELocation.equals(sensor)){
+            return prefs.getBoolean("ble_enable", false) && prefs.getStringSet("ble_options", Collections.emptySet()).contains("PUSH_REMOTE");
         }
 
         return false;
@@ -484,7 +482,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             ((FlirOneCameraConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
         } else if (Sensors.ProxySensor.equals(sensor)) {
             sensorConfig = new ProxySensorConfig();
-        } else {
+        } else if(Sensors.BLELocation.equals(sensor)){
+            sensorConfig = new BLEBeaconConfig();
+            sensorConfig.id = "BLE_BEACON_SCANNER";
+            sensorConfig.name = "BLE Scanner [" + deviceName + "]";
+            sensorConfig.autoStart = true;
+        }else {
             sensorConfig = new SensorConfig();
         }
 
