@@ -991,6 +991,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         else if(id == R.id.action_stop_proxy){
             testStopProxyBroadcast();
         }
+        else if(id == R.id.action_report) {
+            startActivity(new Intent(this, ReconActivity.class));
+            return true;
+        }
 
         return super.onOptionsItemSelected(item);
     }

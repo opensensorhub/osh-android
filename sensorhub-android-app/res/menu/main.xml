@@ -1,40 +1,39 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="org.sensorhub.android.MainActivity" >
 
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/action_settings"/>
+        android:title="@string/action_settings" />
 
     <item
         android:id="@+id/action_start"
-        android:orderInCategory="101"
-        android:showAsAction="never"
-        android:title="@string/action_start"/>
-    
+        android:orderInCategory="110"
+        android:title="@string/action_start" />
+
+    <item
+        android:id="@+id/action_report"
+        android:orderInCategory="111"
+        android:title="@string/recon_report" />
     <item
         android:id="@+id/action_stop"
-        android:orderInCategory="102"
-        android:showAsAction="never"
-        android:title="@string/action_stop"/>
+        android:orderInCategory="120"
+        android:title="@string/action_stop" />
 
     <item
         android:id="@+id/action_proxy"
-        android:orderInCategory="103"
-        android:showAsAction="never"
-        android:title="@string/action_proxy"/>
+        android:orderInCategory="130"
+        android:title="@string/action_proxy" />
 
     <item
         android:id="@+id/action_stop_proxy"
-        android:orderInCategory="104"
-        android:showAsAction="never"
-        android:title="@string/action_stop_proxy"/>
+        android:orderInCategory="140"
+        android:title="@string/action_stop_proxy" />
 
     <item
-            android:id="@+id/action_about"
-            android:orderInCategory="105"
-            android:showAsAction="never"
-            android:title="@string/action_about"/>
+        android:id="@+id/action_about"
+        android:orderInCategory="150"
+        android:title="@string/action_about" />
 </menu>

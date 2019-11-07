@@ -4,43 +4,42 @@ description = 'OSH Demo Android App'
 ext.details = 'OSH demo app for Android'
 
 dependencies {
-  api project(':sensorhub-android-lib')
-  implementation 'javax.xml.stream:stax-api:1.0-2'
+    api project(':sensorhub-android-lib')
+    implementation 'javax.xml.stream:stax-api:1.0-2'
 }
 
 android {
-  compileSdkVersion rootProject.compileSdkVersion
-  buildToolsVersion rootProject.buildToolsVersion
+    compileSdkVersion rootProject.compileSdkVersion
+    buildToolsVersion rootProject.buildToolsVersion
 
-  defaultConfig {
-    minSdkVersion rootProject.minSdkVersion
-    targetSdkVersion rootProject.targetSdkVersion
-    versionCode 1
-    versionName rootProject.version
-  }
-
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
-  }
-
-  packagingOptions {
-    exclude 'META-INF/LICENSE'
-    exclude '**/empty'
-    exclude 'META-INF/rxjava.properties'
-  }
-
-  sourceSets {
-    main {
-      manifest.srcFile 'AndroidManifest.xml'
-      java.srcDirs = ['src']
-      res.srcDirs = ['res']
-      assets.srcDirs = ['assets']
+    defaultConfig {
+        minSdkVersion rootProject.minSdkVersion
+        targetSdkVersion rootProject.targetSdkVersion
+        versionCode 1
+        versionName rootProject.version
     }
-  }
 
-  lintOptions {
-    abortOnError false
-  }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude '**/empty'
+        exclude 'META-INF/rxjava.properties'
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['src']
+            res.srcDirs = ['res']
+            assets.srcDirs = ['assets']
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
 }
-
