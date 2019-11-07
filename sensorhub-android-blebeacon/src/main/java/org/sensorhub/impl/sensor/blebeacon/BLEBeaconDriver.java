@@ -84,9 +84,9 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
                 if (o1 instanceof Beacon && o2 instanceof Beacon) {
                     Beacon b1 = (Beacon) o1;
                     Beacon b2 = (Beacon) o2;
-                    if((System.currentTimeMillis() - runningAveragePollTimeMillis) >= lastRunningAverageTime ){ // TODO: Make sure this is a reasonable place to check this
+                   /* if((System.currentTimeMillis() - runningAveragePollTimeMillis) >= lastRunningAverageTime ){ // TODO: Make sure this is a reasonable place to check this
                         lastRunningAverageTime = System.currentTimeMillis();
-                    }
+                    }*/
                     return -Double.compare(b1.getRunningAverageRssi(), b2.getRunningAverageRssi());
                 } else {
                     throw new ClassCastException("Arguments must be of type Beacon");
