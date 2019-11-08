@@ -65,7 +65,7 @@
     </string-array>
     <string name="trupulse_datasource_default">STREAM</string>
 
-    <string-array name="recon_feature_type_list">
+    <string-array name="spot_report_feature_type_list">
         <item>Select Reporting Item</item>
         <item>Vulnerable Person</item>
         <item>Traffic Accident</item>
@@ -78,18 +78,18 @@
         <item>Suspicious Activity</item>
     </string-array>
 
-    <string-array name="recon_location_source_list">
+    <string-array name="spot_report_location_source_list">
         <item>Phone GPS</item>
         <item>Laser Range Finder</item>
         <item>BLE Beacon</item>
     </string-array>
 
-    <string name="recon_report">Report</string>
-    <string name="recon_name_field">NAME:</string>
-    <string name="recon_description_field">DESCRIPTION:</string>
-    <string name="recon_take_image_button">CAPTURE</string>
-    <string name="recon_reset_image_button"> RESET </string>
-    <string name="recon_submit_report_button">SUBMIT REPORT</string>
-    <string name="recon_name_description">A name for the report</string>
+    <string name="spot_report">Spot Report</string>
+    <string name="spot_name_field">NAME:</string>
+    <string name="spot_description_field">DESCRIPTION:</string>
+    <string name="spot_take_image_button">CAPTURE</string>
+    <string name="spot_reset_image_button"> RESET </string>
+    <string name="spot_submit_report_button">SUBMIT REPORT</string>
+    <string name="spot_name_description">A name for the report</string>
 
 </resources>

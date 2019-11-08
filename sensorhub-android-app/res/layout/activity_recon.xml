@@ -5,14 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ReconActivity">
+    tools:context=".SpotReportActivity">
 
     <Spinner
         android:id="@+id/reportType"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:entries="@array/recon_feature_type_list"
+        android:entries="@array/spot_report_feature_type_list"
         android:visibility="visible" />
 
     <Spinner
@@ -20,16 +20,16 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:entries="@array/recon_location_source_list"
+        android:entries="@array/spot_report_location_source_list"
         tools:visibility="visible" />
 
     <TextView
         android:id="@+id/nameLabel"
         android:layout_width="match_parent"
         android:layout_height="20dp"
-        android:contentDescription="@string/recon_name_description"
+        android:contentDescription="@string/spot_name_description"
         android:labelFor="@id/reportName"
-        android:text="@string/recon_name_field"
+        android:text="@string/spot_name_field"
         tools:visibility="visible" />
 
     <EditText
@@ -49,7 +49,7 @@
         android:layout_width="match_parent"
         android:layout_height="20dp"
         android:labelFor="@id/description"
-        android:text="@string/recon_description_field"
+        android:text="@string/spot_description_field"
         tools:visibility="visible" />
 
     <EditText
@@ -76,7 +76,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="@string/recon_take_image_button"
+        android:text="@string/spot_take_image_button"
         tools:visibility="visible" />
 
     <Button
@@ -85,7 +85,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:text="@string/recon_submit_report_button"
+        android:text="@string/spot_submit_report_button"
         android:textAlignment="center"
         tools:visibility="visible" />
 </LinearLayout>

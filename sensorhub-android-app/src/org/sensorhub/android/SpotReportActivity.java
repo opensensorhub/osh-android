@@ -14,7 +14,7 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-public class ReconActivity extends Activity {
+public class SpotReportActivity extends Activity {
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
 

@@ -44,7 +44,6 @@ import org.sensorhub.android.comm.ble.BleConfig;
 import org.sensorhub.android.comm.ble.BleNetwork;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
-import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
@@ -54,7 +53,6 @@ import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
-import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.GenericStreamStorage;
 import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
@@ -62,7 +60,6 @@ import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
-import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensor;
 import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
@@ -992,7 +989,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             testStopProxyBroadcast();
         }
         else if(id == R.id.action_report) {
-            startActivity(new Intent(this, ReconActivity.class));
+            startActivity(new Intent(this, SpotReportActivity.class));
             return true;
         }
 
