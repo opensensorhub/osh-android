@@ -245,7 +245,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // Spot Report
         SpotReportConfig spotReportConfig = (SpotReportConfig)createSensorConfig(Sensors.SpotReport);
         sensorhubConfig.add(spotReportConfig);
-        addSosTConfig(spotReportConfig, sosUser, sosPwd);
+//        addSosTConfig(spotReportConfig, sosUser, sosPwd);
 
         /*
         // DJI Drone

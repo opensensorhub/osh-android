@@ -36,9 +36,9 @@ public class SpotReportActivity extends Activity {
     private static final String RESPONSE_CODE = "code";
     private static final int RESPONSE_SUCCESS = 1;
     private static final String DATA_LOC = "location";
-    private static final String DATA_REPORT_NAME = "report name";
-    private static final String DATA_REPORT_DESCRIPTION = "report description";
-    private static final String DATA_REPORTING_ITEM = "reporting item";
+    private static final String DATA_REPORT_NAME = "name";
+    private static final String DATA_REPORT_DESCRIPTION = "description";
+    private static final String DATA_REPORTING_CATEGORY = "item";
     private static final String DATA_REPORTING_IMAGE = "image";
     private SpotReportReceiver broadCastReceiver = new SpotReportReceiver();
 
@@ -77,8 +77,8 @@ public class SpotReportActivity extends Activity {
     private void onSubmitReport() {
 
         // Get data from incident type field
-        int reportTypePos = ((Spinner)findViewById(R.id.reportType)).getSelectedItemPosition();
-        String reportType = ((Spinner)findViewById(R.id.reportType)).getSelectedItem().toString();
+        int categoryPos = ((Spinner)findViewById(R.id.reportType)).getSelectedItemPosition();
+        String category = ((Spinner)findViewById(R.id.reportType)).getSelectedItem().toString();
 
         // Get location data from selected source
         String locationSource = ((Spinner)findViewById(R.id.locationSource)).getSelectedItem().toString();
@@ -90,13 +90,13 @@ public class SpotReportActivity extends Activity {
         String reportDescription = ((TextView)findViewById(R.id.description)).getText().toString();
 
         // If the user has filled out the form completely
-        if ((reportTypePos == 0) || reportName.isEmpty()) {
+        if ((categoryPos == 0) || reportName.isEmpty()) {
 
             StringBuffer messageBuilder = new StringBuffer();
             messageBuilder.append("The following fields have errors:\n\n");
 
-            if (reportTypePos == 0) {
-                messageBuilder.append("Report Item - Select report type\n\n");
+            if (categoryPos == 0) {
+                messageBuilder.append("Report Category - Select report category\n\n");
             }
 
             if (reportName.isEmpty()) {
@@ -116,7 +116,7 @@ public class SpotReportActivity extends Activity {
             // Create and transmit report
             Intent submitReportIntent = new Intent(ACTION_SUBMIT_REPORT);
             submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-            submitReportIntent.putExtra(DATA_REPORTING_ITEM, reportType);
+            submitReportIntent.putExtra(DATA_REPORTING_CATEGORY, category);
             submitReportIntent.putExtra(DATA_LOC, locationSource);
             submitReportIntent.putExtra(DATA_REPORT_NAME, reportName);
             submitReportIntent.putExtra(DATA_REPORT_DESCRIPTION, reportDescription);

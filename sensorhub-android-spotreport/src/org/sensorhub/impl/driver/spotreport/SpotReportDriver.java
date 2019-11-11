@@ -60,7 +60,6 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
 
         super.init();
 
-        this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
 
         // create data interfaces for location providers
         if (config.androidContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION)) {
@@ -83,7 +82,8 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
         String deviceID = Secure.getString(config.androidContext.getContentResolver(), Secure.ANDROID_ID);
         this.uniqueID = "urn:spotreport:android:" + deviceID;
         this.xmlID = "SPOT_REPORT_" + deviceID;
-        
+        this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
+
         // create output
         spotReportOutput = new SpotReportOutput(this, locationProvider);
         spotReportOutput.init();

@@ -68,10 +68,10 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     // SWE DataBlock elements
     private static final String DATA_RECORD_TIME_LABEL = "time";
     private static final String DATA_RECORD_LOC_LABEL = "location";
-    private static final String DATA_RECORD_REPORT_NAME_LABEL = "report name";
-    private static final String DATA_RECORD_REPORT_DESCRIPTION_LABEL = "report description";
-    private static final String DATA_RECORD_REPORTING_ITEM_LABEL = "reporting item";
-    private static final String DATA_RECORD_REPORTING_CONTAINS_IMAGE_LABEL = "contains image";
+    private static final String DATA_RECORD_REPORT_NAME_LABEL = "name";
+    private static final String DATA_RECORD_REPORT_DESCRIPTION_LABEL = "description";
+    private static final String DATA_RECORD_REPORTING_CATEGORY_LABEL = "category";
+    private static final String DATA_RECORD_REPORTING_CONTAINS_IMAGE_LABEL = "has-image";
     private static final String DATA_RECORD_REPORTING_IMAGE_LABEL = "image";
 
     private static final String DATA_RECORD_NAME = "Spot Report";
@@ -105,6 +105,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     
     @Override
     public String getName() {
+
         return name;
     }
     
@@ -136,7 +137,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
 
         // Add the reporting item component of the data record
         Text reportingItem = sweHelper.newText();
-        spotReport.addComponent(DATA_RECORD_REPORTING_ITEM_LABEL, reportingItem);
+        spotReport.addComponent(DATA_RECORD_REPORTING_CATEGORY_LABEL, reportingItem);
 
         // Add image data block
         Boolean containsImage = sweHelper.newBoolean();
@@ -162,7 +163,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     public void start(Context context) {
 
         this.context = context;
-        context.registerReceiver(broadCastReceiver, new IntentFilter(ACTION_SUBMIT_REPORT));
+//        context.registerReceiver(broadCastReceiver, new IntentFilter(ACTION_SUBMIT_REPORT));
     }
     
     @Override
