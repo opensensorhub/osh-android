@@ -3,19 +3,29 @@ package org.sensorhub.android;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.icu.text.SimpleDateFormat;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.File;
+import java.util.Date;
+import java.util.Locale;
 
 public class SpotReportActivity extends Activity {
 
@@ -35,6 +45,7 @@ public class SpotReportActivity extends Activity {
     private ImageView imageView;
     private Bitmap imageBitmap = null;
     private Button submitReportButton;
+    private Uri imageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,9 +153,12 @@ public class SpotReportActivity extends Activity {
         }
     }
 
-
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+        File photo = new File(Environment.getExternalStorageDirectory(),  "SpotReport-" + currentDate);
+        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photo));
+        imageUri = Uri.fromFile(photo);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
@@ -152,10 +166,25 @@ public class SpotReportActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            imageBitmap = (Bitmap) extras.get("data");
-            imageView.setImageBitmap(imageBitmap);
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_IMAGE_CAPTURE:
+                if (resultCode == Activity.RESULT_OK) {
+                    Uri selectedImage = imageUri;
+                    getContentResolver().notifyChange(selectedImage, null);
+                    ContentResolver cr = getContentResolver();
+                    try {
+                        imageBitmap = android.provider.MediaStore.Images.Media
+                                .getBitmap(cr, selectedImage);
+                        imageView.setImageBitmap(imageBitmap);
+                        Toast.makeText(this, selectedImage.toString(),
+                                Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Failed to load", Toast.LENGTH_SHORT)
+                                .show();
+                        Log.e("Camera", e.toString());
+                    }
+                }
         }
     }
 

@@ -53,14 +53,19 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
     SpotReportOutput spotReportOutput;
         
     public SpotReportDriver() {
+    }
+    
+    @Override
+    public void init() throws SensorHubException {
 
-        Context androidContext = config.androidContext;
+        super.init();
+
         this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
 
         // create data interfaces for location providers
-        if (androidContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION)) {
+        if (config.androidContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION)) {
 
-            LocationManager locationManager = (LocationManager)androidContext.getSystemService(Context.LOCATION_SERVICE);
+            LocationManager locationManager = (LocationManager)config.androidContext.getSystemService(Context.LOCATION_SERVICE);
 
             List<String> locProviders = locationManager.getAllProviders();
 
@@ -73,13 +78,7 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
                 this.locationProvider = null;
             }
         }
-    }
-    
-    @Override
-    public void init() throws SensorHubException {
 
-        super.init();
-        
         // generate identifiers
         String deviceID = Secure.getString(config.androidContext.getContentResolver(), Secure.ANDROID_ID);
         this.uniqueID = "urn:spotreport:android:" + deviceID;

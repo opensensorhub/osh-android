@@ -71,7 +71,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     private static final String DATA_RECORD_REPORT_NAME_LABEL = "report name";
     private static final String DATA_RECORD_REPORT_DESCRIPTION_LABEL = "report description";
     private static final String DATA_RECORD_REPORTING_ITEM_LABEL = "reporting item";
-    private static final String DATA_RECORD_REPORTING_CONTAINS_IMAGE_LABEL = "image";
+    private static final String DATA_RECORD_REPORTING_CONTAINS_IMAGE_LABEL = "contains image";
     private static final String DATA_RECORD_REPORTING_IMAGE_LABEL = "image";
 
     private static final String DATA_RECORD_NAME = "Spot Report";

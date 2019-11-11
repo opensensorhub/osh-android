@@ -523,6 +523,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         else if (Sensors.SpotReport.equals(sensor))
         {
             sensorConfig = new SpotReportConfig();
+            sensorConfig.id = "urn:spotreport:android:" + deviceID;
+            sensorConfig.name = "Spot Report [" + deviceName + "]";
+            sensorConfig.autoStart = true;
             ((SpotReportConfig) sensorConfig).androidContext = this.getApplicationContext();
             DisplayMetrics displayMetrics = new DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);

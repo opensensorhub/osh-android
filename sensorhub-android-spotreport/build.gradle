@@ -7,7 +7,7 @@ dependencies {
   //compile 'org.sensorhub:sensorhub-core:' + oshCoreVersion
   //compile 'org.sensorhub:sensorhub-driver-videocam:[1.0,2.0)'
   api project(':sensorhub-core')
-    api project(':sensorhub-driver-videocam')
+  api project(':sensorhub-driver-videocam')
   api fileTree(dir: 'libs', include: ['*.jar'])
 }
 
