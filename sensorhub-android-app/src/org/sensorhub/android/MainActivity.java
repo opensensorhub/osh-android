@@ -35,6 +35,7 @@ import java.util.Map.Entry;
 
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.*;
 
@@ -48,16 +49,20 @@ import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorConfig;
+import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
+import org.sensorhub.impl.driver.spotreport.SpotReportConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.persistence.GenericStreamStorage;
 import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
+import org.sensorhub.impl.sensor.android.AndroidCameraOutputH264;
+import org.sensorhub.impl.sensor.android.AndroidCameraOutputMJPEG;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensorConfig;
@@ -103,7 +108,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         Angel,
         FlirOne,
         DJIDrone,
-        ProxySensor
+        ProxySensor,
+        SpotReport
     }
 
     TextView textArea;
@@ -235,6 +241,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sensorhubConfig.add(flironeConfig);
             addSosTConfig(flironeConfig, sosUser, sosPwd);
         }
+
+        // Spot Report
+        SpotReportConfig spotReportConfig = (SpotReportConfig)createSensorConfig(Sensors.SpotReport);
+        sensorhubConfig.add(spotReportConfig);
+        addSosTConfig(spotReportConfig, sosUser, sosPwd);
 
         /*
         // DJI Drone
@@ -508,6 +519,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         else if (Sensors.ProxySensor.equals(sensor))
         {
             sensorConfig = new ProxySensorConfig();
+        }
+        else if (Sensors.SpotReport.equals(sensor))
+        {
+            sensorConfig = new SpotReportConfig();
+            ((SpotReportConfig) sensorConfig).androidContext = this.getApplicationContext();
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            ((SpotReportConfig) sensorConfig).imgWidth = displayMetrics.widthPixels;
+            ((SpotReportConfig) sensorConfig).imgHeight = displayMetrics.heightPixels;
         }
         else
         {
