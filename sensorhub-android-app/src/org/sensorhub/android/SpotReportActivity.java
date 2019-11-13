@@ -21,11 +21,8 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Locale;
@@ -126,7 +123,11 @@ public class SpotReportActivity extends Activity {
             submitReportIntent.putExtra(DATA_LOC, locationSource);
             submitReportIntent.putExtra(DATA_REPORT_NAME, reportName);
             submitReportIntent.putExtra(DATA_REPORT_DESCRIPTION, reportDescription);
-            submitReportIntent.putExtra(DATA_REPORT_IMAGE, imageUri.toString());
+            String uriString = null;
+            if (imageUri != null) {
+                uriString = imageUri.toString();
+            }
+            submitReportIntent.putExtra(DATA_REPORT_IMAGE, uriString);
             submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
             sendBroadcast(submitReportIntent);
         }
