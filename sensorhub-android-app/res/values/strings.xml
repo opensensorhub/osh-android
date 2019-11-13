@@ -79,9 +79,8 @@
     </string-array>
 
     <string-array name="spot_report_location_source_list">
-        <item>Phone GPS</item>
-        <item>Laser Range Finder</item>
-        <item>BLE Beacon</item>
+        <item>GPS</item>
+        <item>Network</item>
     </string-array>
 
     <string name="spot_report">Spot Report</string>

@@ -16,7 +16,10 @@ package org.sensorhub.impl.driver.spotreport;
 
 import javax.xml.namespace.QName;
 import net.opengis.gml.v32.AbstractFeature;
+import net.opengis.sensorml.v20.ObservableProperty;
+import net.opengis.sensorml.v20.PhysicalComponent;
 import net.opengis.sensorml.v20.SpatialFrame;
+import net.opengis.sensorml.v20.impl.ObservablePropertyImpl;
 import net.opengis.sensorml.v20.impl.SpatialFrameImpl;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.SensorException;
@@ -24,10 +27,11 @@ import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.ogc.gml.GenericFeatureImpl;
+import org.vast.sensorML.SMLFactory;
+import org.vast.sensorML.SMLHelper;
 import org.vast.sensorML.SMLStaxBindings;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.location.LocationManager;
+import org.vast.swe.SWEHelper;
+
 import android.location.LocationProvider;
 import android.provider.Settings.Secure;
 
@@ -49,7 +53,6 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
     public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
 
     String localFrameURI;
-    LocationProvider locationProvider;
     SpotReportOutput spotReportOutput;
         
     public SpotReportDriver() {
@@ -60,34 +63,16 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
 
         super.init();
 
-
-        // create data interfaces for location providers
-        if (config.androidContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION)) {
-
-            LocationManager locationManager = (LocationManager)config.androidContext.getSystemService(Context.LOCATION_SERVICE);
-
-            List<String> locProviders = locationManager.getAllProviders();
-
-            for (String provName: locProviders) {
-
-                log.debug("Detected location provider " + provName);
-                LocationProvider locProvider = locationManager.getProvider(provName);
-
-                // Set selected location provider
-                this.locationProvider = null;
-            }
-        }
-
         // generate identifiers
         String deviceID = Secure.getString(config.androidContext.getContentResolver(), Secure.ANDROID_ID);
-        this.uniqueID = "urn:spotreport:android:" + deviceID;
+        this.uniqueID = "urn:android:spotreport:" + deviceID;
         this.xmlID = "SPOT_REPORT_" + deviceID;
         this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
 
         // create output
-        spotReportOutput = new SpotReportOutput(this, locationProvider);
-        spotReportOutput.init();
+        spotReportOutput = new SpotReportOutput(this);
         this.addOutput(spotReportOutput, false);
+        spotReportOutput.init();
     }
 
 
@@ -114,7 +99,9 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
         synchronized (sensorDescLock) {
 
             super.updateSensorDescription();
-            
+
+            sensorDescription.setDescription("Spot Reports, providing the user the ability to submit manual observations.");
+
             SpatialFrame localRefFrame = new SpatialFrameImpl();
             localRefFrame.setId(LOCAL_REF_FRAME);
             localRefFrame.setOrigin("Center of the device screen");
@@ -139,7 +126,7 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
         if (config.runName != null && config.runName.length() > 0) {
 
             AbstractFeature foi = new GenericFeatureImpl(new QName(SMLStaxBindings.NS_URI, "Feature", "sml"));
-            String uid = "urn:android:foi:" + config.runName.replaceAll("[ |']", "");
+            String uid = "urn:android:spotreport:foi:" + config.runName.replaceAll("[ |']", "");
             foi.setUniqueIdentifier(uid);
             foi.setName(config.runName);
             foi.setDescription(config.runDescription);

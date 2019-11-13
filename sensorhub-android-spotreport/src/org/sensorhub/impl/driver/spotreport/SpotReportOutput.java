@@ -1,22 +1,23 @@
 /***************************** BEGIN LICENSE BLOCK ***************************
 
-The contents of this file are subject to the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one
-at http://mozilla.org/MPL/2.0/.
+ The contents of this file are subject to the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one
+ at http://mozilla.org/MPL/2.0/.
 
-Software distributed under the License is distributed on an "AS IS" basis,
-WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-for the specific language governing rights and limitations under the License.
+ Software distributed under the License is distributed on an "AS IS" basis,
+ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ for the specific language governing rights and limitations under the License.
 
-Copyright (C) 2019 Botts Innovative Research, Inc. All Rights Reserved.
- 
-******************************* END LICENSE BLOCK ***************************/
+ Copyright (C) 2019 Botts Innovative Research, Inc. All Rights Reserved.
+ ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.driver.spotreport;
 
 import java.io.ByteArrayOutputStream;
+import java.util.List;
 
 import net.opengis.swe.v20.Boolean;
+import net.opengis.swe.v20.Count;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -25,19 +26,30 @@ import net.opengis.swe.v20.Text;
 import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
 
+import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vast.data.AbstractDataBlock;
+import org.vast.data.DataBlockList;
+import org.vast.data.DataBlockMixed;
 import org.vast.swe.SWEHelper;
 import org.vast.swe.helper.GeoPosHelper;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.location.LocationProvider;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.location.Location;
+import android.location.LocationManager;
+import android.net.Uri;
+import android.os.ResultReceiver;
+import android.provider.MediaStore;
 
 /**
  * <p>
@@ -54,16 +66,14 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
 
     // Data Associated with Broadcast Receivers and Intents
     private static final String ACTION_SUBMIT_REPORT = "org.sensorhub.android.intent.SPOT_REPORT";
-    private static final String ACTION_SUBMIT_REPORT_RESPONSE = "org.sensorhub.android.intent.SPOT_REPORT_RESPONSE";
-    private static final String RESPONSE_CODE = "code";
-    private static final int RESPONSE_SUCCESS = 1;
-    private static final int RESPONSE_FAILURE = 0;
-    private static final String DATA_LOC= "location";
-    private static final String DATA_REPORT_NAME = "report name";
-    private static final String DATA_REPORT_DESCRIPTION = "report description";
-    private static final String DATA_REPORTING_ITEM = "reporting item";
-    private static final String DATA_REPORTING_IMAGE = "image";
-    private SpotReportReceiver broadCastReceiver = new SpotReportReceiver();
+    private static final int SUBMIT_REPORT_FAILURE = 0;
+    private static final int SUBMIT_REPORT_SUCCESS = 1;
+    private static final String DATA_LOC = "location";
+    private static final String DATA_REPORT_NAME = "name";
+    private static final String DATA_REPORT_DESCRIPTION = "description";
+    private static final String DATA_REPORT_CATEGORY = "item";
+    private static final String DATA_REPORT_IMAGE = "image";
+    private SpotReportReceiver broadcastReceiver = new SpotReportReceiver();
 
     // SWE DataBlock elements
     private static final String DATA_RECORD_TIME_LABEL = "time";
@@ -82,37 +92,33 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
             SWEHelper.getPropertyUri("SpotReport");
     private int imgHeight;
     private int imgWidth;
-    private ByteArrayOutputStream jpegBuf = new ByteArrayOutputStream();
     private DataComponent spotReport;
     private DataEncoding dataEncoding;
 
-
     private Context context;
-    private LocationProvider locProvider;
     private String name;
 
+    private ByteArrayOutputStream imageBuffer = new ByteArrayOutputStream();
 
-    protected SpotReportOutput(SpotReportDriver parentModule, LocationProvider locProvider) {
+    protected SpotReportOutput(SpotReportDriver parentModule) {
 
         super(parentModule);
         this.name = "spot_report_data";
 
-        this.locProvider = locProvider;
-
         this.imgWidth = parentModule.getConfiguration().imgWidth;
         this.imgHeight = parentModule.getConfiguration().imgHeight;
     }
-    
+
     @Override
     public String getName() {
 
         return name;
     }
-    
+
     protected void init() throws SensorException {
 
         SWEHelper sweHelper = new SWEHelper();
-        spotReport = sweHelper.newDataRecord(6);
+        spotReport = sweHelper.newDataRecord(7);
         spotReport.setDescription(DATA_RECORD_DESCRIPTION);
         spotReport.setDefinition(DATA_RECORD_DEFINITION);
         spotReport.setName(DATA_RECORD_NAME);
@@ -136,8 +142,8 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
         spotReport.addComponent(DATA_RECORD_REPORT_DESCRIPTION_LABEL, description);
 
         // Add the reporting item component of the data record
-        Text reportingItem = sweHelper.newText();
-        spotReport.addComponent(DATA_RECORD_REPORTING_CATEGORY_LABEL, reportingItem);
+        Text category = sweHelper.newText();
+        spotReport.addComponent(DATA_RECORD_REPORTING_CATEGORY_LABEL, category);
 
         // Add image data block
         Boolean containsImage = sweHelper.newBoolean();
@@ -146,30 +152,63 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
         VideoCamHelper videoCamHelper = new VideoCamHelper();
         DataStream videoStream = videoCamHelper.newVideoOutputMJPEG(getName(), this.imgWidth, this.imgHeight);
         videoStream.setDefinition(SWEHelper.getPropertyUri("Image"));
+        Count count = sweHelper.newCount();
+        count.setValue(1);
+        videoStream.setElementCount(count);
         spotReport.addComponent(DATA_RECORD_REPORTING_IMAGE_LABEL, videoStream);
 
-        // output encoding
-        dataEncoding = sweHelper.newTextEncoding(",", "\n");
+        // Output encoding
+        dataEncoding = sweHelper.newBinaryEncoding();
     }
 
-    private void submitReport(String reportingItem, String locationSource, String reportName, String reportDescription, byte[] imageBuffer) {
+    private boolean submitReport(String category, String locationSource, String name, String description, byte[] image) {
 
-        // Create and transmit report response
-        Intent submitReportIntent = new Intent(ACTION_SUBMIT_REPORT_RESPONSE);
-        submitReportIntent.putExtra(RESPONSE_CODE, RESPONSE_SUCCESS);
-        context.sendBroadcast(submitReportIntent);
+        Location location;
+
+        location = getLocation(locationSource);
+
+        double sampleTime = location.getTime() / 1000.0;
+
+        // build and populate datablock
+        DataBlock dataBlock = spotReport.createDataBlock();
+        dataBlock.setDoubleValue(0, sampleTime);
+        AbstractDataBlock locationData = ((DataBlockMixed)dataBlock).getUnderlyingObject()[1];
+        locationData.setDoubleValue(0, location.getLatitude());
+        locationData.setDoubleValue(1, location.getLongitude());
+        locationData.setDoubleValue(2, location.getAltitude());
+        AbstractDataBlock nameData = ((DataBlockMixed)dataBlock).getUnderlyingObject()[2];
+        nameData.setStringValue(name);
+        AbstractDataBlock descriptionData = ((DataBlockMixed)dataBlock).getUnderlyingObject()[3];
+        descriptionData.setStringValue(description);
+        AbstractDataBlock categoryData = ((DataBlockMixed)dataBlock).getUnderlyingObject()[4];
+        categoryData.setStringValue(category);
+        boolean hasImage = true;
+        if(image.length == 0) {
+            hasImage = false;
+        }
+        dataBlock.setBooleanValue(5, hasImage);
+        AbstractDataBlock frameData = ((DataBlockMixed)dataBlock).getUnderlyingObject()[6];
+        ((DataBlockList)frameData).get(0).setDoubleValue(0, sampleTime);
+        ((DataBlockMixed)((DataBlockList)frameData).get(0)).getUnderlyingObject()[1].setUnderlyingObject(image);
+
+        // update latest record and send event
+        latestRecord = dataBlock;
+        latestRecordTime = System.currentTimeMillis();
+        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, dataBlock));
+
+        return true;
     }
 
     public void start(Context context) {
 
         this.context = context;
-//        context.registerReceiver(broadCastReceiver, new IntentFilter(ACTION_SUBMIT_REPORT));
+        context.registerReceiver(broadcastReceiver, new IntentFilter(ACTION_SUBMIT_REPORT));
     }
     
     @Override
     public void stop() {
 
-        context.unregisterReceiver(broadCastReceiver);
+        context.unregisterReceiver(broadcastReceiver);
     }
 
     @Override
@@ -202,6 +241,42 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
         return latestRecordTime;
     }
 
+    private Location getLocation(String locationSource) {
+
+        Location location = null;
+
+        SpotReportConfig config = getParentModule().getConfiguration();
+
+        // Attempt to get location based given location source
+        if (config.androidContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION)) {
+
+            // Retrieve the location manager
+            LocationManager locationManager = (LocationManager) config.androidContext.getSystemService(Context.LOCATION_SERVICE);
+
+            // Get a list of all location providers
+            List<String> locProviders = locationManager.getAllProviders();
+
+            // Scan through the list until a provider is matched
+            for (String providerName : locProviders) {
+
+                if (providerName.equalsIgnoreCase(locationSource)) {
+
+                    log.debug("Detected location provider " + providerName);
+
+                    if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                            context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+                        location = locationManager.getLastKnownLocation(providerName);
+
+                        log.debug("Location " + location.toString());
+                    }
+                }
+            }
+        }
+
+        return location;
+    }
+
     private class SpotReportReceiver extends BroadcastReceiver {
 
         @Override
@@ -209,13 +284,34 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
 
             if(intent.getAction().equals(ACTION_SUBMIT_REPORT)) {
 
-                String reportingItem = intent.getStringExtra(DATA_REPORTING_ITEM);
+                String category = intent.getStringExtra(DATA_REPORT_CATEGORY);
                 String locationSource = intent.getStringExtra(DATA_LOC);
-                String reportName = intent.getStringExtra(DATA_REPORT_NAME);
-                String reportDescription = intent.getStringExtra(DATA_REPORT_DESCRIPTION);
-                byte[] imageBuffer = intent.getByteArrayExtra(DATA_REPORTING_IMAGE);
+                String name = intent.getStringExtra(DATA_REPORT_NAME);
+                String description = intent.getStringExtra(DATA_REPORT_DESCRIPTION);
+                Uri imageUri = Uri.parse(intent.getStringExtra(DATA_REPORT_IMAGE));
+                ResultReceiver resultReceiver = intent.getParcelableExtra(Intent.EXTRA_RESULT_RECEIVER);
 
-                submitReport(reportingItem, locationSource, reportName, reportDescription, imageBuffer);
+                imageBuffer.reset();
+                try {
+
+                    Bitmap imageBitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), imageUri);
+                    imageBitmap.compress(Bitmap.CompressFormat.JPEG, 90, imageBuffer);
+
+                    boolean success = submitReport(category, locationSource, name, description, imageBuffer.toByteArray());
+
+                    if (success) {
+
+                        resultReceiver.send(SUBMIT_REPORT_SUCCESS, null);
+                    }
+                    else {
+
+                        resultReceiver.send(SUBMIT_REPORT_FAILURE, null);
+                    }
+
+                } catch(Exception e) {
+
+                    resultReceiver.send(SUBMIT_REPORT_FAILURE, null);
+                }
             }
         }
     }

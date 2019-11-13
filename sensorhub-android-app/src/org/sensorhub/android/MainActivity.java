@@ -245,7 +245,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // Spot Report
         SpotReportConfig spotReportConfig = (SpotReportConfig)createSensorConfig(Sensors.SpotReport);
         sensorhubConfig.add(spotReportConfig);
-//        addSosTConfig(spotReportConfig, sosUser, sosPwd);
+//        if (isPushingSensor(Sensors.SpotReport))
+        {
+            addSosTConfig(spotReportConfig, sosUser, sosPwd);
+        }
 
         /*
         // DJI Drone
@@ -523,7 +526,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         else if (Sensors.SpotReport.equals(sensor))
         {
             sensorConfig = new SpotReportConfig();
-            sensorConfig.id = "urn:spotreport:android:" + deviceID;
+            sensorConfig.id = "urn:android:spotreport:" + deviceID;
             sensorConfig.name = "Spot Report [" + deviceName + "]";
             sensorConfig.autoStart = true;
             ((SpotReportConfig) sensorConfig).androidContext = this.getApplicationContext();

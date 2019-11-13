@@ -14,6 +14,7 @@ Copyright (C) 2019 Botts Innovative Research, Inc. All Rights Reserved.
 
 package org.sensorhub.impl.driver.spotreport;
 
+import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.sensor.SensorConfig;
 import android.content.Context;
 
@@ -37,5 +38,11 @@ public class SpotReportConfig extends SensorConfig {
     public SpotReportConfig() {
 
         this.moduleClass = SpotReportDriver.class.getCanonicalName();
+    }
+
+    @Override
+    public ModuleConfig clone()
+    {
+        return this; // disable clone for now as it crashes Android app
     }
 }

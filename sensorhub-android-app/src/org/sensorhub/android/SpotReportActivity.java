@@ -2,28 +2,31 @@ package org.sensorhub.android;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.ResultReceiver;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Date;
 import java.util.Locale;
 
@@ -31,21 +34,24 @@ public class SpotReportActivity extends Activity {
 
     // Data Associated with Broadcast Receivers and Intents
     private static final int REQUEST_IMAGE_CAPTURE = 1;
+
+    private static final int SUBMIT_REPORT_FAILURE = 0;
+    private static final int SUBMIT_REPORT_SUCCESS = 1;
+
     private static final String ACTION_SUBMIT_REPORT = "org.sensorhub.android.intent.SPOT_REPORT";
-    private static final String ACTION_SUBMIT_REPORT_RESPONSE = "org.sensorhub.android.intent.SPOT_REPORT_RESPONSE";
-    private static final String RESPONSE_CODE = "code";
-    private static final int RESPONSE_SUCCESS = 1;
     private static final String DATA_LOC = "location";
     private static final String DATA_REPORT_NAME = "name";
     private static final String DATA_REPORT_DESCRIPTION = "description";
-    private static final String DATA_REPORTING_CATEGORY = "item";
-    private static final String DATA_REPORTING_IMAGE = "image";
-    private SpotReportReceiver broadCastReceiver = new SpotReportReceiver();
+    private static final String DATA_REPORT_CATEGORY = "item";
+    private static final String DATA_REPORT_IMAGE = "image";
+
+    private Button submitReportButton;
 
     private ImageView imageView;
     private Bitmap imageBitmap = null;
-    private Button submitReportButton;
     private Uri imageUri;
+
+    private SubmitRequestResultReceiver submitRequestResultReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,20 +71,20 @@ public class SpotReportActivity extends Activity {
                     onSubmitReport();
                 });
 
-        registerReceiver(broadCastReceiver, new IntentFilter(ACTION_SUBMIT_REPORT_RESPONSE));
+        submitRequestResultReceiver = new SubmitRequestResultReceiver(this, new Handler());
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(broadCastReceiver);
     }
 
     private void onSubmitReport() {
 
         // Get data from incident type field
-        int categoryPos = ((Spinner)findViewById(R.id.reportType)).getSelectedItemPosition();
-        String category = ((Spinner)findViewById(R.id.reportType)).getSelectedItem().toString();
+        Spinner spinner = findViewById(R.id.reportType);
+        int categoryPos = spinner.getSelectedItemPosition();
+        String category = spinner.getSelectedItem().toString();
 
         // Get location data from selected source
         String locationSource = ((Spinner)findViewById(R.id.locationSource)).getSelectedItem().toString();
@@ -92,7 +98,7 @@ public class SpotReportActivity extends Activity {
         // If the user has filled out the form completely
         if ((categoryPos == 0) || reportName.isEmpty()) {
 
-            StringBuffer messageBuilder = new StringBuffer();
+            StringBuilder messageBuilder = new StringBuilder();
             messageBuilder.append("The following fields have errors:\n\n");
 
             if (categoryPos == 0) {
@@ -116,81 +122,136 @@ public class SpotReportActivity extends Activity {
             // Create and transmit report
             Intent submitReportIntent = new Intent(ACTION_SUBMIT_REPORT);
             submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-            submitReportIntent.putExtra(DATA_REPORTING_CATEGORY, category);
+            submitReportIntent.putExtra(DATA_REPORT_CATEGORY, category);
             submitReportIntent.putExtra(DATA_LOC, locationSource);
             submitReportIntent.putExtra(DATA_REPORT_NAME, reportName);
             submitReportIntent.putExtra(DATA_REPORT_DESCRIPTION, reportDescription);
-            submitReportIntent.putExtra(DATA_REPORTING_IMAGE, new byte[50]);
+            submitReportIntent.putExtra(DATA_REPORT_IMAGE, imageUri.toString());
+            submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
             sendBroadcast(submitReportIntent);
         }
     }
 
-    private class SpotReportReceiver extends BroadcastReceiver {
+    private File createImageFile() throws IOException {
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
+        String timeStamp =
+                new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault()).format(new Date());
 
-            if(intent.getAction().equals(ACTION_SUBMIT_REPORT_RESPONSE)) {
+        String imageFileName = "SpotReport_IMG_" + timeStamp + ".jpg";
 
-                if (intent.getIntExtra(RESPONSE_CODE, 0) == RESPONSE_SUCCESS) {
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
-                    // Pop up error dialog, noting fields need to be corrected
-                    new AlertDialog.Builder(context)
-                            .setTitle("Report Submitted")
-                            .setMessage("Report Submitted Successfully")
-                            .setCancelable(true)
-                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    ((TextView) findViewById(R.id.reportName)).setText(null);
-                                    ((TextView) findViewById(R.id.description)).setText(null);
-                                    imageView.setImageBitmap(null);
-                                }
-                            })
-                            .show();
-                }
-            }
-        }
+        File file = new File(storageDir + "/" + imageFileName);
+
+        file.createNewFile();
+
+        return file;
     }
 
     private void dispatchTakePictureIntent() {
+
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
-        File photo = new File(Environment.getExternalStorageDirectory(),  "SpotReport-" + currentDate);
-        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photo));
-        imageUri = Uri.fromFile(photo);
+
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+
+            //Create a file to store the image
+            File imageFile = null;
+
+            try {
+
+                imageFile = createImageFile();
+
+                imageUri = FileProvider.getUriForFile(this,"org.sensorhub.android.provider", imageFile);
+
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+
+            } catch (IOException e) {
+
+                // Error occurred while creating the File
+                Log.e("SpotReport", e.toString());
+            }
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case REQUEST_IMAGE_CAPTURE:
-                if (resultCode == Activity.RESULT_OK) {
-                    Uri selectedImage = imageUri;
-                    getContentResolver().notifyChange(selectedImage, null);
-                    ContentResolver cr = getContentResolver();
-                    try {
-                        imageBitmap = android.provider.MediaStore.Images.Media
-                                .getBitmap(cr, selectedImage);
-                        imageView.setImageBitmap(imageBitmap);
-                        Toast.makeText(this, selectedImage.toString(),
-                                Toast.LENGTH_LONG).show();
-                    } catch (Exception e) {
-                        Toast.makeText(this, "Failed to load", Toast.LENGTH_SHORT)
-                                .show();
-                        Log.e("Camera", e.toString());
-                    }
+
+        if (requestCode == REQUEST_IMAGE_CAPTURE) {
+
+            if (resultCode == Activity.RESULT_OK) {
+
+                try {
+
+                    imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+
+                    imageView.setImageBitmap(imageBitmap);
+
+                } catch (Exception e) {
+
+                    Log.e("SpotReport", e.toString());
                 }
+            }
         }
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
+
         super.onConfigurationChanged(newConfig);
+
         imageView.setImageBitmap(imageBitmap);
+    }
+
+    private class SubmitRequestResultReceiver extends ResultReceiver {
+
+        SpotReportActivity activity;
+
+        public SubmitRequestResultReceiver(SpotReportActivity activity, Handler handler) {
+
+            super(handler);
+            this.activity = activity;
+        }
+
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            super.onReceiveResult(resultCode, resultData);
+
+            DialogInterface.OnClickListener clickListener = null;
+            String title = null;
+            String message = null;
+
+            if (resultCode == SUBMIT_REPORT_FAILURE) {
+
+                title = "Report Submission Failed";
+                message = "Report failed to be submit, check general settings.";
+            }
+            else if (resultCode == SUBMIT_REPORT_SUCCESS) {
+
+                title = "Report Submitted";
+                message = "Report Submitted Successfully";
+
+                clickListener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        ((TextView) findViewById(R.id.reportName)).setText(null);
+                        ((TextView) findViewById(R.id.description)).setText(null);
+                        imageView.setImageBitmap(null);
+                        imageUri = null;
+                        imageBitmap = null;
+                    }
+                };
+            }
+
+            new AlertDialog.Builder(activity)
+                    .setTitle(title)
+                    .setMessage(message)
+                    .setCancelable(true)
+                    .setPositiveButton("OK", clickListener)
+                    .show();
+        }
     }
 }
