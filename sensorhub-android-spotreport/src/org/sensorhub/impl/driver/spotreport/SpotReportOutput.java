@@ -16,14 +16,17 @@ package org.sensorhub.impl.driver.spotreport;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
+import net.opengis.swe.v20.BinaryComponent;
+import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.Boolean;
-import net.opengis.swe.v20.Count;
+import net.opengis.swe.v20.ByteEncoding;
+import net.opengis.swe.v20.ByteOrder;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import net.opengis.swe.v20.DataStream;
+import net.opengis.swe.v20.DataRecord;
+import net.opengis.swe.v20.DataType;
 import net.opengis.swe.v20.Text;
-import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
 
 import org.sensorhub.api.sensor.SensorDataEvent;
@@ -32,9 +35,9 @@ import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vast.data.AbstractDataBlock;
-import org.vast.data.DataBlockList;
+import org.vast.cdm.common.CDMException;
 import org.vast.data.DataBlockMixed;
+import org.vast.swe.SWEConstants;
 import org.vast.swe.SWEHelper;
 import org.vast.swe.helper.GeoPosHelper;
 
@@ -50,6 +53,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
+import android.util.Log;
 
 /**
  * <p>
@@ -76,7 +80,6 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     private SpotReportReceiver broadcastReceiver = new SpotReportReceiver();
 
     // SWE DataBlock elements
-    private static final String DATA_RECORD_TIME_LABEL = "time";
     private static final String DATA_RECORD_LOC_LABEL = "location";
     private static final String DATA_RECORD_REPORT_NAME_LABEL = "name";
     private static final String DATA_RECORD_REPORT_DESCRIPTION_LABEL = "description";
@@ -92,7 +95,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
             SWEHelper.getPropertyUri("SpotReport");
     private int imgHeight;
     private int imgWidth;
-    private DataComponent spotReport;
+    private DataComponent dataStruct;
     private DataEncoding dataEncoding;
 
     private Context context;
@@ -118,47 +121,133 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     protected void init() throws SensorException {
 
         SWEHelper sweHelper = new SWEHelper();
-        spotReport = sweHelper.newDataRecord(7);
-        spotReport.setDescription(DATA_RECORD_DESCRIPTION);
-        spotReport.setDefinition(DATA_RECORD_DEFINITION);
-        spotReport.setName(DATA_RECORD_NAME);
-
-        // Add the time stamp component of the data record
-        Time time = sweHelper.newTimeStampIsoUTC();
-        spotReport.addComponent(DATA_RECORD_TIME_LABEL, time);
+        dataStruct = sweHelper.newDataRecord(7);
+        dataStruct.setDescription(DATA_RECORD_DESCRIPTION);
+        dataStruct.setDefinition(DATA_RECORD_DEFINITION);
+        dataStruct.setName(DATA_RECORD_NAME);
 
         // Add the location component of the data record
         GeoPosHelper geoPosHelper = new GeoPosHelper();
-        Vector vec = geoPosHelper.newLocationVectorLLA(null);
-        vec.setLocalFrame(parentSensor.localFrameURI);
-        spotReport.addComponent(DATA_RECORD_LOC_LABEL, vec);
+        Vector locationVectorLLA = geoPosHelper.newLocationVectorLLA(null);
+        locationVectorLLA.setLocalFrame(parentSensor.localFrameURI);
 
         // Add the report name component of the data record
-        Text name = sweHelper.newText();
-        spotReport.addComponent(DATA_RECORD_REPORT_NAME_LABEL, name);
+        Text name = sweHelper.newText(sweHelper.getPropertyUri("ReportName"),
+                "Report Name",
+                "An identifier used as a describer for the report");
 
         // Add the report description component of the data record
-        Text description = sweHelper.newText();
-        spotReport.addComponent(DATA_RECORD_REPORT_DESCRIPTION_LABEL, description);
+        Text description = sweHelper.newText(sweHelper.getPropertyUri("ReportDescription"),
+                "Report Description",
+                "A verbose description of the observed event");
 
         // Add the reporting item component of the data record
-        Text category = sweHelper.newText();
-        spotReport.addComponent(DATA_RECORD_REPORTING_CATEGORY_LABEL, category);
+        Text category = sweHelper.newText(sweHelper.getPropertyUri("ReportCategory"),
+                "Report Category",
+                "A categorical value used to identify a report as belonging to a kind, family, or group of reports");
 
         // Add image data block
-        Boolean containsImage = sweHelper.newBoolean();
-        spotReport.addComponent(DATA_RECORD_REPORTING_CONTAINS_IMAGE_LABEL, containsImage);
+        Boolean containsImage = sweHelper.newBoolean(SWEConstants.DEF_FLAG,
+                "Image Flag",
+                "A flag used to denote if the report has an associated image");
 
-        VideoCamHelper videoCamHelper = new VideoCamHelper();
-        DataStream videoStream = videoCamHelper.newVideoOutputMJPEG(getName(), this.imgWidth, this.imgHeight);
-        videoStream.setDefinition(SWEHelper.getPropertyUri("Image"));
-        Count count = sweHelper.newCount();
-        count.setValue(1);
-        videoStream.setElementCount(count);
-        spotReport.addComponent(DATA_RECORD_REPORTING_IMAGE_LABEL, videoStream);
 
-        // Output encoding
-        dataEncoding = sweHelper.newBinaryEncoding();
+        DataRecord image = new VideoCamHelper().newVideoFrameRGB("image", imgWidth, imgHeight);
+
+
+        dataStruct.addComponent(DATA_RECORD_LOC_LABEL, locationVectorLLA);
+        dataStruct.addComponent(DATA_RECORD_REPORT_NAME_LABEL, name);
+        dataStruct.addComponent(DATA_RECORD_REPORT_DESCRIPTION_LABEL, description);
+        dataStruct.addComponent(DATA_RECORD_REPORTING_CATEGORY_LABEL, category);
+        dataStruct.addComponent(DATA_RECORD_REPORTING_CONTAINS_IMAGE_LABEL, containsImage);
+        dataStruct.addComponent(DATA_RECORD_REPORTING_IMAGE_LABEL, image);
+
+        // Binary encoding for message data structure
+        BinaryEncoding dataEncoding = sweHelper.newBinaryEncoding();
+        dataEncoding.setByteEncoding(ByteEncoding.RAW);
+        dataEncoding.setByteOrder(ByteOrder.BIG_ENDIAN);
+
+        // Specify encoding for location field
+//        BinaryComponent locEnc = sweHelper.newBinaryComponent();
+//        locEnc.setRef("/" + locationVectorLLA.getName());
+//        locEnc.setCdmDataType(DataType.DOUBLE);
+//        dataEncoding.addMemberAsComponent(locEnc);
+
+        // Specify encoding for name field
+        BinaryComponent nameEnc = sweHelper.newBinaryComponent();
+        nameEnc.setRef("/" + name.getName());
+        nameEnc.setCdmDataType(DataType.ASCII_STRING);
+        dataEncoding.addMemberAsComponent(nameEnc);
+
+        // Specify encoding for description field
+        BinaryComponent descriptionEnc = sweHelper.newBinaryComponent();
+        descriptionEnc.setRef("/" + description.getName());
+        descriptionEnc.setCdmDataType(DataType.ASCII_STRING);
+        dataEncoding.addMemberAsComponent(descriptionEnc);
+
+        // Specify encoding for category field
+        BinaryComponent categoryEnc = sweHelper.newBinaryComponent();
+        categoryEnc.setRef("/" + category.getName());
+        categoryEnc.setCdmDataType(DataType.ASCII_STRING);
+        dataEncoding.addMemberAsComponent(categoryEnc);
+
+        // Specify encoding for image flag field
+        BinaryComponent containsImageEnc = sweHelper.newBinaryComponent();
+        containsImageEnc.setRef("/" + containsImage.getName());
+        containsImageEnc.setCdmDataType(DataType.BOOLEAN);
+        dataEncoding.addMemberAsComponent(containsImageEnc);
+
+        // Specify encoding for image field
+//        BinaryComponent imageEnc = sweHelper.newBinaryComponent();
+//        imageEnc.setRef("/" + image.getName());
+//        imageEnc.setCdmDataType(DataType.MIXED);
+//        dataEncoding.addMemberAsComponent(imageEnc);
+
+        try
+        {
+            SWEHelper.assignBinaryEncoding(dataStruct, dataEncoding);
+        }
+        catch (CDMException e)
+        {
+            throw new RuntimeException("Invalid binary encoding configuration", e);
+        }
+
+        this.dataEncoding = dataEncoding;
+    }
+
+    private boolean submitReport(String category, String locationSource, String name, String description) {
+
+        Location location;
+
+        location = getLocation(locationSource);
+
+        double samplingTime = location.getTime() / 1000.0;
+
+        // generate new data record
+        DataBlock newRecord;
+        if (latestRecord == null) {
+
+            newRecord = dataStruct.createDataBlock();
+        }
+        else {
+
+            newRecord = latestRecord.renew();
+        }
+
+        newRecord.setDoubleValue(0, location.getLatitude());
+        newRecord.setDoubleValue(1, location.getLongitude());
+        newRecord.setDoubleValue(2, location.getAltitude());
+        newRecord.setStringValue(3, name);
+        newRecord.setStringValue(4, description);
+        newRecord.setStringValue(5, category);
+        newRecord.setBooleanValue(6, false);
+
+        // update latest record and send event
+        latestRecord = newRecord;
+        latestRecordTime = System.currentTimeMillis();
+        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, newRecord));
+
+        return true;
     }
 
     private boolean submitReport(String category, String locationSource, String name, String description, byte[] image) {
@@ -167,34 +256,33 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
 
         location = getLocation(locationSource);
 
-        double sampleTime = location.getTime() / 1000.0;
+        double samplingTime = location.getTime() / 1000.0;
 
-        // build and populate datablock
-        DataBlock dataBlock = spotReport.createDataBlock();
-        dataBlock.setDoubleValue(0, sampleTime);
-        AbstractDataBlock locationData = ((DataBlockMixed)dataBlock).getUnderlyingObject()[1];
-        locationData.setDoubleValue(0, location.getLatitude());
-        locationData.setDoubleValue(1, location.getLongitude());
-        locationData.setDoubleValue(2, location.getAltitude());
-        AbstractDataBlock nameData = ((DataBlockMixed)dataBlock).getUnderlyingObject()[2];
-        nameData.setStringValue(name);
-        AbstractDataBlock descriptionData = ((DataBlockMixed)dataBlock).getUnderlyingObject()[3];
-        descriptionData.setStringValue(description);
-        AbstractDataBlock categoryData = ((DataBlockMixed)dataBlock).getUnderlyingObject()[4];
-        categoryData.setStringValue(category);
-        boolean hasImage = true;
-        if(image.length == 0) {
-            hasImage = false;
+        // generate new data record
+        DataBlock newRecord;
+        if (latestRecord == null) {
+
+            newRecord = dataStruct.createDataBlock();
         }
-        dataBlock.setBooleanValue(5, hasImage);
-        AbstractDataBlock frameData = ((DataBlockMixed)dataBlock).getUnderlyingObject()[6];
-        ((DataBlockList)frameData).get(0).setDoubleValue(0, sampleTime);
-        ((DataBlockMixed)((DataBlockList)frameData).get(0)).getUnderlyingObject()[1].setUnderlyingObject(image);
+        else {
+
+            newRecord = latestRecord.renew();
+        }
+
+        newRecord.setDoubleValue(0, location.getLatitude());
+        newRecord.setDoubleValue(1, location.getLongitude());
+        newRecord.setDoubleValue(2, location.getAltitude());
+        newRecord.setStringValue(3, name);
+        newRecord.setStringValue(4, description);
+        newRecord.setStringValue(5, category);
+        newRecord.setBooleanValue(6, true);
+        newRecord.setDoubleValue(7, samplingTime);
+        ((DataBlockMixed)newRecord).getUnderlyingObject()[8].setUnderlyingObject(image);
 
         // update latest record and send event
-        latestRecord = dataBlock;
+        latestRecord = newRecord;
         latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, dataBlock));
+        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, newRecord));
 
         return true;
     }
@@ -220,7 +308,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     @Override
     public DataComponent getRecordDescription() {
 
-        return spotReport;
+        return dataStruct;
     }
 
     @Override
@@ -288,28 +376,30 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
                 String locationSource = intent.getStringExtra(DATA_LOC);
                 String name = intent.getStringExtra(DATA_REPORT_NAME);
                 String description = intent.getStringExtra(DATA_REPORT_DESCRIPTION);
-                Uri imageUri = Uri.parse(intent.getStringExtra(DATA_REPORT_IMAGE));
+                String uriString = intent.getStringExtra(DATA_REPORT_IMAGE);
                 ResultReceiver resultReceiver = intent.getParcelableExtra(Intent.EXTRA_RESULT_RECEIVER);
 
                 imageBuffer.reset();
                 try {
 
-                    Bitmap imageBitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), imageUri);
-                    imageBitmap.compress(Bitmap.CompressFormat.JPEG, 90, imageBuffer);
+                    if(uriString != null) {
 
-                    boolean success = submitReport(category, locationSource, name, description, imageBuffer.toByteArray());
+                        Uri imageUri = Uri.parse(uriString);
+                        Bitmap imageBitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), imageUri);
+                        imageBitmap.compress(Bitmap.CompressFormat.JPEG, 90, imageBuffer);
 
-                    if (success) {
-
-                        resultReceiver.send(SUBMIT_REPORT_SUCCESS, null);
+                        submitReport(category, locationSource, name, description, imageBuffer.toByteArray());
                     }
                     else {
 
-                        resultReceiver.send(SUBMIT_REPORT_FAILURE, null);
+                        submitReport(category, locationSource, name, description);
                     }
+
+                    resultReceiver.send(SUBMIT_REPORT_SUCCESS, null);
 
                 } catch(Exception e) {
 
+                    Log.e("SpotReportOutput", e.toString());
                     resultReceiver.send(SUBMIT_REPORT_FAILURE, null);
                 }
             }
