@@ -16,6 +16,7 @@ package org.sensorhub.impl.driver.spotreport;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
+import net.opengis.swe.v20.BinaryBlock;
 import net.opengis.swe.v20.BinaryComponent;
 import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.Boolean;
@@ -36,6 +37,7 @@ import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.cdm.common.CDMException;
+import org.vast.data.AbstractDataBlock;
 import org.vast.data.DataBlockMixed;
 import org.vast.swe.SWEConstants;
 import org.vast.swe.SWEHelper;
@@ -121,7 +123,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     protected void init() throws SensorException {
 
         SWEHelper sweHelper = new SWEHelper();
-        dataStruct = sweHelper.newDataRecord(7);
+        dataStruct = sweHelper.newDataRecord(9);
         dataStruct.setDescription(DATA_RECORD_DESCRIPTION);
         dataStruct.setDefinition(DATA_RECORD_DEFINITION);
         dataStruct.setName(DATA_RECORD_NAME);
@@ -151,9 +153,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
                 "Image Flag",
                 "A flag used to denote if the report has an associated image");
 
-
         DataRecord image = new VideoCamHelper().newVideoFrameRGB("image", imgWidth, imgHeight);
-
 
         dataStruct.addComponent(DATA_RECORD_LOC_LABEL, locationVectorLLA);
         dataStruct.addComponent(DATA_RECORD_REPORT_NAME_LABEL, name);
@@ -168,10 +168,20 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
         dataEncoding.setByteOrder(ByteOrder.BIG_ENDIAN);
 
         // Specify encoding for location field
-//        BinaryComponent locEnc = sweHelper.newBinaryComponent();
-//        locEnc.setRef("/" + locationVectorLLA.getName());
-//        locEnc.setCdmDataType(DataType.DOUBLE);
-//        dataEncoding.addMemberAsComponent(locEnc);
+        BinaryComponent latEnc = sweHelper.newBinaryComponent();
+        latEnc.setRef("/" + locationVectorLLA.getName() + "/lat");
+        latEnc.setCdmDataType(DataType.DOUBLE);
+        dataEncoding.addMemberAsComponent(latEnc);
+
+        BinaryComponent lonEnc = sweHelper.newBinaryComponent();
+        lonEnc.setRef("/" + locationVectorLLA.getName() + "/lon");
+        lonEnc.setCdmDataType(DataType.DOUBLE);
+        dataEncoding.addMemberAsComponent(lonEnc);
+
+        BinaryComponent altEnc = sweHelper.newBinaryComponent();
+        altEnc.setRef("/" + locationVectorLLA.getName() + "/alt");
+        altEnc.setCdmDataType(DataType.DOUBLE);
+        dataEncoding.addMemberAsComponent(altEnc);
 
         // Specify encoding for name field
         BinaryComponent nameEnc = sweHelper.newBinaryComponent();
@@ -198,10 +208,15 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
         dataEncoding.addMemberAsComponent(containsImageEnc);
 
         // Specify encoding for image field
-//        BinaryComponent imageEnc = sweHelper.newBinaryComponent();
-//        imageEnc.setRef("/" + image.getName());
-//        imageEnc.setCdmDataType(DataType.MIXED);
-//        dataEncoding.addMemberAsComponent(imageEnc);
+        BinaryComponent timeEnc = sweHelper.newBinaryComponent();
+        timeEnc.setRef("/image/" + image.getComponent(0).getName());
+        timeEnc.setCdmDataType(DataType.DOUBLE);
+        dataEncoding.addMemberAsComponent(timeEnc);
+
+        BinaryBlock compressedBlock = sweHelper.newBinaryBlock();
+        compressedBlock.setRef("/image/" + image.getComponent(1).getName());
+        compressedBlock.setCompression("JPEG");
+        dataEncoding.addMemberAsBlock(compressedBlock);
 
         try
         {
@@ -234,13 +249,17 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
             newRecord = latestRecord.renew();
         }
 
-        newRecord.setDoubleValue(0, location.getLatitude());
-        newRecord.setDoubleValue(1, location.getLongitude());
-        newRecord.setDoubleValue(2, location.getAltitude());
-        newRecord.setStringValue(3, name);
-        newRecord.setStringValue(4, description);
-        newRecord.setStringValue(5, category);
-        newRecord.setBooleanValue(6, false);
+        AbstractDataBlock locationData = ((DataBlockMixed)newRecord).getUnderlyingObject()[0];
+        locationData.setDoubleValue(0, location.getLatitude());
+        locationData.setDoubleValue(1, location.getLongitude());
+        locationData.setDoubleValue(2, location.getAltitude());
+        ((DataBlockMixed)newRecord).getUnderlyingObject()[1].setStringValue(name);
+        ((DataBlockMixed)newRecord).getUnderlyingObject()[2].setStringValue(description);
+        ((DataBlockMixed)newRecord).getUnderlyingObject()[3].setStringValue(category);
+        ((DataBlockMixed)newRecord).getUnderlyingObject()[4].setBooleanValue(false);
+        AbstractDataBlock imageData = ((DataBlockMixed)newRecord).getUnderlyingObject()[5];
+        imageData.setDoubleValue(0, samplingTime);
+//        ((DataBlockMixed)imageData).getUnderlyingObject()[1].setUnderlyingObject(image);
 
         // update latest record and send event
         latestRecord = newRecord;
@@ -269,15 +288,17 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
             newRecord = latestRecord.renew();
         }
 
-        newRecord.setDoubleValue(0, location.getLatitude());
-        newRecord.setDoubleValue(1, location.getLongitude());
-        newRecord.setDoubleValue(2, location.getAltitude());
-        newRecord.setStringValue(3, name);
-        newRecord.setStringValue(4, description);
-        newRecord.setStringValue(5, category);
-        newRecord.setBooleanValue(6, true);
-        newRecord.setDoubleValue(7, samplingTime);
-        ((DataBlockMixed)newRecord).getUnderlyingObject()[8].setUnderlyingObject(image);
+        AbstractDataBlock locationData = ((DataBlockMixed)newRecord).getUnderlyingObject()[0];
+        locationData.setDoubleValue(0, location.getLatitude());
+        locationData.setDoubleValue(1, location.getLongitude());
+        locationData.setDoubleValue(2, location.getAltitude());
+        ((DataBlockMixed)newRecord).getUnderlyingObject()[1].setStringValue(name);
+        ((DataBlockMixed)newRecord).getUnderlyingObject()[2].setStringValue(description);
+        ((DataBlockMixed)newRecord).getUnderlyingObject()[3].setStringValue(category);
+        ((DataBlockMixed)newRecord).getUnderlyingObject()[4].setBooleanValue(true);
+        AbstractDataBlock imageData = ((DataBlockMixed)newRecord).getUnderlyingObject()[5];
+        imageData.setDoubleValue(0, samplingTime);
+        ((DataBlockMixed)imageData).getUnderlyingObject()[1].setUnderlyingObject(image);
 
         // update latest record and send event
         latestRecord = newRecord;
