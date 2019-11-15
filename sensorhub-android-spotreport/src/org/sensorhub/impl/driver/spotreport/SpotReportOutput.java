@@ -28,6 +28,7 @@ import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataRecord;
 import net.opengis.swe.v20.DataType;
 import net.opengis.swe.v20.Text;
+import net.opengis.swe.v20.Time;
 import net.opengis.swe.v20.Vector;
 
 import org.sensorhub.api.sensor.SensorDataEvent;
@@ -82,7 +83,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     private SpotReportReceiver broadcastReceiver = new SpotReportReceiver();
 
     // SWE DataBlock elements
-    private static final String DATA_RECORD_LOC_LABEL = "location";
+    private static final String DATA_RECORD_REPORT_LOC_LABEL = "location";
     private static final String DATA_RECORD_REPORT_NAME_LABEL = "name";
     private static final String DATA_RECORD_REPORT_DESCRIPTION_LABEL = "description";
     private static final String DATA_RECORD_REPORTING_CATEGORY_LABEL = "category";
@@ -123,15 +124,13 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     protected void init() throws SensorException {
 
         SWEHelper sweHelper = new SWEHelper();
-        dataStruct = sweHelper.newDataRecord(9);
+        dataStruct = sweHelper.newDataRecord();
         dataStruct.setDescription(DATA_RECORD_DESCRIPTION);
         dataStruct.setDefinition(DATA_RECORD_DEFINITION);
         dataStruct.setName(DATA_RECORD_NAME);
 
-        // Add the location component of the data record
-        GeoPosHelper geoPosHelper = new GeoPosHelper();
-        Vector locationVectorLLA = geoPosHelper.newLocationVectorLLA(null);
-        locationVectorLLA.setLocalFrame(parentSensor.localFrameURI);
+        // Add time stamp component to data record
+        Time time = sweHelper.newTimeStampIsoUTC();
 
         // Add the report name component of the data record
         Text name = sweHelper.newText(sweHelper.getPropertyUri("ReportName"),
@@ -148,17 +147,23 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
                 "Report Category",
                 "A categorical value used to identify a report as belonging to a kind, family, or group of reports");
 
+        // Add the location component of the data record
+        GeoPosHelper geoPosHelper = new GeoPosHelper();
+        Vector locationVectorLLA = geoPosHelper.newLocationVectorLLA(null);
+        locationVectorLLA.setLocalFrame(parentSensor.localFrameURI);
+
         // Add image data block
         Boolean containsImage = sweHelper.newBoolean(SWEConstants.DEF_FLAG,
                 "Image Flag",
                 "A flag used to denote if the report has an associated image");
 
-        DataRecord image = new VideoCamHelper().newVideoFrameRGB("image", imgWidth, imgHeight);
+        VideoCamHelper videoCamHelper = new VideoCamHelper();
+        DataRecord image = videoCamHelper.newVideoFrameRGB("image", imgWidth, imgHeight);
 
-        dataStruct.addComponent(DATA_RECORD_LOC_LABEL, locationVectorLLA);
         dataStruct.addComponent(DATA_RECORD_REPORT_NAME_LABEL, name);
         dataStruct.addComponent(DATA_RECORD_REPORT_DESCRIPTION_LABEL, description);
         dataStruct.addComponent(DATA_RECORD_REPORTING_CATEGORY_LABEL, category);
+        dataStruct.addComponent(DATA_RECORD_REPORT_LOC_LABEL, locationVectorLLA);
         dataStruct.addComponent(DATA_RECORD_REPORTING_CONTAINS_IMAGE_LABEL, containsImage);
         dataStruct.addComponent(DATA_RECORD_REPORTING_IMAGE_LABEL, image);
 
@@ -166,22 +171,6 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
         BinaryEncoding dataEncoding = sweHelper.newBinaryEncoding();
         dataEncoding.setByteEncoding(ByteEncoding.RAW);
         dataEncoding.setByteOrder(ByteOrder.BIG_ENDIAN);
-
-        // Specify encoding for location field
-        BinaryComponent latEnc = sweHelper.newBinaryComponent();
-        latEnc.setRef("/" + locationVectorLLA.getName() + "/lat");
-        latEnc.setCdmDataType(DataType.DOUBLE);
-        dataEncoding.addMemberAsComponent(latEnc);
-
-        BinaryComponent lonEnc = sweHelper.newBinaryComponent();
-        lonEnc.setRef("/" + locationVectorLLA.getName() + "/lon");
-        lonEnc.setCdmDataType(DataType.DOUBLE);
-        dataEncoding.addMemberAsComponent(lonEnc);
-
-        BinaryComponent altEnc = sweHelper.newBinaryComponent();
-        altEnc.setRef("/" + locationVectorLLA.getName() + "/alt");
-        altEnc.setCdmDataType(DataType.DOUBLE);
-        dataEncoding.addMemberAsComponent(altEnc);
 
         // Specify encoding for name field
         BinaryComponent nameEnc = sweHelper.newBinaryComponent();
@@ -201,20 +190,37 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
         categoryEnc.setCdmDataType(DataType.ASCII_STRING);
         dataEncoding.addMemberAsComponent(categoryEnc);
 
+        // Specify encoding for location field
+        BinaryComponent latEnc = sweHelper.newBinaryComponent();
+        latEnc.setRef("/" + locationVectorLLA.getName() + "/lat");
+        latEnc.setCdmDataType(DataType.DOUBLE);
+        dataEncoding.addMemberAsComponent(latEnc);
+
+        BinaryComponent lonEnc = sweHelper.newBinaryComponent();
+        lonEnc.setRef("/" + locationVectorLLA.getName() + "/lon");
+        lonEnc.setCdmDataType(DataType.DOUBLE);
+        dataEncoding.addMemberAsComponent(lonEnc);
+
+        BinaryComponent altEnc = sweHelper.newBinaryComponent();
+        altEnc.setRef("/" + locationVectorLLA.getName() + "/alt");
+        altEnc.setCdmDataType(DataType.DOUBLE);
+        dataEncoding.addMemberAsComponent(altEnc);
+
         // Specify encoding for image flag field
         BinaryComponent containsImageEnc = sweHelper.newBinaryComponent();
         containsImageEnc.setRef("/" + containsImage.getName());
         containsImageEnc.setCdmDataType(DataType.BOOLEAN);
         dataEncoding.addMemberAsComponent(containsImageEnc);
 
-        // Specify encoding for image field
+        // Specify encoding for time field
         BinaryComponent timeEnc = sweHelper.newBinaryComponent();
-        timeEnc.setRef("/image/" + image.getComponent(0).getName());
+        timeEnc.setRef("/" + image.getName() + "/" + image.getComponent(0).getName());
         timeEnc.setCdmDataType(DataType.DOUBLE);
         dataEncoding.addMemberAsComponent(timeEnc);
 
+        // Specify encoding for image field
         BinaryBlock compressedBlock = sweHelper.newBinaryBlock();
-        compressedBlock.setRef("/image/" + image.getComponent(1).getName());
+        compressedBlock.setRef("/" + image.getName() + "/" + image.getComponent(1).getName());
         compressedBlock.setCompression("JPEG");
         dataEncoding.addMemberAsBlock(compressedBlock);
 
@@ -240,6 +246,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
 
         // generate new data record
         DataBlock newRecord;
+
         if (latestRecord == null) {
 
             newRecord = dataStruct.createDataBlock();
@@ -249,17 +256,34 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
             newRecord = latestRecord.renew();
         }
 
-        AbstractDataBlock locationData = ((DataBlockMixed)newRecord).getUnderlyingObject()[0];
+        // Set data record textual information
+        newRecord.setStringValue(0, name);
+        newRecord.setStringValue(1, description);
+        newRecord.setStringValue(2, category);
+
+        // Get the location data record, makes more sense to retrieve underlying object and set
+        // with respective indices
+        AbstractDataBlock locationData = ((DataBlockMixed)newRecord).getUnderlyingObject()[3];
         locationData.setDoubleValue(0, location.getLatitude());
         locationData.setDoubleValue(1, location.getLongitude());
         locationData.setDoubleValue(2, location.getAltitude());
-        ((DataBlockMixed)newRecord).getUnderlyingObject()[1].setStringValue(name);
-        ((DataBlockMixed)newRecord).getUnderlyingObject()[2].setStringValue(description);
-        ((DataBlockMixed)newRecord).getUnderlyingObject()[3].setStringValue(category);
-        ((DataBlockMixed)newRecord).getUnderlyingObject()[4].setBooleanValue(false);
+
+        // Set the flag indicating image is present
+        newRecord.setBooleanValue(4, true);
+
+        // Get the image data record, again makes more sense to retrieve underlying object and
+        // set with respective indices
         AbstractDataBlock imageData = ((DataBlockMixed)newRecord).getUnderlyingObject()[5];
+
+        // Set timestamp for image
         imageData.setDoubleValue(0, samplingTime);
-//        ((DataBlockMixed)imageData).getUnderlyingObject()[1].setUnderlyingObject(image);
+
+        // Create a new empty image buffer, otherwise send won't work
+        byte[] image = new byte[imgWidth * imgHeight];
+
+        // Since the actual image is embedded in the image record as a sub-record
+        // get the underlying record to store image buffer there
+        ((DataBlockMixed)imageData).getUnderlyingObject()[1].setUnderlyingObject(image);
 
         // update latest record and send event
         latestRecord = newRecord;
@@ -279,6 +303,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
 
         // generate new data record
         DataBlock newRecord;
+
         if (latestRecord == null) {
 
             newRecord = dataStruct.createDataBlock();
@@ -288,16 +313,30 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
             newRecord = latestRecord.renew();
         }
 
-        AbstractDataBlock locationData = ((DataBlockMixed)newRecord).getUnderlyingObject()[0];
+        // Set data record textual information
+        newRecord.setStringValue(0, name);
+        newRecord.setStringValue(1, description);
+        newRecord.setStringValue(2, category);
+
+        // Get the location data record, makes more sense to retrieve underlying object and set
+        // with respective indices
+        AbstractDataBlock locationData = ((DataBlockMixed)newRecord).getUnderlyingObject()[3];
         locationData.setDoubleValue(0, location.getLatitude());
         locationData.setDoubleValue(1, location.getLongitude());
         locationData.setDoubleValue(2, location.getAltitude());
-        ((DataBlockMixed)newRecord).getUnderlyingObject()[1].setStringValue(name);
-        ((DataBlockMixed)newRecord).getUnderlyingObject()[2].setStringValue(description);
-        ((DataBlockMixed)newRecord).getUnderlyingObject()[3].setStringValue(category);
-        ((DataBlockMixed)newRecord).getUnderlyingObject()[4].setBooleanValue(true);
+
+        // Set the flag indicating image is present
+        newRecord.setBooleanValue(4, true);
+
+        // Get the image data record, again makes more sense to retrieve underlying object and
+        // set with respective indices
         AbstractDataBlock imageData = ((DataBlockMixed)newRecord).getUnderlyingObject()[5];
+
+        // Set timestamp for image
         imageData.setDoubleValue(0, samplingTime);
+
+        // Since the actual image is embedded in the image record as a sub-record
+        // get the underlying record to store image buffer there
         ((DataBlockMixed)imageData).getUnderlyingObject()[1].setUnderlyingObject(image);
 
         // update latest record and send event
