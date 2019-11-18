@@ -35,7 +35,6 @@ import java.util.Map.Entry;
 
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.*;
 
@@ -61,8 +60,6 @@ import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
-import org.sensorhub.impl.sensor.android.AndroidCameraOutputH264;
-import org.sensorhub.impl.sensor.android.AndroidCameraOutputMJPEG;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensorConfig;
@@ -530,10 +527,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sensorConfig.name = "Spot Report [" + deviceName + "]";
             sensorConfig.autoStart = true;
             ((SpotReportConfig) sensorConfig).androidContext = this.getApplicationContext();
-            DisplayMetrics displayMetrics = new DisplayMetrics();
-            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-            ((SpotReportConfig) sensorConfig).imgWidth = displayMetrics.widthPixels;
-            ((SpotReportConfig) sensorConfig).imgHeight = displayMetrics.heightPixels;
         }
         else
         {
