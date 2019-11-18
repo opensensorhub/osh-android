@@ -14,6 +14,7 @@
 package org.sensorhub.impl.driver.spotreport;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import net.opengis.swe.v20.BinaryBlock;
@@ -22,10 +23,10 @@ import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.Boolean;
 import net.opengis.swe.v20.ByteEncoding;
 import net.opengis.swe.v20.ByteOrder;
+import net.opengis.swe.v20.DataArray;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import net.opengis.swe.v20.DataRecord;
 import net.opengis.swe.v20.DataType;
 import net.opengis.swe.v20.Text;
 import net.opengis.swe.v20.Time;
@@ -34,7 +35,6 @@ import net.opengis.swe.v20.Vector;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
-import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.cdm.common.CDMException;
@@ -51,12 +51,18 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.ImageFormat;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.Size;
 
 /**
  * <p>
@@ -83,6 +89,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     private SpotReportReceiver broadcastReceiver = new SpotReportReceiver();
 
     // SWE DataBlock elements
+    private static final String DATA_RECORD_REPORT_TIME_LABEL = "time";
     private static final String DATA_RECORD_REPORT_LOC_LABEL = "location";
     private static final String DATA_RECORD_REPORT_NAME_LABEL = "name";
     private static final String DATA_RECORD_REPORT_DESCRIPTION_LABEL = "description";
@@ -110,9 +117,6 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
 
         super(parentModule);
         this.name = "spot_report_data";
-
-        this.imgWidth = parentModule.getConfiguration().imgWidth;
-        this.imgHeight = parentModule.getConfiguration().imgHeight;
     }
 
     @Override
@@ -121,8 +125,57 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
         return name;
     }
 
+    /**
+     * Setup camera parameters.  Specifically we are looking for an image format between
+     * 600 pixels & 800 pixels wide.  On finding one that fits the range use that, and the image
+     * will be scaled appropriately.
+     */
+    void setupCameraParameters() {
+
+        context = getParentModule().getConfiguration().androidContext;
+        CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+
+        try {
+
+            String[] cameraIds = manager.getCameraIdList();
+
+            boolean sizeFound = false;
+
+            for(int idx = 0; idx < cameraIds.length && !sizeFound; ++idx) {
+
+                String cameraId = cameraIds[idx];
+                CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+
+                StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+                Size[] imageDimension = map.getOutputSizes(ImageFormat.JPEG);
+
+                for (Size dimension : imageDimension) {
+
+                    if (dimension.getWidth() >= 600 && dimension.getWidth() <= 800) {
+
+                        imgWidth = dimension.getWidth();
+                        imgHeight = dimension.getHeight();
+                        sizeFound = true;
+                        break;
+                    }
+                }
+            }
+
+        } catch (CameraAccessException e) {
+
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Initialize the output data structure
+     * @throws SensorException
+     */
     protected void init() throws SensorException {
 
+        setupCameraParameters();
+
+        // Build data structure ********************************************************************
         SWEHelper sweHelper = new SWEHelper();
         dataStruct = sweHelper.newDataRecord();
         dataStruct.setDescription(DATA_RECORD_DESCRIPTION);
@@ -131,46 +184,54 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
 
         // Add time stamp component to data record
         Time time = sweHelper.newTimeStampIsoUTC();
+        dataStruct.addComponent(DATA_RECORD_REPORT_TIME_LABEL, time);
 
         // Add the report name component of the data record
         Text name = sweHelper.newText(sweHelper.getPropertyUri("ReportName"),
                 "Report Name",
                 "An identifier used as a describer for the report");
+        dataStruct.addComponent(DATA_RECORD_REPORT_NAME_LABEL, name);
 
         // Add the report description component of the data record
         Text description = sweHelper.newText(sweHelper.getPropertyUri("ReportDescription"),
                 "Report Description",
                 "A verbose description of the observed event");
+        dataStruct.addComponent(DATA_RECORD_REPORT_DESCRIPTION_LABEL, description);
 
         // Add the reporting item component of the data record
         Text category = sweHelper.newText(sweHelper.getPropertyUri("ReportCategory"),
                 "Report Category",
                 "A categorical value used to identify a report as belonging to a kind, family, or group of reports");
+        dataStruct.addComponent(DATA_RECORD_REPORTING_CATEGORY_LABEL, category);
 
         // Add the location component of the data record
         GeoPosHelper geoPosHelper = new GeoPosHelper();
         Vector locationVectorLLA = geoPosHelper.newLocationVectorLLA(null);
         locationVectorLLA.setLocalFrame(parentSensor.localFrameURI);
+        dataStruct.addComponent(DATA_RECORD_REPORT_LOC_LABEL, locationVectorLLA);
 
         // Add image data block
         Boolean containsImage = sweHelper.newBoolean(SWEConstants.DEF_FLAG,
                 "Image Flag",
                 "A flag used to denote if the report has an associated image");
-
-        VideoCamHelper videoCamHelper = new VideoCamHelper();
-        DataRecord image = videoCamHelper.newVideoFrameRGB("image", imgWidth, imgHeight);
-
-        dataStruct.addComponent(DATA_RECORD_REPORT_NAME_LABEL, name);
-        dataStruct.addComponent(DATA_RECORD_REPORT_DESCRIPTION_LABEL, description);
-        dataStruct.addComponent(DATA_RECORD_REPORTING_CATEGORY_LABEL, category);
-        dataStruct.addComponent(DATA_RECORD_REPORT_LOC_LABEL, locationVectorLLA);
         dataStruct.addComponent(DATA_RECORD_REPORTING_CONTAINS_IMAGE_LABEL, containsImage);
+
+        DataArray image = sweHelper.newRgbImage(imgWidth, imgHeight, DataType.BYTE);
+        image.setName(DATA_RECORD_REPORTING_IMAGE_LABEL);
         dataStruct.addComponent(DATA_RECORD_REPORTING_IMAGE_LABEL, image);
+
+        // Setup data encoding *********************************************************************
 
         // Binary encoding for message data structure
         BinaryEncoding dataEncoding = sweHelper.newBinaryEncoding();
         dataEncoding.setByteEncoding(ByteEncoding.RAW);
         dataEncoding.setByteOrder(ByteOrder.BIG_ENDIAN);
+
+        // Specify encoding for time field
+        BinaryComponent timeEnc = sweHelper.newBinaryComponent();
+        timeEnc.setRef("/" + time.getName());
+        timeEnc.setCdmDataType(DataType.DOUBLE);
+        dataEncoding.addMemberAsComponent(timeEnc);
 
         // Specify encoding for name field
         BinaryComponent nameEnc = sweHelper.newBinaryComponent();
@@ -212,17 +273,11 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
         containsImageEnc.setCdmDataType(DataType.BOOLEAN);
         dataEncoding.addMemberAsComponent(containsImageEnc);
 
-        // Specify encoding for time field
-        BinaryComponent timeEnc = sweHelper.newBinaryComponent();
-        timeEnc.setRef("/" + image.getName() + "/" + image.getComponent(0).getName());
-        timeEnc.setCdmDataType(DataType.DOUBLE);
-        dataEncoding.addMemberAsComponent(timeEnc);
-
-        // Specify encoding for image field
-        BinaryBlock compressedBlock = sweHelper.newBinaryBlock();
-        compressedBlock.setRef("/" + image.getName() + "/" + image.getComponent(1).getName());
-        compressedBlock.setCompression("JPEG");
-        dataEncoding.addMemberAsBlock(compressedBlock);
+        // Specify image block compression for image field
+        BinaryBlock imageBlock = sweHelper.newBinaryBlock();
+        imageBlock.setRef("/" + image.getName());
+        imageBlock.setCompression("JPEG");
+        dataEncoding.addMemberAsBlock(imageBlock);
 
         try
         {
@@ -236,7 +291,14 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
         this.dataEncoding = dataEncoding;
     }
 
-    private boolean submitReport(String category, String locationSource, String name, String description) {
+    /**
+     * Populate and submit an instance of the SpotReport containing no image.
+     * @param category The category for the spot report
+     * @param locationSource The location source name for the spot report
+     * @param name The name of the report
+     * @param description A description of the report
+     */
+    private void submitReport(String category, String locationSource, String name, String description) {
 
         Location location;
 
@@ -256,44 +318,37 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
             newRecord = latestRecord.renew();
         }
 
-        // Set data record textual information
-        newRecord.setStringValue(0, name);
-        newRecord.setStringValue(1, description);
-        newRecord.setStringValue(2, category);
+        newRecord.setDoubleValue(0, samplingTime);
+        newRecord.setStringValue(1, name);
+        newRecord.setStringValue(2, description);
+        newRecord.setStringValue(3, category);
 
-        // Get the location data record, makes more sense to retrieve underlying object and set
-        // with respective indices
-        AbstractDataBlock locationData = ((DataBlockMixed)newRecord).getUnderlyingObject()[3];
+        AbstractDataBlock locationData = ((DataBlockMixed)newRecord).getUnderlyingObject()[4];
         locationData.setDoubleValue(0, location.getLatitude());
         locationData.setDoubleValue(1, location.getLongitude());
         locationData.setDoubleValue(2, location.getAltitude());
 
-        // Set the flag indicating image is present
-        newRecord.setBooleanValue(4, true);
+        newRecord.setBooleanValue(5, false);
 
-        // Get the image data record, again makes more sense to retrieve underlying object and
-        // set with respective indices
-        AbstractDataBlock imageData = ((DataBlockMixed)newRecord).getUnderlyingObject()[5];
+        byte[] image = new byte[imgWidth * imgHeight * 3];
 
-        // Set timestamp for image
-        imageData.setDoubleValue(0, samplingTime);
-
-        // Create a new empty image buffer, otherwise send won't work
-        byte[] image = new byte[imgWidth * imgHeight];
-
-        // Since the actual image is embedded in the image record as a sub-record
-        // get the underlying record to store image buffer there
-        ((DataBlockMixed)imageData).getUnderlyingObject()[1].setUnderlyingObject(image);
+        ((DataBlockMixed)newRecord).getUnderlyingObject()[6].setUnderlyingObject(image);
 
         // update latest record and send event
         latestRecord = newRecord;
         latestRecordTime = System.currentTimeMillis();
         eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, newRecord));
-
-        return true;
     }
 
-    private boolean submitReport(String category, String locationSource, String name, String description, byte[] image) {
+    /**
+     * Populate and submit an instance of the SpotReport containing the given image.
+     * @param category The category for the spot report
+     * @param locationSource The location source name for the spot report
+     * @param name The name of the report
+     * @param description A description of the report
+     * @param image The image to be submitted with the report
+     */
+    private void submitReport(String category, String locationSource, String name, String description, byte[] image) {
 
         Location location;
 
@@ -313,43 +368,28 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
             newRecord = latestRecord.renew();
         }
 
-        // Set data record textual information
-        newRecord.setStringValue(0, name);
-        newRecord.setStringValue(1, description);
-        newRecord.setStringValue(2, category);
+        newRecord.setDoubleValue(0, samplingTime);
+        newRecord.setStringValue(1, name);
+        newRecord.setStringValue(2, description);
+        newRecord.setStringValue(3, category);
 
-        // Get the location data record, makes more sense to retrieve underlying object and set
-        // with respective indices
-        AbstractDataBlock locationData = ((DataBlockMixed)newRecord).getUnderlyingObject()[3];
+        AbstractDataBlock locationData = ((DataBlockMixed)newRecord).getUnderlyingObject()[4];
         locationData.setDoubleValue(0, location.getLatitude());
         locationData.setDoubleValue(1, location.getLongitude());
         locationData.setDoubleValue(2, location.getAltitude());
 
-        // Set the flag indicating image is present
-        newRecord.setBooleanValue(4, true);
+        newRecord.setBooleanValue(5, true);
 
-        // Get the image data record, again makes more sense to retrieve underlying object and
-        // set with respective indices
-        AbstractDataBlock imageData = ((DataBlockMixed)newRecord).getUnderlyingObject()[5];
-
-        // Set timestamp for image
-        imageData.setDoubleValue(0, samplingTime);
-
-        // Since the actual image is embedded in the image record as a sub-record
-        // get the underlying record to store image buffer there
-        ((DataBlockMixed)imageData).getUnderlyingObject()[1].setUnderlyingObject(image);
+        ((DataBlockMixed)newRecord).getUnderlyingObject()[6].setUnderlyingObject(image);
 
         // update latest record and send event
         latestRecord = newRecord;
         latestRecordTime = System.currentTimeMillis();
         eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, newRecord));
-
-        return true;
     }
 
-    public void start(Context context) {
+    public void start() {
 
-        this.context = context;
         context.registerReceiver(broadcastReceiver, new IntentFilter(ACTION_SUBMIT_REPORT));
     }
     
@@ -389,6 +429,11 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
         return latestRecordTime;
     }
 
+    /**
+     * Get the location provider based on the given name of the location source
+     * @param locationSource The name of the source for location data
+     * @return Instance of the location provider
+     */
     private Location getLocation(String locationSource) {
 
         Location location = null;
@@ -425,6 +470,9 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
         return location;
     }
 
+    /**
+     * Broadcast receiver to register with OS for IPC with SpotReportActivity
+     */
     private class SpotReportReceiver extends BroadcastReceiver {
 
         @Override
@@ -440,13 +488,19 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
                 ResultReceiver resultReceiver = intent.getParcelableExtra(Intent.EXTRA_RESULT_RECEIVER);
 
                 imageBuffer.reset();
+
                 try {
 
                     if(uriString != null) {
 
                         Uri imageUri = Uri.parse(uriString);
                         Bitmap imageBitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), imageUri);
-                        imageBitmap.compress(Bitmap.CompressFormat.JPEG, 90, imageBuffer);
+                        imageBitmap.setHasAlpha(false);
+                        Bitmap scaledBitmap = Bitmap.createScaledBitmap(imageBitmap, imgWidth, imgHeight, true);
+                        Bitmap converted = scaledBitmap.copy(Bitmap.Config.RGB_565,false);
+                        ByteBuffer buffer = ByteBuffer.allocate(imgWidth * imgHeight * 3);
+                        converted.copyPixelsToBuffer(buffer);
+                        converted.compress(Bitmap.CompressFormat.JPEG, 90, imageBuffer);
 
                         submitReport(category, locationSource, name, description, imageBuffer.toByteArray());
                     }

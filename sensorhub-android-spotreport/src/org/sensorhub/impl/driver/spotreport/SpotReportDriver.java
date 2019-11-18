@@ -16,10 +16,7 @@ package org.sensorhub.impl.driver.spotreport;
 
 import javax.xml.namespace.QName;
 import net.opengis.gml.v32.AbstractFeature;
-import net.opengis.sensorml.v20.ObservableProperty;
-import net.opengis.sensorml.v20.PhysicalComponent;
 import net.opengis.sensorml.v20.SpatialFrame;
-import net.opengis.sensorml.v20.impl.ObservablePropertyImpl;
 import net.opengis.sensorml.v20.impl.SpatialFrameImpl;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.SensorException;
@@ -27,12 +24,8 @@ import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.ogc.gml.GenericFeatureImpl;
-import org.vast.sensorML.SMLFactory;
-import org.vast.sensorML.SMLHelper;
 import org.vast.sensorML.SMLStaxBindings;
-import org.vast.swe.SWEHelper;
 
-import android.location.LocationProvider;
 import android.provider.Settings.Secure;
 
 import java.util.List;
@@ -79,7 +72,7 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
     @Override
     public void start() throws SensorException {
 
-        spotReportOutput.start(config.androidContext);
+        spotReportOutput.start();
     }
     
     

@@ -30,9 +30,7 @@ public class SpotReportConfig extends SensorConfig {
 
     public String runName;
     public String runDescription;
-    public int imgWidth;
-    public int imgHeight;
-    
+
     public transient Context androidContext;
 
     public SpotReportConfig() {
