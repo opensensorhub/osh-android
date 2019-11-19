@@ -42,8 +42,6 @@ public class SpotReportActivity extends Activity {
     private static final String DATA_REPORT_CATEGORY = "item";
     private static final String DATA_REPORT_IMAGE = "image";
 
-    private Button submitReportButton;
-
     private ImageView imageView;
     private Bitmap imageBitmap = null;
     private Uri imageUri;
@@ -59,14 +57,10 @@ public class SpotReportActivity extends Activity {
         imageView = findViewById(R.id.imageView);
 
         Button captureImageButton = findViewById(R.id.captureImage);
-        captureImageButton.setOnClickListener((View view)-> {
-                    dispatchTakePictureIntent();
-                });
+        captureImageButton.setOnClickListener((View view)-> dispatchTakePictureIntent());
 
-        submitReportButton = findViewById(R.id.submitReport);
-        submitReportButton.setOnClickListener((View view)-> {
-                    onSubmitReport();
-                });
+        Button submitReportButton = findViewById(R.id.submitReport);
+        submitReportButton.setOnClickListener((View view)-> onSubmitReport());
 
         submitRequestResultReceiver = new SubmitRequestResultReceiver(this, new Handler());
     }
@@ -133,7 +127,7 @@ public class SpotReportActivity extends Activity {
         }
     }
 
-    private File createImageFile() throws IOException {
+    private boolean createImageFile() throws IOException {
 
         String timeStamp =
                 new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault()).format(new Date());
@@ -144,9 +138,15 @@ public class SpotReportActivity extends Activity {
 
         File file = new File(storageDir + "/" + imageFileName);
 
-        file.createNewFile();
+        boolean result = file.createNewFile();
 
-        return file;
+        if (result) {
+
+            imageUri = FileProvider.getUriForFile(this,"org.sensorhub.android.provider", file);
+
+        }
+
+        return result;
     }
 
     private void dispatchTakePictureIntent() {
@@ -155,18 +155,15 @@ public class SpotReportActivity extends Activity {
 
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
 
-            //Create a file to store the image
-            File imageFile = null;
-
             try {
 
-                imageFile = createImageFile();
+                if (createImageFile()) {
 
-                imageUri = FileProvider.getUriForFile(this,"org.sensorhub.android.provider", imageFile);
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
 
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
 
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                }
 
             } catch (IOException e) {
 
@@ -211,7 +208,7 @@ public class SpotReportActivity extends Activity {
 
         SpotReportActivity activity;
 
-        public SubmitRequestResultReceiver(SpotReportActivity activity, Handler handler) {
+        SubmitRequestResultReceiver(SpotReportActivity activity, Handler handler) {
 
             super(handler);
             this.activity = activity;
@@ -235,16 +232,13 @@ public class SpotReportActivity extends Activity {
                 title = "Report Submitted";
                 message = "Report Submitted Successfully";
 
-                clickListener = new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
+                clickListener = (DialogInterface dialogInterface, int i) -> {
                         ((TextView) findViewById(R.id.reportName)).setText(null);
                         ((TextView) findViewById(R.id.description)).setText(null);
                         imageView.setImageBitmap(null);
                         imageUri = null;
                         imageBitmap = null;
-                    }
-                };
+                    };
             }
 
             new AlertDialog.Builder(activity)
