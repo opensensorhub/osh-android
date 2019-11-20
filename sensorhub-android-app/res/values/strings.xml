@@ -80,6 +80,7 @@
 
     <string-array name="spot_report_location_source_list">
         <item>GPS</item>
+        <item>Laser Range Finder</item>
         <item>Network</item>
     </string-array>
 
