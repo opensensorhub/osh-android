@@ -232,6 +232,18 @@ public class UserSettingsActivity extends PreferenceActivity
                 trupulseDatasource.setEnabled((boolean) newValue);
                 return true;
             });
+
+            Preference bleEnable = getPreferenceScreen().findPreference("ble_enable");
+            Preference bleLocationMethod = getPreferenceScreen().findPreference("ble_loc_method");
+            Preference bleOptions = getPreferenceScreen().findPreference("ble_options");
+            bleLocationMethod.setEnabled(prefs.getBoolean(bleEnable.getKey(), false));
+            bleOptions.setEnabled((prefs.getBoolean(bleEnable.getKey(), false)));
+            bleEnable.setOnPreferenceChangeListener(((preference, newValue) -> {
+                bleLocationMethod.setEnabled((boolean) newValue);
+                bleOptions.setEnabled((boolean) newValue);
+                return true;
+            }));
+
         }
     }
 

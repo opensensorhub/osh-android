@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+<PreferenceScreen xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android" >
     <!--
         TODO: list of sensors and each item goes to a sub menu. Once it gets into each sensor, ask Alex for things like orientation.
@@ -115,6 +116,29 @@
             android:entries="@array/sos_option_list"
             android:entryValues="@array/sos_option_values"
             android:defaultValue="@array/sos_option_defaults" />
+
+        <SwitchPreference
+            android:key="ble_enable"
+            android:title="BLE Beacon Scanning"
+            android:defaultValue="false"/>
+        <MultiSelectListPreference
+            android:defaultValue="@array/ble_location_method_defaults"
+            android:enabled="false"
+            android:entries="@array/ble_location_method_list"
+            android:entryValues="@array/ble_location_method_values"
+            android:key="ble_loc_method"
+            android:summary="Method used for estimating the User's Location"
+            android:title="BLE Location Method" />
+        <MultiSelectListPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="@array/sos_option_defaults"
+            android:enabled="false"
+            android:entries="@array/sos_option_list"
+            android:entryValues="@array/sos_option_values"
+            android:key="ble_options"
+            android:summary="Options for pushing data"
+            android:title="BLE Output Options" />
     </PreferenceCategory>
 
     <PreferenceCategory

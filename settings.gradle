@@ -1,3 +1,4 @@
+include ':sensorhub-android-blebeacon'
 rootProject.name = 'osh-android'
 def oshMainDir = "$rootDir/.."
 

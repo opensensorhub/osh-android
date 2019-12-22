@@ -1,42 +1,48 @@
 /*************************** BEGIN LICENSE BLOCK ***************************
 
-The contents of this file are subject to the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one
-at http://mozilla.org/MPL/2.0/.
+ The contents of this file are subject to the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one
+ at http://mozilla.org/MPL/2.0/.
 
-Software distributed under the License is distributed on an "AS IS" basis,
-WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-for the specific language governing rights and limitations under the License.
- 
-Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
- 
-******************************* END LICENSE BLOCK ***************************/
+ Software distributed under the License is distributed on an "AS IS" basis,
+ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ for the specific language governing rights and limitations under the License.
+
+ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
+ ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.android;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Looper;
+import android.preference.PreferenceManager;
+import android.provider.Settings.Secure;
+import android.text.Html;
 import android.util.Log;
-import android.view.*;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.TextureView;
+import android.view.WindowManager;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import org.sensorhub.android.comm.BluetoothCommProvider;
 import org.sensorhub.android.comm.BluetoothCommProviderConfig;
@@ -62,36 +68,32 @@ import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
+import org.sensorhub.impl.sensor.blebeacon.BLEBeacon;
+import org.sensorhub.impl.sensor.blebeacon.BLEBeaconConfig;
+import org.sensorhub.impl.sensor.blebeacon.BLEBeaconDriver;
 import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
+import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
 import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
-import org.sensorhub.impl.service.HttpServerConfig;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Looper;
-import android.preference.PreferenceManager;
-import android.provider.Settings.Secure;
-import android.text.Html;
-import android.widget.EditText;
-import android.widget.TextView;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import static android.content.ContentValues.TAG;
 
-public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener
-{
+public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener {
     public static final String ACTION_BROADCAST_RECEIVER = "org.sensorhub.android.BROADCAST_RECEIVER";
 
     String deviceID;
@@ -106,7 +108,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         FlirOne,
         DJIDrone,
         ProxySensor,
-        SpotReport
+        SpotReport,
+        BLELocation
     }
 
     TextView textArea;
@@ -122,22 +125,18 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     URL sostUrl = null;
     boolean showVideo;
 
-    private ServiceConnection sConn = new ServiceConnection()
-    {
-        public void onServiceConnected(ComponentName className, IBinder service)
-        {
+    private ServiceConnection sConn = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
             boundService = ((SensorHubService.LocalBinder) service).getService();
         }
 
-        public void onServiceDisconnected(ComponentName className)
-        {
+        public void onServiceDisconnected(ComponentName className) {
             boundService = null;
         }
     };
 
 
-    protected void updateConfig(SharedPreferences prefs, String runName)
-    {
+    protected void updateConfig(SharedPreferences prefs, String runName) {
         // get device name
         deviceID = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
         deviceName = prefs.getString("device_name", null);
@@ -151,14 +150,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         String sosUriConfig = prefs.getString("sos_uri", "http://127.0.0.1:8585/sensorhub/sos");
         String sosUser = prefs.getString("sos_username", "");
         String sosPwd = prefs.getString("sos_password", "");
-        if (sosUriConfig != null && sosUriConfig.trim().length() > 0)
-        {
-            try
-            {
+        if (sosUriConfig != null && sosUriConfig.trim().length() > 0) {
+            try {
                 sosUrl = new URL(sosUriConfig);
-            }
-            catch (MalformedURLException e)
-            {
+            } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
         }
@@ -179,7 +174,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.autoStart = true;
         sosConfig.enableTransactional = true;
 
-        File dbFile = new File(getApplicationContext().getFilesDir()+"/db/");
+        File dbFile = new File(getApplicationContext().getFilesDir() + "/db/");
         dbFile.mkdirs();
         MVStorageConfig basicStorageConfig = new MVStorageConfig();
         basicStorageConfig.moduleClass = "org.sensorhub.impl.persistence.h2.MVObsStorageImpl";
@@ -190,8 +185,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // Push Sensors Config
         AndroidSensorsConfig androidSensorsConfig = (AndroidSensorsConfig) createSensorConfig(Sensors.Android);
         sensorhubConfig.add(androidSensorsConfig);
-        if (isPushingSensor(Sensors.Android))
-        {
+        if (isPushingSensor(Sensors.Android)) {
             addSosTConfig(androidSensorsConfig, sosUser, sosPwd);
         }
 
@@ -203,23 +197,20 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enable", false);
-        if (enabled)
-        {
+        if (enabled) {
             String truPulseDevice = prefs.getString("trupulse_datasource", "SIMULATED");
             TruPulseConfig truPulseConfig = truPulseDevice == "SIMULATED"
                     ? (TruPulseConfig) createSensorConfig(Sensors.TruPulseSim)
                     : (TruPulseConfig) createSensorConfig(Sensors.TruPulse);
             sensorhubConfig.add(truPulseConfig);
-            if (isPushingSensor(Sensors.TruPulse))
-            {
+            if (isPushingSensor(Sensors.TruPulse)) {
                 addSosTConfig(truPulseConfig, sosUser, sosPwd);
             }
         }
 
         // AngelSensor
         enabled = prefs.getBoolean("angel_enabled", false);
-        if (enabled)
-        {
+        if (enabled) {
             AngelSensorConfig angelConfig = (AngelSensorConfig) createSensorConfig(Sensors.Angel);
             //angelConfig.btAddress = "00:07:80:79:04:AF"; // mike
             //angelConfig.btAddress = "00:07:80:03:0E:0A"; // alex
@@ -230,8 +221,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // FLIR One sensor
         enabled = prefs.getBoolean("flirone_enabled", false);
-        if (enabled)
-        {
+        if (enabled) {
             showVideo = true;
 
             FlirOneCameraConfig flironeConfig = (FlirOneCameraConfig) createSensorConfig(Sensors.FlirOne);
@@ -245,6 +235,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 //        if (isPushingSensor(Sensors.SpotReport))
         {
             addSosTConfig(spotReportConfig, sosUser, sosPwd);
+        }
+
+        enabled = prefs.getBoolean("ble_enable", false);
+        if(enabled){
+            BLEBeaconConfig beaconConfig = (BLEBeaconConfig)createSensorConfig(Sensors.BLELocation);
+            beaconConfig.androidContext = this.getApplicationContext();
+            sensorhubConfig.add(beaconConfig);
+            addSosTConfig(beaconConfig, sosUser, sosPwd);
+            Log.d(TAG, "onCreate: BLE Config Added");
         }
 
         /*
@@ -325,7 +324,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
             dataProviderConfig.name = proxySensorConfig.id;
             dataProviderConfig.sensorID = proxySensorConfig.id;
-            dataProviderConfig.offeringID = proxySensorConfig.id+"-sos";
+            dataProviderConfig.offeringID = proxySensorConfig.id + "-sos";
             dataProviderConfig.enabled = true;
 
             sosConfig.dataProviders.add(dataProviderConfig);
@@ -334,12 +333,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig.add(sosConfig);
     }
 
-    private boolean isPushingSensor(Sensors sensor)
-    {
+    private boolean isPushingSensor(Sensors sensor) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
 
-        if (Sensors.Android.equals(sensor))
-        {
+        if (Sensors.Android.equals(sensor)) {
             if (prefs.getBoolean("accelerometer_enable", false)
                     && prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                 return true;
@@ -355,22 +352,19 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             if (prefs.getBoolean("location_enable", false)
                     && prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                 return true;
-            if (prefs.getBoolean("video_enable", false)
-                    && prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-                return true;
-        }
-        else if (Sensors.TruPulse.equals(sensor) || Sensors.TruPulseSim.equals(sensor))
-        {
-            if (prefs.getBoolean("trupulse_enable", false)
-                    && prefs.getStringSet("trupulse_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-                return true;
+            return prefs.getBoolean("video_enable", false)
+                    && prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH_REMOTE");
+        } else if (Sensors.TruPulse.equals(sensor) || Sensors.TruPulseSim.equals(sensor)) {
+            return prefs.getBoolean("trupulse_enable", false)
+                    && prefs.getStringSet("trupulse_options", Collections.emptySet()).contains("PUSH_REMOTE");
+        } else if(Sensors.BLELocation.equals(sensor)){
+            return prefs.getBoolean("ble_enable", false) && prefs.getStringSet("ble_options", Collections.emptySet()).contains("PUSH_REMOTE");
         }
 
         return false;
     }
 
-    private SensorDataProviderConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig)
-    {
+    private SensorDataProviderConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig) {
         SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
         dataProviderConfig.sensorID = sensorConfig.id;
         dataProviderConfig.offeringID = sensorConfig.id + ":offering";
@@ -382,19 +376,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         return dataProviderConfig;
     }
 
-    private StreamStorageConfig createStreamStorageConfig(AndroidSensorsConfig sensorConfig)
-    {
+    private StreamStorageConfig createStreamStorageConfig(AndroidSensorsConfig sensorConfig) {
         // H2 Storage Config
-        File dbFile = new File(getApplicationContext().getFilesDir()+"/db/", deviceID+"_h2.dat");
+        File dbFile = new File(getApplicationContext().getFilesDir() + "/db/", deviceID + "_h2.dat");
         dbFile.getParentFile().mkdirs();
-        if(!dbFile.exists())
-        {
-            try
-            {
+        if (!dbFile.exists()) {
+            try {
                 dbFile.createNewFile();
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -426,12 +415,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         return streamStorageConfig;
     }
 
-    private SensorConfig createSensorConfig(Sensors sensor)
-    {
+    private SensorConfig createSensorConfig(Sensors sensor) {
         SensorConfig sensorConfig;
 
-        if (Sensors.Android.equals(sensor))
-        {
+        if (Sensors.Android.equals(sensor)) {
             sensorConfig = new AndroidSensorsConfig();
             sensorConfig.id = "urn:android:device:" + deviceID;
             sensorConfig.name = "Android Sensors [" + deviceName + "]";
@@ -442,18 +429,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             ((AndroidSensorsConfig) sensorConfig).activateAccelerometer = prefs.getBoolean("accelerometer_enable", false);
             ((AndroidSensorsConfig) sensorConfig).activateGyrometer = prefs.getBoolean("gyroscope_enable", false);
             ((AndroidSensorsConfig) sensorConfig).activateMagnetometer = prefs.getBoolean("magnetometer_enable", false);
-            if (prefs.getBoolean("orientation_enable", false))
-            {
+            if (prefs.getBoolean("orientation_enable", false)) {
                 ((AndroidSensorsConfig) sensorConfig).activateOrientationQuat = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("QUATERNION");
                 ((AndroidSensorsConfig) sensorConfig).activateOrientationEuler = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("EULER");
             }
-            if (prefs.getBoolean("location_enable", false))
-            {
+            if (prefs.getBoolean("location_enable", false)) {
                 ((AndroidSensorsConfig) sensorConfig).activateGpsLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("GPS");
                 ((AndroidSensorsConfig) sensorConfig).activateNetworkLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("NETWORK");
             }
-            if (prefs.getBoolean("video_enable", false))
-            {
+            if (prefs.getBoolean("video_enable", false)) {
                 showVideo = true;
 
                 ((AndroidSensorsConfig) sensorConfig).activateBackCamera = true;
@@ -463,9 +447,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             ((AndroidSensorsConfig) sensorConfig).androidContext = this.getApplicationContext();
             ((AndroidSensorsConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
             ((AndroidSensorsConfig) sensorConfig).runName = runName;
-        }
-        else if (Sensors.TruPulse.equals(sensor))
-        {
+        } else if (Sensors.TruPulse.equals(sensor)) {
             sensorConfig = new TruPulseConfig();
             sensorConfig.id = "TRUPULSE_SENSOR";
             sensorConfig.name = "TruPulse Range Finder [" + deviceName + "]";
@@ -476,9 +458,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             btConf.moduleClass = BluetoothCommProvider.class.getCanonicalName();
             ((TruPulseConfig) sensorConfig).commSettings = btConf;
             ((TruPulseConfig) sensorConfig).serialNumber = deviceID;
-        }
-        else if (Sensors.TruPulseSim.equals(sensor))
-        {
+        } else if (Sensors.TruPulseSim.equals(sensor)) {
             sensorConfig = new TruPulseConfig();
             sensorConfig.id = "TRUPULSE_SENSOR_SIMULATED";
             sensorConfig.name = "Simulated TruPulse Range Finder [" + deviceName + "]";
@@ -489,9 +469,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             btConf.moduleClass = SimulatedDataStream.class.getCanonicalName();
             ((TruPulseConfig) sensorConfig).commSettings = btConf;
             ((TruPulseConfig) sensorConfig).serialNumber = deviceID;
-        }
-        else if (Sensors.Angel.equals(sensor))
-        {
+        } else if (Sensors.Angel.equals(sensor)) {
             sensorConfig = new AngelSensorConfig();
             sensorConfig.id = "ANGEL_SENSOR";
             sensorConfig.name = "Angel Sensor [" + deviceName + "]";
@@ -505,9 +483,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sensorhubConfig.add(bleConf);
 
             ((AngelSensorConfig) sensorConfig).networkID = bleConf.id;
-        }
-        else if (Sensors.FlirOne.equals(sensor))
-        {
+        } else if (Sensors.FlirOne.equals(sensor)) {
             sensorConfig = new FlirOneCameraConfig();
             sensorConfig.id = "FLIRONE_SENSOR";
             sensorConfig.name = "FLIR One Camera [" + deviceName + "]";
@@ -515,9 +491,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
             ((FlirOneCameraConfig) sensorConfig).androidContext = this.getApplicationContext();
             ((FlirOneCameraConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
-        }
-        else if (Sensors.ProxySensor.equals(sensor))
-        {
+        } else if (Sensors.ProxySensor.equals(sensor)) {
             sensorConfig = new ProxySensorConfig();
         }
         else if (Sensors.SpotReport.equals(sensor))
@@ -527,39 +501,36 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sensorConfig.name = "Spot Report [" + deviceName + "]";
             sensorConfig.autoStart = true;
             ((SpotReportConfig) sensorConfig).androidContext = this.getApplicationContext();
-        }
-        else
-        {
+        } else if(Sensors.BLELocation.equals(sensor)){
+            sensorConfig = new BLEBeaconConfig();
+            sensorConfig.id = "BLE_BEACON_SCANNER";
+            sensorConfig.name = "BLE Scanner [" + deviceName + "]";
+            sensorConfig.autoStart = true;
+        }else {
             sensorConfig = new SensorConfig();
         }
 
         return sensorConfig;
     }
 
-    protected void addStorageConfig(SensorConfig sensorConf, StreamStorageConfig storageConf)
-    {
-        if (sensorConf instanceof AndroidSensorsConfig)
-        {
+    protected void addStorageConfig(SensorConfig sensorConf, StreamStorageConfig storageConf) {
+        if (sensorConf instanceof AndroidSensorsConfig) {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-            SensorManager sensorManager = (SensorManager)getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
+            SensorManager sensorManager = (SensorManager) getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
             List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
             String sensorName;
-            for (Sensor sensor: deviceSensors)
-            {
-                if (sensor.isWakeUpSensor())
-                {
+            for (Sensor sensor : deviceSensors) {
+                if (sensor.isWakeUpSensor()) {
                     continue;
                 }
 
                 Log.d(TAG, "addStorageConfig: sensor: " + sensor.getName());
 
-                switch (sensor.getType())
-                {
+                switch (sensor.getType()) {
                     case Sensor.TYPE_ACCELEROMETER:
                         if (!prefs.getBoolean("accelerometer_enable", false)
-                            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("STORE_LOCAL"))
-                        {
+                                || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                             Log.d(TAG, "addStorageConfig: excluding accelerometer");
 
@@ -571,8 +542,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         break;
                     case Sensor.TYPE_GYROSCOPE:
                         if (!prefs.getBoolean("gyroscope_enable", false)
-                            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("STORE_LOCAL"))
-                        {
+                                || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                             Log.d(TAG, "addStorageConfig: excluding gyroscope");
 
@@ -584,8 +554,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         break;
                     case Sensor.TYPE_MAGNETIC_FIELD:
                         if (!prefs.getBoolean("magnetometer_enable", false)
-                            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("STORE_LOCAL"))
-                        {
+                                || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                             Log.d(TAG, "addStorageConfig: excluding magnetometer");
 
@@ -597,8 +566,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         break;
                     case Sensor.TYPE_ROTATION_VECTOR:
                         if (!prefs.getBoolean("orientation_enable", false)
-                            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("STORE_LOCAL"))
-                        {
+                                || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                             Log.d(TAG, "addStorageConfig: excluding orientation");
 
@@ -615,8 +583,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 }
             }
             if (!prefs.getBoolean("location_enable", false)
-                || !prefs.getStringSet("location_options", Collections.emptySet()).contains("STORE_LOCAL"))
-            {
+                    || !prefs.getStringSet("location_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                 Log.d(TAG, "addStorageConfig: excluding location");
 
@@ -628,8 +595,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 Log.d(TAG, "addStorageConfig: NOT excluding location");
             }
             if (!prefs.getBoolean("video_enable", false)
-                || !prefs.getStringSet("video_options", Collections.emptySet()).contains("STORE_LOCAL"))
-            {
+                    || !prefs.getStringSet("video_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                 Log.d(TAG, "addStorageConfig: excluding video");
 
@@ -645,28 +611,23 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig.add(storageConf);
     }
 
-    protected void addSosServerConfig(SOSServiceConfig sosConf, SensorDataProviderConfig dataProviderConf)
-    {
+    protected void addSosServerConfig(SOSServiceConfig sosConf, SensorDataProviderConfig dataProviderConf) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-        SensorManager sensorManager = (SensorManager)getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
+        SensorManager sensorManager = (SensorManager) getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
         String sensorName;
-        for (Sensor sensor: deviceSensors)
-        {
-            if (sensor.isWakeUpSensor())
-            {
+        for (Sensor sensor : deviceSensors) {
+            if (sensor.isWakeUpSensor()) {
                 continue;
             }
 
             Log.d(TAG, "addSosServerConfig: sensor: " + sensor.getName());
 
-            switch (sensor.getType())
-            {
+            switch (sensor.getType()) {
                 case Sensor.TYPE_ACCELEROMETER:
                     if (!prefs.getBoolean("accelerometer_enable", false)
-                        || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("STORE_LOCAL"))
-                    {
+                            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                         Log.d(TAG, "addSosServerConfig: excluding accelerometer");
 
@@ -678,8 +639,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     break;
                 case Sensor.TYPE_GYROSCOPE:
                     if (!prefs.getBoolean("gyroscope_enable", false)
-                        || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("STORE_LOCAL"))
-                    {
+                            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                         Log.d(TAG, "addSosServerConfig: excluding gyroscope");
 
@@ -691,8 +651,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     break;
                 case Sensor.TYPE_MAGNETIC_FIELD:
                     if (!prefs.getBoolean("magnetometer_enable", false)
-                        || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("STORE_LOCAL"))
-                    {
+                            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                         Log.d(TAG, "addSosServerConfig: excluding magnetometer");
 
@@ -704,8 +663,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     break;
                 case Sensor.TYPE_ROTATION_VECTOR:
                     if (!prefs.getBoolean("orientation_enable", false)
-                        || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("STORE_LOCAL"))
-                    {
+                            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                         Log.d(TAG, "addSosServerConfig: excluding orientation");
 
@@ -722,8 +680,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             }
         }
         if (!prefs.getBoolean("location_enable", false)
-            || !prefs.getStringSet("location_options", Collections.emptySet()).contains("STORE_LOCAL"))
-        {
+                || !prefs.getStringSet("location_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
             Log.d(TAG, "addSosServerConfig: excluding location");
 
@@ -735,8 +692,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             Log.d(TAG, "addSosServerConfig: NOT excluding location");
         }
         if (!prefs.getBoolean("video_enable", false)
-            || !prefs.getStringSet("video_options", Collections.emptySet()).contains("STORE_LOCAL"))
-        {
+                || !prefs.getStringSet("video_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
             Log.d(TAG, "addSosServerConfig: excluding video");
 
@@ -747,12 +703,20 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         } else {
             Log.d(TAG, "addSosServerConfig: NOT excluding video");
         }
+        if (!prefs.getBoolean("ble_enable", false)
+                || !prefs.getStringSet("ble_location_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+            sensorName = "BLEBeacon";
+            dataProviderConf.excludedOutputs.add(sensorName);
+            sensorName = "BLEBeaconLocation";
+            dataProviderConf.excludedOutputs.add(sensorName);
+            sensorName = "NearestBeacon";
+            dataProviderConf.excludedOutputs.add(sensorName);
+        }
 
         sosConf.dataProviders.add(dataProviderConf);
     }
 
-    protected void addSosTConfig(SensorConfig sensorConf, String sosUser, String sosPwd)
-    {
+    protected void addSosTConfig(SensorConfig sensorConf, String sosUser, String sosPwd) {
         if (sosUrl == null)
             return;
 
@@ -771,28 +735,23 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.connection.usePersistentConnection = true;
         sosConfig.connection.reconnectAttempts = 9;
 
-        if (sensorConf instanceof AndroidSensorsConfig)
-        {
+        if (sensorConf instanceof AndroidSensorsConfig) {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-            SensorManager sensorManager = (SensorManager)getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
+            SensorManager sensorManager = (SensorManager) getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
             List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
             String sensorName;
-            for (Sensor sensor: deviceSensors)
-            {
-                if (sensor.isWakeUpSensor())
-                {
+            for (Sensor sensor : deviceSensors) {
+                if (sensor.isWakeUpSensor()) {
                     continue;
                 }
 
                 Log.d(TAG, "addSosTConfig: sensor: " + sensor.getName());
 
-                switch (sensor.getType())
-                {
+                switch (sensor.getType()) {
                     case Sensor.TYPE_ACCELEROMETER:
                         if (!prefs.getBoolean("accelerometer_enable", false)
-                            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-                        {
+                                || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH_REMOTE")) {
 
                             Log.d(TAG, "addSosTConfig: excluding accelerometer");
 
@@ -804,8 +763,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         break;
                     case Sensor.TYPE_GYROSCOPE:
                         if (!prefs.getBoolean("gyroscope_enable", false)
-                            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-                        {
+                                || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH_REMOTE")) {
 
                             Log.d(TAG, "addSosTConfig: excluding gyroscope");
 
@@ -817,8 +775,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         break;
                     case Sensor.TYPE_MAGNETIC_FIELD:
                         if (!prefs.getBoolean("magnetometer_enable", false)
-                            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-                        {
+                                || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH_REMOTE")) {
 
                             Log.d(TAG, "addSosTConfig: excluding magnetometer");
 
@@ -830,8 +787,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         break;
                     case Sensor.TYPE_ROTATION_VECTOR:
                         if (!prefs.getBoolean("orientation_enable", false)
-                            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-                        {
+                                || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH_REMOTE")) {
 
                             Log.d(TAG, "addSosTConfig: excluding orientation");
 
@@ -848,8 +804,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 }
             }
             if (!prefs.getBoolean("location_enable", false)
-                || !prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-            {
+                    || !prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH_REMOTE")) {
 
                 Log.d(TAG, "addSosTConfig: excluding location");
 
@@ -861,8 +816,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 Log.d(TAG, "addSosTConfig: NOT excluding location");
             }
             if (!prefs.getBoolean("video_enable", false)
-                || !prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH_REMOTE"))
-            {
+                    || !prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH_REMOTE")) {
 
                 Log.d(TAG, "addSosTConfig: excluding video");
 
@@ -873,6 +827,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             } else {
                 Log.d(TAG, "addSosTConfig: NOT excluding video");
             }
+            if (!prefs.getBoolean("ble_enable", false)
+                    || !prefs.getStringSet("ble_location_options", Collections.emptySet()).contains("PUSH_REMOTE")){
+                sensorName = "BLEBeacon";
+                sosConfig.excludedOutputs.add(sensorName);
+                sensorName = "BLEBeaconLocation";
+                sosConfig.excludedOutputs.add(sensorName);
+                sensorName = "NearestBeacon";
+                sosConfig.excludedOutputs.add(sensorName);
+            }
         }
 
         sensorhubConfig.add(sosConfig);
@@ -881,8 +844,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
     @SuppressLint("HandlerLeak")
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate: Should appear in logs");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textArea = (TextView) findViewById(R.id.text);
@@ -899,25 +862,23 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         displayHandler = new Handler(Looper.getMainLooper());
 
         setupBroadcastReceivers();
+
+
     }
 
 
     private void setupBroadcastReceivers() {
-        BroadcastReceiver receiver = new BroadcastReceiver()
-        {
+        BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override
-            public void onReceive(Context context, Intent intent)
-            {
+            public void onReceive(Context context, Intent intent) {
                 String origin = intent.getStringExtra("src");
-                if (!context.getPackageName().equalsIgnoreCase(origin))
-                {
+                if (!context.getPackageName().equalsIgnoreCase(origin)) {
                     String sosEndpointUrl = intent.getStringExtra("sosEndpointUrl");
                     String name = intent.getStringExtra("name");
                     String sensorId = intent.getStringExtra("sensorId");
                     ArrayList<String> properties = intent.getStringArrayListExtra("properties");
 
-                    if (sosEndpointUrl== null || name == null || sensorId == null || properties.size() == 0)
-                    {
+                    if (sosEndpointUrl == null || name == null || sensorId == null || properties.size() == 0) {
                         return;
                     }
 
@@ -958,33 +919,26 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
+    public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
+    public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings)
-        {
+        if (id == R.id.action_settings) {
             startActivity(new Intent(this, UserSettingsActivity.class));
             return true;
-        }
-        else if (id == R.id.action_start)
-        {
+        } else if (id == R.id.action_start) {
             if (boundService != null && boundService.getSensorHub() == null)
                 showRunNamePopup();
             return true;
-        }
-        else if (id == R.id.action_stop)
-        {
+        } else if (id == R.id.action_stop) {
             stopListeningForEvents();
             stopRefreshingStatus();
             sostClients.clear();
@@ -995,16 +949,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             newStatusMessage("SensorHub Stopped");
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             return true;
-        }
-        else if (id == R.id.action_about)
-        {
+        } else if (id == R.id.action_about) {
             showAboutPopup();
-        }
-        else if (id == R.id.action_proxy)
-        {
+        } else if (id == R.id.action_proxy) {
             testProxyBroadcast();
-        }
-        else if(id == R.id.action_stop_proxy){
+        } else if (id == R.id.action_stop_proxy) {
             testStopProxyBroadcast();
         }
         else if(id == R.id.action_report) {
@@ -1016,8 +965,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     }
 
 
-    protected void showRunNamePopup()
-    {
+    protected void showRunNamePopup() {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
         alert.setTitle("Run Name");
@@ -1030,10 +978,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         input.getText().append(formatter.format(new Date()));
         alert.setView(input);
 
-        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener()
-        {
-            public void onClick(DialogInterface dialog, int whichButton)
-            {
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 runName = input.getText().toString();
                 newStatusMessage("Starting SensorHub...");
@@ -1056,17 +1002,13 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     }
 
 
-    protected void showAboutPopup()
-    {
+    protected void showAboutPopup() {
         String version = "?";
 
-        try
-        {
+        try {
             PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);
             version = pInfo.versionName;
-        }
-        catch (PackageManager.NameNotFoundException e)
-        {
+        } catch (PackageManager.NameNotFoundException e) {
         }
 
         String message = "A software platform for building smart sensor networks and the Internet of Things\n\n";
@@ -1080,8 +1022,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     }
 
 
-    protected void testProxyBroadcast()
-    {
+    protected void testProxyBroadcast() {
         ArrayList<String> testProperties = new ArrayList<String>();
         testProperties.add("http://sensorml.com/ont/swe/property/Acceleration");
         testProperties.add("http://sensorml.com/ont/swe/property/MagneticField");
@@ -1097,32 +1038,27 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sendBroadcast(testIntent);
     }
 
-    protected void testStopProxyBroadcast(){
+    protected void testStopProxyBroadcast() {
         Intent testIntent = new Intent();
         testIntent.setAction("org.sofwerx.ogc.ACTION_PROXY");
         sendBroadcast(testIntent);
     }
 
     @Override
-    public void handleEvent(Event<?> e)
-    {
-        if (e instanceof ModuleEvent)
-        {
+    public void handleEvent(Event<?> e) {
+        if (e instanceof ModuleEvent) {
             // start refreshing status on first module loaded
-            if (!oshStarted && ((ModuleEvent) e).getType() == ModuleEvent.Type.LOADED)
-            {
+            if (!oshStarted && ((ModuleEvent) e).getType() == ModuleEvent.Type.LOADED) {
                 oshStarted = true;
                 startRefreshingStatus();
                 return;
             }
 
             // detect when SOS-T modules are connected
-            else if (e.getSource() instanceof SOSTClient && ((ModuleEvent)e).getType() == ModuleEvent.Type.STATE_CHANGED)
-            {
-                switch (((ModuleEvent)e).getNewState())
-                {
+            else if (e.getSource() instanceof SOSTClient && ((ModuleEvent) e).getType() == ModuleEvent.Type.STATE_CHANGED) {
+                switch (((ModuleEvent) e).getNewState()) {
                     case INITIALIZING:
-                        sostClients.add((SOSTClient)e.getSource());
+                        sostClients.add((SOSTClient) e.getSource());
                         break;
                 }
             }
@@ -1130,16 +1066,13 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     }
 
 
-    protected void startRefreshingStatus()
-    {
+    protected void startRefreshingStatus() {
         if (displayCallback != null)
             return;
 
         // handler to display async messages in UI
-        displayCallback = new Runnable()
-        {
-            public void run()
-            {
+        displayCallback = new Runnable() {
+            public void run() {
                 displayStatus();
                 textArea.setText(Html.fromHtml(displayText.toString()));
                 displayHandler.postDelayed(this, 1000);
@@ -1150,34 +1083,28 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     }
 
 
-    protected void stopRefreshingStatus()
-    {
-        if (displayCallback != null)
-        {
+    protected void stopRefreshingStatus() {
+        if (displayCallback != null) {
             displayHandler.removeCallbacks(displayCallback);
             displayCallback = null;
         }
     }
 
 
-    protected synchronized void displayStatus()
-    {
+    protected synchronized void displayStatus() {
         displayText.setLength(0);
 
         // first display error messages if any
-        for (SOSTClient client: sostClients)
-        {
+        for (SOSTClient client : sostClients) {
             Map<ISensorDataInterface, StreamInfo> dataStreams = client.getDataStreams();
             boolean showError = (client.getCurrentError() != null);
             boolean showMsg = (dataStreams.size() == 0) && (client.getStatusMessage() != null);
 
-            if (showError || showMsg)
-            {
+            if (showError || showMsg) {
                 displayText.append("<p>" + client.getName() + ":<br/>");
                 if (showMsg)
                     displayText.append(client.getStatusMessage() + "<br/>");
-                if (showError)
-                {
+                if (showError) {
                     Throwable errorObj = client.getCurrentError();
                     String errorMsg = errorObj.getMessage().trim();
                     if (!errorMsg.endsWith("."))
@@ -1192,13 +1119,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // then display streams status
         displayText.append("<p>");
-        for (SOSTClient client: sostClients)
-        {
+        for (SOSTClient client : sostClients) {
             Map<ISensorDataInterface, StreamInfo> dataStreams = client.getDataStreams();
             long now = System.currentTimeMillis();
 
-            for (Entry<ISensorDataInterface, StreamInfo> stream : dataStreams.entrySet())
-            {
+            for (Entry<ISensorDataInterface, StreamInfo> stream : dataStreams.entrySet()) {
                 displayText.append("<b>" + stream.getKey().getName() + " : </b>");
 
                 long lastEventTime = stream.getValue().lastEventTime;
@@ -1210,8 +1135,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 else
                     displayText.append("<font color='green'>OK (" + dt + "ms ago)</font>");
 
-                if (stream.getValue().errorCount > 0)
-                {
+                if (stream.getValue().errorCount > 0) {
                     displayText.append("<font color='red'> (");
                     displayText.append(stream.getValue().errorCount);
                     displayText.append(")</font>");
@@ -1222,34 +1146,29 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
 
         if (displayText.length() > 5)
-            displayText.setLength(displayText.length()-5); // remove last </br>
+            displayText.setLength(displayText.length() - 5); // remove last </br>
         displayText.append("</p>");
     }
 
 
-    protected synchronized void newStatusMessage(String msg)
-    {
+    protected synchronized void newStatusMessage(String msg) {
         displayText.setLength(0);
         appendStatusMessage(msg);
     }
 
 
-    protected synchronized void appendStatusMessage(String msg)
-    {
+    protected synchronized void appendStatusMessage(String msg) {
         displayText.append(msg);
 
-        displayHandler.post(new Runnable()
-        {
-            public void run()
-            {
+        displayHandler.post(new Runnable() {
+            public void run() {
                 textArea.setText(displayText.toString());
             }
         });
     }
 
 
-    protected void startListeningForEvents()
-    {
+    protected void startListeningForEvents() {
         if (boundService == null || boundService.getSensorHub() == null)
             return;
 
@@ -1257,8 +1176,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     }
 
 
-    protected void stopListeningForEvents()
-    {
+    protected void stopListeningForEvents() {
         if (boundService == null || boundService.getSensorHub() == null)
             return;
 
@@ -1266,10 +1184,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     }
 
 
-    protected void showVideo()
-    {
-        if (boundService.getVideoTexture() != null)
-        {
+    protected void showVideo() {
+        // TODO: need to force bound service's creation before this get's called in the future.
+        if (boundService != null && boundService.getVideoTexture() != null) {
             TextureView textureView = (TextureView) findViewById(R.id.video);
             if (textureView.getSurfaceTexture() != boundService.getVideoTexture())
                 textureView.setSurfaceTexture(boundService.getVideoTexture());
@@ -1277,28 +1194,24 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     }
 
 
-    protected void hideVideo()
-    {
+    protected void hideVideo() {
     }
 
 
     @Override
-    protected void onStart()
-    {
+    protected void onStart() {
         super.onStart();
     }
 
 
     @Override
-    protected void onResume()
-    {
+    protected void onResume() {
         super.onResume();
 
         TextureView textureView = (TextureView) findViewById(R.id.video);
         textureView.setSurfaceTextureListener(this);
 
-        if (oshStarted)
-        {
+        if (oshStarted) {
             startListeningForEvents();
             startRefreshingStatus();
 
@@ -1309,8 +1222,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
 
     @Override
-    protected void onPause()
-    {
+    protected void onPause() {
         stopListeningForEvents();
         stopRefreshingStatus();
         hideVideo();
@@ -1319,8 +1231,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
 
     @Override
-    protected void onStop()
-    {
+    protected void onStop() {
         stopListeningForEvents();
         stopRefreshingStatus();
         super.onStop();
@@ -1328,35 +1239,30 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
 
     @Override
-    protected void onDestroy()
-    {
+    protected void onDestroy() {
         stopService(new Intent(this, SensorHubService.class));
         super.onDestroy();
     }
 
 
     @Override
-    public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1)
-    {
+    public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1) {
         showVideo();
     }
 
 
     @Override
-    public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i1)
-    {
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i1) {
     }
 
 
     @Override
-    public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture)
-    {
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
         return false;
     }
 
 
     @Override
-    public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture)
-    {
+    public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
     }
 }

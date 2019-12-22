@@ -1,5 +1,5 @@
 ext.oshCoreVersion = '1.3.3'
-ext.compileSdkVersion = 26
+ext.compileSdkVersion = 28
 ext.minSdkVersion = 26
 ext.targetSdkVersion = 26
 ext.buildToolsVersion = "28.0.3"
