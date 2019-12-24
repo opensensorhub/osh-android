@@ -67,17 +67,12 @@
 
     <string-array name="spot_report_feature_type_list">
         <item>Select Reporting Item</item>
-        <item>Vulnerable Person</item>
-        <item>Traffic Accident</item>
-        <item>Tree Down</item>
-        <item>Fire</item>
+        <item>Street Closure</item>
         <item>Flooding</item>
-        <item>Power Line Down</item>
-        <item>Power Outage</item>
-        <item>Medical Emergency</item>
-        <item>Suspicious Activity</item>
+        <item>Medical</item>
+        <item>Aid</item>
+        <item>Track</item>
     </string-array>
-
 
     <string-array name="ble_location_method_list">
         <item>Nearest Beacon</item>
@@ -104,5 +99,48 @@
     <string name="spot_reset_image_button"> RESET </string>
     <string name="spot_submit_report_button">SUBMIT REPORT</string>
     <string name="spot_name_description">A name for the report</string>
+
+    <string name="spot_report_radius">Radius:</string>
+    <string name="spot_report_latitude">Latitude:</string>
+    <string name="spot_report_longitude">Longitude:</string>
+    <string name="spot_report_ft">Ft.</string>
+
+    <string-array name="spot_report_closure_type">
+        <item>Select...</item>
+        <item>Public</item>
+        <item>All</item>
+    </string-array>
+
+    <string-array name="spot_report_closure_action">
+        <item>Select...</item>
+        <item>Close</item>
+        <item>Open</item>
+    </string-array>
+
+    <string name="spot_report_closure_action">Action:</string>
+    <string name="spot_report_closure_type">Type:</string>
+    <string name="spot_report_closure_reference">Ref. Id:</string>
+
+    <string-array name="spot_report_flood_feature_type">
+        <item>Select...</item>
+        <item>Channel Drainage</item>
+        <item>Land Surface</item>
+    </string-array>
+
+    <string-array name="spot_report_observation_modes">
+        <item>Select...</item>
+        <item>Meter</item>
+        <item>Visual</item>
+        <item>Model</item>
+    </string-array>
+
+    <string name="spot_report_flood_feature">Feature Type:</string>
+    <string name="spot_report_depth">Depth:</string>
+    <string name="spot_report_observation_mode">Obs. Mode:</string>
+
+    <string name="spot_report_med_sign">Describe Medical Condition...</string>
+    <string name="spot_report_med_value">Enter measurement (BP, Temp, etc.)...</string>
+    <string name="spot_report_med_emergency">Emergency (T/F)</string>
+
 
 </resources>

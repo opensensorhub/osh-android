@@ -28,9 +28,6 @@ import org.vast.sensorML.SMLStaxBindings;
 
 import android.provider.Settings.Secure;
 
-import java.util.List;
-
-
 /**
  * <p>
  * Main driver class for Android Spot Reports
