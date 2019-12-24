@@ -52,7 +52,7 @@ public class SpotReportActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_recon);
+        setContentView(R.layout.activity_spot_report);
 
         imageView = findViewById(R.id.imageView);
 

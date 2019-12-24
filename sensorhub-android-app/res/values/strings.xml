@@ -142,5 +142,28 @@
     <string name="spot_report_med_value">Enter measurement (BP, Temp, etc.)...</string>
     <string name="spot_report_med_emergency">Emergency (T/F)</string>
 
+    <string-array name="spot_report_aid_types">
+        <item>Select...</item>
+        <item>Environment</item>
+        <item>Health</item>
+        <item>Safety</item>
+        <item>Services</item>
+    </string-array>
+
+    <string-array name="spot_report_aid_urgency_value">
+        <item>Select...</item>
+        <item>5</item>
+        <item>4</item>
+        <item>3</item>
+        <item>2</item>
+        <item>1</item>
+    </string-array>
+
+    <string name="spot_report_aid_type">Aid Type:</string>
+    <string name="spot_report_aid_num"># Persons:</string>
+    <string name="spot_report_aid_urgency">Urgency:</string>
+    <string name="spot_report_aid_description">Describe aid needed...</string>
+    <string name="spot_report_aid_reporter">Enter your name or id</string>
+
 
 </resources>

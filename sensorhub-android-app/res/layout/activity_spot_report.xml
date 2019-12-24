@@ -51,6 +51,8 @@
                 android:id="@+id/scLatLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/scLatitude"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_latitude" />
 
             <EditText
@@ -58,12 +60,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="8"
+                android:importantForAutofill="no"
                 android:inputType="numberDecimal" />
 
             <TextView
                 android:id="@+id/scLonLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/scLongitude"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_longitude" />
 
             <EditText
@@ -71,6 +76,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="8"
+                android:importantForAutofill="no"
                 android:inputType="numberDecimal" />
         </LinearLayout>
 
@@ -84,20 +90,24 @@
                 android:id="@+id/scRadiusLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/scRadiusNum"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_radius" />
 
             <EditText
                 android:id="@+id/scRadiusNum"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="0"
                 android:ems="3"
+                android:importantForAutofill="no"
                 android:inputType="number" />
 
             <TextView
                 android:id="@+id/scFeetLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/scRadiusValue"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_ft" />
 
             <SeekBar
@@ -121,13 +131,13 @@
                 android:id="@+id/closureTypeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_closure_type" />
 
             <Spinner
                 android:id="@+id/closureType"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="20"
                 android:entries="@array/spot_report_closure_type" />
         </LinearLayout>
 
@@ -141,13 +151,13 @@
                 android:id="@+id/closureActLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_closure_action" />
 
             <Spinner
                 android:id="@+id/closureAction"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="20"
                 android:entries="@array/spot_report_closure_action" />
         </LinearLayout>
 
@@ -161,13 +171,13 @@
                 android:id="@+id/closureRefLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_closure_reference" />
 
             <Spinner
                 android:id="@+id/closureReference"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="20" />
+                android:layout_height="wrap_content" />
         </LinearLayout>
     </LinearLayout>
 
@@ -190,6 +200,8 @@
                 android:id="@+id/floodLatLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/floodLatitude"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_latitude" />
 
             <EditText
@@ -197,12 +209,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="8"
+                android:importantForAutofill="no"
                 android:inputType="numberDecimal" />
 
             <TextView
                 android:id="@+id/floodLonLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/floodLongitude"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_longitude" />
 
             <EditText
@@ -210,6 +225,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="8"
+                android:importantForAutofill="no"
                 android:inputType="numberDecimal" />
         </LinearLayout>
 
@@ -223,6 +239,8 @@
                 android:id="@+id/floodRadiusLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/floodRadiusNum"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_radius" />
 
             <EditText
@@ -230,12 +248,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="3"
+                android:importantForAutofill="no"
                 android:inputType="number" />
 
             <TextView
                 android:id="@+id/floodFeetLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/floodRadiusValue"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_ft" />
 
             <SeekBar
@@ -260,6 +281,8 @@
                 android:id="@+id/floodFeatureTypeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/featureType"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_flood_feature" />
 
             <Spinner
@@ -279,6 +302,8 @@
                 android:id="@+id/floodDepthLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/floodDepthNum"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_depth" />
 
             <EditText
@@ -286,12 +311,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="3"
+                android:importantForAutofill="no"
                 android:inputType="number" />
 
             <TextView
                 android:id="@+id/floodDepthFeetLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/floodDepthValue"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_ft" />
 
             <SeekBar
@@ -315,6 +343,8 @@
                 android:id="@+id/floodObservationModeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/observationMode"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_observation_mode" />
 
             <Spinner
@@ -333,7 +363,7 @@
         android:layout_weight="33"
         android:orientation="vertical"
         android:paddingHorizontal="5dp"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -345,6 +375,8 @@
                 android:id="@+id/medLatLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/medLatitude"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_latitude" />
 
             <EditText
@@ -352,12 +384,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="8"
+                android:importantForAutofill="no"
                 android:inputType="numberDecimal" />
 
             <TextView
                 android:id="@+id/medLonLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/medLongitude"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_longitude" />
 
             <EditText
@@ -365,6 +400,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="8"
+                android:importantForAutofill="no"
                 android:inputType="numberDecimal" />
         </LinearLayout>
 
@@ -378,6 +414,8 @@
                 android:id="@+id/medRadiusLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/medRadiusNum"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_radius" />
 
             <EditText
@@ -385,12 +423,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="3"
+                android:importantForAutofill="no"
                 android:inputType="number" />
 
             <TextView
                 android:id="@+id/medFeetLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/medRadiusValue"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_ft" />
 
             <SeekBar
@@ -416,8 +457,10 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:ems="10"
+                android:hint="@string/spot_report_med_sign"
+                android:importantForAutofill="no"
                 android:inputType="textPersonName"
-                android:text="@string/spot_report_med_sign" />
+                android:labelFor="@id/medValue" />
 
             <EditText
                 android:id="@+id/medValue"
@@ -425,8 +468,9 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:ems="10"
-                android:inputType="textPersonName"
-                android:text="@string/spot_report_med_value" />
+                android:hint="@string/spot_report_med_value"
+                android:importantForAutofill="no"
+                android:inputType="textPersonName" />
 
             <CheckBox
                 android:id="@+id/isEmergency"
@@ -445,7 +489,7 @@
         android:layout_weight="33"
         android:orientation="vertical"
         android:paddingHorizontal="5dp"
-        android:visibility="gone">
+        android:visibility="visible">
 
 
         <LinearLayout
@@ -458,6 +502,8 @@
                 android:id="@+id/aidLatLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/aidLatitude"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_latitude" />
 
             <EditText
@@ -465,12 +511,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="8"
+                android:importantForAutofill="no"
                 android:inputType="numberDecimal" />
 
             <TextView
                 android:id="@+id/aidLonLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/aidLongitude"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_longitude" />
 
             <EditText
@@ -478,6 +527,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="8"
+                android:importantForAutofill="no"
                 android:inputType="numberDecimal" />
         </LinearLayout>
 
@@ -491,6 +541,8 @@
                 android:id="@+id/aidRadiusLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/aidRadiusNum"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_radius" />
 
             <EditText
@@ -498,12 +550,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="3"
+                android:importantForAutofill="no"
                 android:inputType="number" />
 
             <TextView
                 android:id="@+id/aidFeetLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/aidRadiusValue"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_ft" />
 
             <SeekBar
@@ -515,6 +570,92 @@
                 android:max="100"
                 android:min="0"
                 android:progress="3" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="20"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/aidTypeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/aidType"
+                android:paddingHorizontal="5dp"
+                android:text="@string/spot_report_aid_type" />
+
+            <Spinner
+                android:id="@+id/aidType"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/spot_report_aid_types" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="20"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/aidNumLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/aidNum"
+                android:paddingHorizontal="5dp"
+                android:text="@string/spot_report_aid_num" />
+
+            <EditText
+                android:id="@+id/aidNum"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="3"
+                android:importantForAutofill="no"
+                android:inputType="number" />
+
+            <TextView
+                android:id="@+id/aidUrgencyLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/aidUrgency"
+                android:paddingHorizontal="5dp"
+                android:text="@string/spot_report_aid_urgency" />
+
+            <Spinner
+                android:id="@+id/aidUrgency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/spot_report_aid_urgency_value"
+                android:importantForAutofill="no" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="20"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/aidDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start|top"
+                android:hint="@string/spot_report_aid_description"
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine" />
+
+            <EditText
+                android:id="@+id/aidReporter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="@string/spot_report_aid_reporter"
+                android:importantForAutofill="no"
+                android:inputType="textPersonName" />
         </LinearLayout>
 
     </LinearLayout>
@@ -539,6 +680,7 @@
                 android:id="@+id/trackLatLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_latitude" />
 
             <EditText
@@ -552,6 +694,7 @@
                 android:id="@+id/trackLonLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_longitude" />
 
             <EditText
@@ -572,6 +715,7 @@
                 android:id="@+id/trackConfidenceLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_radius" />
 
             <EditText
@@ -585,6 +729,7 @@
                 android:id="@+id/trackConfidence"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_ft" />
 
             <SeekBar
@@ -615,6 +760,7 @@
             android:layout_height="wrap_content"
             android:contentDescription="@string/spot_name_description"
             android:labelFor="@id/reportName"
+            android:paddingHorizontal="5dp"
             android:text="@string/spot_name_field" />
 
         <EditText
@@ -632,6 +778,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:labelFor="@id/description"
+            android:paddingHorizontal="5dp"
             android:text="@string/spot_description_field" />
 
         <EditText
