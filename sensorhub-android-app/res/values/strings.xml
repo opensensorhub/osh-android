@@ -101,8 +101,8 @@
     <string name="spot_name_description">A name for the report</string>
 
     <string name="spot_report_radius">Radius:</string>
-    <string name="spot_report_latitude">Latitude:</string>
-    <string name="spot_report_longitude">Longitude:</string>
+    <string name="spot_report_latitude">Lat:</string>
+    <string name="spot_report_longitude">Lon:</string>
     <string name="spot_report_ft">Ft.</string>
 
     <string-array name="spot_report_closure_type">
