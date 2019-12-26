@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.icu.text.SimpleDateFormat;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -16,6 +18,7 @@ import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
@@ -48,6 +51,8 @@ public class SpotReportActivity extends Activity {
 
     private SubmitRequestResultReceiver submitRequestResultReceiver;
 
+    private ReportTypeListener reportTypeListener = new ReportTypeListener(this);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -63,6 +68,10 @@ public class SpotReportActivity extends Activity {
         submitReportButton.setOnClickListener((View view)-> onSubmitReport());
 
         submitRequestResultReceiver = new SubmitRequestResultReceiver(this, new Handler());
+
+        Spinner spinner = findViewById(R.id.reportType);
+
+        spinner.setOnItemSelectedListener(reportTypeListener);
     }
 
     @Override
@@ -204,6 +213,112 @@ public class SpotReportActivity extends Activity {
         imageView.setImageBitmap(imageBitmap);
     }
 
+    /**
+     *
+     */
+    private class ReportTypeListener implements AdapterView.OnItemSelectedListener {
+
+        private boolean layoutSwitched = false;
+
+        Activity parent;
+
+        ReportTypeListener(Activity parent) {
+
+            this.parent = parent;
+        }
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+        {
+            if (!layoutSwitched) {
+
+                String selectedItem = parent.getItemAtPosition(position).toString();
+
+                int contentViewId = 0;
+                int latId = 0;
+                int lonId = 0;
+
+                if (selectedItem.equalsIgnoreCase("Street Closure")) {
+
+                    contentViewId = R.layout.spot_report_streetclosure;
+                    latId = R.id.scLatitude;
+                    lonId = R.id.scLongitude;
+                    layoutSwitched = true;
+
+                } else if (selectedItem.equalsIgnoreCase("Flooding")) {
+
+                    contentViewId = R.layout.spot_report_flooding;
+                    latId = R.id.floodLatitude;
+                    lonId = R.id.floodLongitude;
+                    layoutSwitched = true;
+
+                } else if (selectedItem.equalsIgnoreCase("Medical")) {
+
+                    contentViewId = R.layout.spot_report_medical;
+                    latId = R.id.medLatitude;
+                    lonId = R.id.medLongitude;
+                    layoutSwitched = true;
+
+                } else if (selectedItem.equalsIgnoreCase("Aid")) {
+
+                    contentViewId = R.layout.spot_report_aid;
+                    latId = R.id.aidLatitude;
+                    lonId = R.id.aidLongitude;
+                    layoutSwitched = true;
+
+                } else if (selectedItem.equalsIgnoreCase("Track")) {
+
+                    contentViewId = R.layout.spot_report_track;
+                    latId = R.id.trackLatitude;
+                    lonId = R.id.trackLongitude;
+                    layoutSwitched = true;
+                }
+
+                if(layoutSwitched) {
+
+                    setContentView(contentViewId);
+
+                    LocationManager locationManager = (LocationManager) this.parent.getSystemService(LOCATION_SERVICE);
+
+                    String locationSource = ((Spinner)findViewById(R.id.locationSource)).getSelectedItem().toString();
+
+                    Location location = null;
+
+                    if(locationSource.equalsIgnoreCase("GPS")) {
+
+                        location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+                    } else if (locationSource.equalsIgnoreCase("Network")) {
+
+                        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    }
+
+                    if (null != location) {
+
+                        ((TextView) findViewById(latId)).setText("" + location.getLatitude());
+                        ((TextView) findViewById(lonId)).setText("" + location.getLongitude());
+                    }
+                }
+
+                ((Spinner) findViewById(R.id.reportType)).setSelection(position);
+                ((Spinner) findViewById(R.id.reportType)).setOnItemSelectedListener(this);
+            }
+            else {
+
+                layoutSwitched = false;
+            }
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent)
+        {
+
+        }
+    }
+
+    /**
+     *
+     */
     private class SubmitRequestResultReceiver extends ResultReceiver {
 
         SpotReportActivity activity;

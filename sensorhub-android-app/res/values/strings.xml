@@ -182,6 +182,8 @@
         <item>N/A</item>
     </string-array>
 
+    <string name="spot_report_track_resource_label">Tracking Resource:</string>
+    <string name="spot_report_track_method_label">Tracking Method:</string>
     <string name="spot_report_track_id">Enter resource id</string>
     <string name="spot_report_track_label">Enter resource label</string>
 

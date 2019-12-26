@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".SpotReportActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="20"
+        android:gravity="top"
+        android:orientation="vertical">
+
+        <Spinner
+            android:id="@+id/locationSource"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_weight="50"
+            android:entries="@array/spot_report_location_source_list" />
+
+        <Spinner
+            android:id="@+id/reportType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_weight="50"
+            android:entries="@array/spot_report_feature_type_list"
+            android:visibility="visible" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/streetClosureLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="78"
+        android:orientation="vertical"
+        android:paddingHorizontal="5dp"
+        android:visibility="visible">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/scLatLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/scLatitude"
+                android:paddingHorizontal="5dp"
+                android:text="@string/spot_report_latitude" />
+
+            <EditText
+                android:id="@+id/scLatitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="8"
+                android:importantForAutofill="no"
+                android:inputType="numberDecimal" />
+
+            <TextView
+                android:id="@+id/scLonLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/scLongitude"
+                android:paddingHorizontal="5dp"
+                android:text="@string/spot_report_longitude" />
+
+            <EditText
+                android:id="@+id/scLongitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="8"
+                android:importantForAutofill="no"
+                android:inputType="numberDecimal" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/scRadiusLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/scRadiusNum"
+                android:paddingHorizontal="5dp"
+                android:text="@string/spot_report_radius" />
+
+            <EditText
+                android:id="@+id/scRadiusNum"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="3"
+                android:importantForAutofill="no"
+                android:inputType="number" />
+
+            <TextView
+                android:id="@+id/scFeetLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/scRadiusValue"
+                android:paddingHorizontal="5dp"
+                android:text="@string/spot_report_ft" />
+
+            <SeekBar
+                android:id="@+id/scRadiusValue"
+                style="@android:style/Widget.Material.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:max="100"
+                android:min="0"
+                android:progress="5" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/closureTypeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="5dp"
+                android:text="@string/spot_report_closure_type" />
+
+            <Spinner
+                android:id="@+id/closureType"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/spot_report_closure_type" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/closureActLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="5dp"
+                android:text="@string/spot_report_closure_action" />
+
+            <Spinner
+                android:id="@+id/closureAction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/spot_report_closure_action" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/closureRefLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="5dp"
+                android:text="@string/spot_report_closure_reference" />
+
+            <Spinner
+                android:id="@+id/closureReference"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:orientation="horizontal"
+        android:paddingHorizontal="5dp">
+
+        <Button
+            android:id="@+id/submitReport"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|top"
+            android:text="@string/spot_submit_report_button"
+            android:textAlignment="center" />
+    </LinearLayout>
+
+</LinearLayout>
