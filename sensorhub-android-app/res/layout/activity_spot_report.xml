@@ -10,7 +10,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="33"
+        android:layout_weight="20"
         android:gravity="top"
         android:orientation="vertical">
 
@@ -33,10 +33,17 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/emptyLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="78"
+        android:orientation="vertical"></LinearLayout>
+
+    <LinearLayout
         android:id="@+id/streetClosureLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="33"
+        android:layout_weight="78"
         android:orientation="vertical"
         android:paddingHorizontal="5dp"
         android:visibility="gone">
@@ -44,7 +51,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -83,7 +91,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -115,7 +124,7 @@
                 style="@android:style/Widget.Material.SeekBar.Discrete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|center_vertical"
+                android:layout_gravity="center_vertical"
                 android:max="100"
                 android:min="0"
                 android:progress="5" />
@@ -124,7 +133,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -144,7 +154,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -164,7 +175,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -185,7 +197,7 @@
         android:id="@+id/floodingLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="33"
+        android:layout_weight="78"
         android:orientation="vertical"
         android:paddingHorizontal="5dp"
         android:visibility="gone">
@@ -193,7 +205,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -232,7 +245,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -264,7 +278,7 @@
                 style="@android:style/Widget.Material.SeekBar.Discrete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|center_vertical"
+                android:layout_gravity="center_vertical"
                 android:max="100"
                 android:min="0"
                 android:progress="3" />
@@ -274,7 +288,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -295,7 +310,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -327,7 +343,7 @@
                 style="@android:style/Widget.Material.SeekBar.Discrete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|center_vertical"
+                android:layout_gravity="center_vertical"
                 android:max="100"
                 android:min="0"
                 android:progress="3" />
@@ -336,7 +352,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -360,7 +377,7 @@
         android:id="@+id/medicalLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="33"
+        android:layout_weight="78"
         android:orientation="vertical"
         android:paddingHorizontal="5dp"
         android:visibility="gone">
@@ -368,7 +385,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -407,7 +425,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -439,7 +458,7 @@
                 style="@android:style/Widget.Material.SeekBar.Discrete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|center_vertical"
+                android:layout_gravity="center_vertical"
                 android:max="100"
                 android:min="0"
                 android:progress="3" />
@@ -448,7 +467,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="60"
+            android:layout_weight="1"
             android:orientation="vertical">
 
             <EditText
@@ -486,16 +505,17 @@
         android:id="@+id/aidLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="33"
+        android:layout_weight="78"
         android:orientation="vertical"
         android:paddingHorizontal="5dp"
-        android:visibility="visible">
+        android:visibility="gone">
 
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -534,7 +554,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -566,7 +587,7 @@
                 style="@android:style/Widget.Material.SeekBar.Discrete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|center_vertical"
+                android:layout_gravity="center_vertical"
                 android:max="100"
                 android:min="0"
                 android:progress="3" />
@@ -576,7 +597,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -597,7 +619,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -636,13 +659,14 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
             android:orientation="vertical">
 
             <EditText
                 android:id="@+id/aidDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:gravity="start|top"
                 android:hint="@string/spot_report_aid_description"
                 android:importantForAutofill="no"
@@ -652,6 +676,7 @@
                 android:id="@+id/aidReporter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:ems="10"
                 android:hint="@string/spot_report_aid_reporter"
                 android:importantForAutofill="no"
@@ -664,22 +689,23 @@
         android:id="@+id/trackLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="33"
+        android:layout_weight="78"
         android:orientation="vertical"
         android:paddingHorizontal="5dp"
         android:visibility="gone">
 
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/trackLatLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/trackLatitude"
                 android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_latitude" />
 
@@ -688,12 +714,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="8"
+                android:importantForAutofill="no"
                 android:inputType="numberDecimal" />
 
             <TextView
                 android:id="@+id/trackLonLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/trackLongitude"
                 android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_longitude" />
 
@@ -702,19 +730,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="8"
+                android:importantForAutofill="no"
                 android:inputType="numberDecimal" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="20"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/trackConfidenceLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/trackConfidenceNum"
                 android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_radius" />
 
@@ -723,12 +754,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="3"
+                android:importantForAutofill="no"
                 android:inputType="number" />
 
             <TextView
                 android:id="@+id/trackConfidence"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:labelFor="@id/trackConfidenceValue"
                 android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_ft" />
 
@@ -737,12 +770,51 @@
                 style="@android:style/Widget.Material.SeekBar.Discrete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|center_vertical"
+                android:layout_gravity="center_vertical"
                 android:max="100"
                 android:min="0"
                 android:progress="3" />
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <Spinner
+                android:id="@+id/trackedResource"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:entries="@array/spot_report_tracked_resource" />
+
+            <EditText
+                android:id="@+id/trackResourceId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/spot_report_track_id"
+                android:importantForAutofill="no"
+                android:inputType="text" />
+
+            <EditText
+                android:id="@+id/trackLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/spot_report_track_label"
+                android:importantForAutofill="no"
+                android:inputType="text" />
+
+            <Spinner
+                android:id="@+id/trackedMethod"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:entries="@array/spot_report_tracked_method" />
+
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -808,7 +880,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="33"
+        android:layout_weight="2"
         android:orientation="horizontal"
         android:paddingHorizontal="5dp">
 

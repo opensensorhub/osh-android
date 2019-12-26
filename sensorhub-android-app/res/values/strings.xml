@@ -165,5 +165,24 @@
     <string name="spot_report_aid_description">Describe aid needed...</string>
     <string name="spot_report_aid_reporter">Enter your name or id</string>
 
+    <string-array name="spot_report_tracked_resource">
+        <item>Select...</item>
+        <item>Person</item>
+        <item>Vehicle</item>
+        <item>Device</item>
+    </string-array>
+
+    <string-array name="spot_report_tracked_method">
+        <item>Select...</item>
+        <item>GPS</item>
+        <item>BlueTooth Beacon</item>
+        <item>WiFi</item>
+        <item>Cellular</item>
+        <item>UWB</item>
+        <item>N/A</item>
+    </string-array>
+
+    <string name="spot_report_track_id">Enter resource id</string>
+    <string name="spot_report_track_label">Enter resource label</string>
 
 </resources>
