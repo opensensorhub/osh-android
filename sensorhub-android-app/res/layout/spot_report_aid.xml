@@ -121,7 +121,7 @@
                 android:layout_gravity="center_vertical"
                 android:max="100"
                 android:min="0"
-                android:progress="3" />
+                android:progress="1" />
         </LinearLayout>
 
 

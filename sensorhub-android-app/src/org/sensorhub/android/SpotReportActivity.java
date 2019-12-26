@@ -20,7 +20,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -58,11 +60,6 @@ public class SpotReportActivity extends Activity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_spot_report);
-
-        imageView = findViewById(R.id.imageView);
-
-        Button captureImageButton = findViewById(R.id.captureImage);
-        captureImageButton.setOnClickListener((View view)-> dispatchTakePictureIntent());
 
         Button submitReportButton = findViewById(R.id.submitReport);
         submitReportButton.setOnClickListener((View view)-> onSubmitReport());
@@ -210,7 +207,68 @@ public class SpotReportActivity extends Activity {
 
         super.onConfigurationChanged(newConfig);
 
-        imageView.setImageBitmap(imageBitmap);
+        if (null != imageView) {
+
+            imageView.setImageBitmap(imageBitmap);
+        }
+    }
+
+    /**
+     *
+     */
+    private class LocationTypeListener implements AdapterView.OnItemSelectedListener {
+
+        private int latId;
+        private int lonId;
+
+        Activity parent;
+
+        LocationTypeListener(Activity parent, int latId, int lonId) {
+
+            this.parent = parent;
+            this.latId = latId;
+            this.lonId = lonId;
+        }
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+        {
+            Location location = null;
+
+            String selectedItem = parent.getItemAtPosition(position).toString();
+
+            LocationManager locationManager = (LocationManager) this.parent.getSystemService(LOCATION_SERVICE);
+
+            if (selectedItem.equalsIgnoreCase("GPS")) {
+
+                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+            } else if (selectedItem.equalsIgnoreCase("Network")) {
+
+                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            }
+
+            if (null != location) {
+
+                if(latId != 0) {
+
+                    ((TextView) findViewById(latId)).setText(
+                            String.format(Locale.ENGLISH, "%f", location.getLatitude()));
+                }
+
+                if(lonId != 0) {
+
+                    ((TextView) findViewById(lonId)).setText(
+                            String.format(Locale.ENGLISH, "%f", location.getLongitude()));
+                }
+            }
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent)
+        {
+
+        }
     }
 
     /**
@@ -227,6 +285,203 @@ public class SpotReportActivity extends Activity {
             this.parent = parent;
         }
 
+        private void initializeAidLayout() {
+
+            setContentView(R.layout.spot_report_aid);
+            EditText text = findViewById(R.id.aidRadiusNum);
+            text.setEnabled(false);
+            text.setText(String.format(Locale.ENGLISH, "%d", 0));
+            findViewById(R.id.aidLatitude).setEnabled(false);
+            findViewById(R.id.aidLongitude).setEnabled(false);
+            ((SeekBar)findViewById(R.id.aidRadiusValue)).setOnSeekBarChangeListener(
+                    new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                            ((EditText)findViewById(R.id.aidRadiusNum)).setText(
+                                    String.format(Locale.ENGLISH, "%d", progress));
+                        }
+
+                        @Override
+                        public void onStartTrackingTouch(SeekBar seekBar) {
+
+                        }
+
+                        @Override
+                        public void onStopTrackingTouch(SeekBar seekBar) {
+
+                        }
+                    }
+            );
+
+            ((Spinner) findViewById(R.id.locationSource)).setOnItemSelectedListener(
+                    new LocationTypeListener(this.parent, R.id.aidLatitude, R.id.aidLongitude));
+        }
+
+        private void initializeMedicalLayout() {
+
+            setContentView(R.layout.spot_report_medical);
+            findViewById(R.id.medLatitude).setEnabled(false);
+            findViewById(R.id.medLongitude).setEnabled(false);
+
+            EditText text = findViewById(R.id.medRadiusNum);
+            text.setEnabled(false);
+            text.setText(String.format(Locale.ENGLISH, "%d", 0));
+            ((SeekBar)findViewById(R.id.medRadiusValue)).setOnSeekBarChangeListener(
+                    new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                            ((EditText)findViewById(R.id.medRadiusNum)).setText(
+                                    String.format(Locale.ENGLISH, "%d", progress));
+                        }
+
+                        @Override
+                        public void onStartTrackingTouch(SeekBar seekBar) {
+
+                        }
+
+                        @Override
+                        public void onStopTrackingTouch(SeekBar seekBar) {
+
+                        }
+                    }
+            );
+
+            ((Spinner) findViewById(R.id.locationSource)).setOnItemSelectedListener(
+                    new LocationTypeListener(this.parent, R.id.medLatitude, R.id.medLongitude));
+        }
+
+        private void initializeFloodLayout() {
+
+            setContentView(R.layout.spot_report_flooding);
+            findViewById(R.id.floodLatitude).setEnabled(false);
+            findViewById(R.id.floodLongitude).setEnabled(false);
+
+            EditText text = findViewById(R.id.floodRadiusNum);
+            text.setEnabled(false);
+            text.setText(String.format(Locale.ENGLISH, "%d", 0));
+            ((SeekBar)findViewById(R.id.floodRadiusValue)).setOnSeekBarChangeListener(
+                    new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                            ((EditText)findViewById(R.id.floodRadiusNum)).setText(
+                                    String.format(Locale.ENGLISH, "%d", progress));
+                        }
+
+                        @Override
+                        public void onStartTrackingTouch(SeekBar seekBar) {
+
+                        }
+
+                        @Override
+                        public void onStopTrackingTouch(SeekBar seekBar) {
+
+                        }
+                    }
+            );
+
+            EditText depthText = findViewById(R.id.floodDepthNum);
+            depthText.setEnabled(false);
+            depthText.setText(String.format(Locale.ENGLISH, "%d", 0));
+            ((SeekBar)findViewById(R.id.floodDepthValue)).setOnSeekBarChangeListener(
+                    new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                            ((EditText)findViewById(R.id.floodDepthNum)).setText(
+                                    String.format(Locale.ENGLISH, "%d", progress));
+                        }
+
+                        @Override
+                        public void onStartTrackingTouch(SeekBar seekBar) {
+
+                        }
+
+                        @Override
+                        public void onStopTrackingTouch(SeekBar seekBar) {
+
+                        }
+                    }
+            );
+
+            ((Spinner) findViewById(R.id.locationSource)).setOnItemSelectedListener(
+                    new LocationTypeListener(this.parent, R.id.floodLatitude, R.id.floodLongitude));
+        }
+
+        private void initializeStreetClosureLayout() {
+
+            setContentView(R.layout.spot_report_streetclosure);
+            findViewById(R.id.scLatitude).setEnabled(false);
+            findViewById(R.id.scLongitude).setEnabled(false);
+
+            EditText text = findViewById(R.id.scRadiusNum);
+            text.setEnabled(false);
+            text.setText(String.format(Locale.ENGLISH, "%d", 0));
+            ((SeekBar)findViewById(R.id.scRadiusValue)).setOnSeekBarChangeListener(
+                    new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                            ((EditText)findViewById(R.id.scRadiusNum)).setText(
+                                    String.format(Locale.ENGLISH, "%d", progress));
+                        }
+
+                        @Override
+                        public void onStartTrackingTouch(SeekBar seekBar) {
+
+                        }
+
+                        @Override
+                        public void onStopTrackingTouch(SeekBar seekBar) {
+
+                        }
+                    }
+            );
+
+            ((Spinner) findViewById(R.id.locationSource)).setOnItemSelectedListener(
+                    new LocationTypeListener(this.parent, R.id.scLatitude, R.id.scLongitude));
+        }
+
+        private void initializeTrackLayout() {
+
+            setContentView(R.layout.spot_report_track);
+            findViewById(R.id.trackLatitude).setEnabled(false);
+            findViewById(R.id.trackLongitude).setEnabled(false);
+
+            EditText text = findViewById(R.id.trackConfidenceNum);
+            text.setEnabled(false);
+            text.setText(String.format(Locale.ENGLISH, "%d", 0));
+            ((SeekBar)findViewById(R.id.trackConfidenceValue)).setOnSeekBarChangeListener(
+                    new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                            ((EditText)findViewById(R.id.trackConfidenceNum)).setText(
+                                    String.format(Locale.ENGLISH, "%d", progress));
+                        }
+
+                        @Override
+                        public void onStartTrackingTouch(SeekBar seekBar) {
+
+                        }
+
+                        @Override
+                        public void onStopTrackingTouch(SeekBar seekBar) {
+
+                        }
+                    }
+            );
+
+            ((Spinner) findViewById(R.id.locationSource)).setOnItemSelectedListener(
+                    new LocationTypeListener(this.parent, R.id.trackLatitude, R.id.trackLongitude));
+        }
+
+        private void initializeImageCaptureLayout() {
+
+            imageView = findViewById(R.id.imageView);
+
+            setContentView(R.layout.spot_report_image_capture);
+
+            Button captureImageButton = findViewById(R.id.captureImage);
+            captureImageButton.setOnClickListener((View v)-> dispatchTakePictureIntent());
+        }
+
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
         {
@@ -234,76 +489,41 @@ public class SpotReportActivity extends Activity {
 
                 String selectedItem = parent.getItemAtPosition(position).toString();
 
-                int contentViewId = 0;
-                int latId = 0;
-                int lonId = 0;
-
                 if (selectedItem.equalsIgnoreCase("Street Closure")) {
 
-                    contentViewId = R.layout.spot_report_streetclosure;
-                    latId = R.id.scLatitude;
-                    lonId = R.id.scLongitude;
+                    initializeStreetClosureLayout();
                     layoutSwitched = true;
 
                 } else if (selectedItem.equalsIgnoreCase("Flooding")) {
 
-                    contentViewId = R.layout.spot_report_flooding;
-                    latId = R.id.floodLatitude;
-                    lonId = R.id.floodLongitude;
+                    initializeFloodLayout();
                     layoutSwitched = true;
 
                 } else if (selectedItem.equalsIgnoreCase("Medical")) {
 
-                    contentViewId = R.layout.spot_report_medical;
-                    latId = R.id.medLatitude;
-                    lonId = R.id.medLongitude;
+                    initializeMedicalLayout();
                     layoutSwitched = true;
 
                 } else if (selectedItem.equalsIgnoreCase("Aid")) {
 
-                    contentViewId = R.layout.spot_report_aid;
-                    latId = R.id.aidLatitude;
-                    lonId = R.id.aidLongitude;
+                    initializeAidLayout();
                     layoutSwitched = true;
 
                 } else if (selectedItem.equalsIgnoreCase("Track")) {
 
-                    contentViewId = R.layout.spot_report_track;
-                    latId = R.id.trackLatitude;
-                    lonId = R.id.trackLongitude;
+                    initializeTrackLayout();
                     layoutSwitched = true;
-                }
 
-                if(layoutSwitched) {
+                } else if(selectedItem.equalsIgnoreCase("Image Capture")) {
 
-                    setContentView(contentViewId);
-
-                    LocationManager locationManager = (LocationManager) this.parent.getSystemService(LOCATION_SERVICE);
-
-                    String locationSource = ((Spinner)findViewById(R.id.locationSource)).getSelectedItem().toString();
-
-                    Location location = null;
-
-                    if(locationSource.equalsIgnoreCase("GPS")) {
-
-                        location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-                    } else if (locationSource.equalsIgnoreCase("Network")) {
-
-                        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                    }
-
-                    if (null != location) {
-
-                        ((TextView) findViewById(latId)).setText("" + location.getLatitude());
-                        ((TextView) findViewById(lonId)).setText("" + location.getLongitude());
-                    }
+                    initializeImageCaptureLayout();
+                    layoutSwitched = true;
                 }
 
                 ((Spinner) findViewById(R.id.reportType)).setSelection(position);
                 ((Spinner) findViewById(R.id.reportType)).setOnItemSelectedListener(this);
-            }
-            else {
+
+            } else {
 
                 layoutSwitched = false;
             }
