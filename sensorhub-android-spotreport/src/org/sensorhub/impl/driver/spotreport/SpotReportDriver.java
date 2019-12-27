@@ -40,11 +40,16 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
 
     // keep logger name short because in LogCat it's max 23 chars
     private static final Logger log = LoggerFactory.getLogger(SpotReportDriver.class.getSimpleName());
-    public static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
+    private static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
 
-    String localFrameURI;
-    SpotReportOutput spotReportOutput;
-        
+    protected String localFrameURI;
+    private SpotReportOutput spotReportOutput;
+    private SpotReportAidOutput spotReportAidOutput;
+    private SpotReportFloodingOutput spotReportFloodingOutput;
+    private SpotReportMedicalOutput spotReportMedicalOutput;
+    private SpotReportStreetClosureOutput spotReportStreetClosureOutput;
+    private SpotReportTrackingOutput spotReportTrackingOutput;
+
     public SpotReportDriver() {
     }
     
@@ -59,19 +64,42 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
         this.xmlID = "SPOT_REPORT_" + deviceID;
         this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
 
-        // create output
+        // create outputs
         spotReportOutput = new SpotReportOutput(this);
         this.addOutput(spotReportOutput, false);
         spotReportOutput.init();
-    }
 
+        spotReportAidOutput = new SpotReportAidOutput(this);
+        this.addOutput(spotReportOutput, false);
+        spotReportOutput.init();
+
+        spotReportFloodingOutput = new SpotReportFloodingOutput(this);
+        this.addOutput(spotReportOutput, false);
+        spotReportOutput.init();
+
+        spotReportMedicalOutput = new SpotReportMedicalOutput(this);
+        this.addOutput(spotReportOutput, false);
+        spotReportOutput.init();
+
+        spotReportStreetClosureOutput = new SpotReportStreetClosureOutput(this);
+        this.addOutput(spotReportOutput, false);
+        spotReportOutput.init();
+
+        spotReportTrackingOutput = new SpotReportTrackingOutput(this);
+        this.addOutput(spotReportOutput, false);
+        spotReportOutput.init();
+    }
 
     @Override
     public void start() throws SensorException {
 
         spotReportOutput.start();
+        spotReportAidOutput.start();
+        spotReportFloodingOutput.start();
+        spotReportMedicalOutput.start();
+        spotReportStreetClosureOutput.start();
+        spotReportTrackingOutput.start();
     }
-    
     
     @Override
     public void stop() throws SensorException {
@@ -80,8 +108,32 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
 
             spotReportOutput.stop();
         }
-    }
 
+        if (spotReportAidOutput != null) {
+
+            spotReportAidOutput.stop();
+        }
+
+        if (spotReportFloodingOutput != null) {
+
+            spotReportFloodingOutput.stop();
+        }
+
+        if (spotReportMedicalOutput != null) {
+
+            spotReportMedicalOutput.stop();
+        }
+
+        if (spotReportStreetClosureOutput != null) {
+
+            spotReportStreetClosureOutput.stop();
+        }
+
+        if (spotReportTrackingOutput != null) {
+
+            spotReportTrackingOutput.stop();
+        }
+    }
 
     @Override
     protected void updateSensorDescription() {
@@ -109,7 +161,6 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
         }
     }
     
-    
     @Override
     public AbstractFeature getCurrentFeatureOfInterest() {
 
@@ -126,12 +177,10 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
         return null;
     }
 
-
     @Override
     public boolean isConnected() {
         return true;
     }
-    
     
     @Override
     public void cleanup() throws SensorHubException {

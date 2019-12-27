@@ -30,6 +30,7 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
@@ -41,12 +42,12 @@ public class SpotReportActivity extends Activity {
     private static final int SUBMIT_REPORT_FAILURE = 0;
     private static final int SUBMIT_REPORT_SUCCESS = 1;
 
-    private static final String ACTION_SUBMIT_REPORT = "org.sensorhub.android.intent.SPOT_REPORT";
-    private static final String DATA_LOC = "location";
-    private static final String DATA_REPORT_NAME = "name";
-    private static final String DATA_REPORT_DESCRIPTION = "description";
-    private static final String DATA_REPORT_CATEGORY = "item";
-    private static final String DATA_REPORT_IMAGE = "image";
+    private static final String ACTION_SUBMIT_AID_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_AID";
+    private static final String ACTION_SUBMIT_FLOODING_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_FLOODING";
+    private static final String ACTION_SUBMIT_IMAGE_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_IMAGE";
+    private static final String ACTION_SUBMIT_MEDICAL_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_MEDICAL";
+    private static final String ACTION_SUBMIT_STREET_CLOSURE_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_STREET_CLOSURE";
+    private static final String ACTION_SUBMIT_TRACK_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_TRACK";
 
     private ImageView imageView;
     private Bitmap imageBitmap = null;
@@ -100,7 +101,7 @@ public class SpotReportActivity extends Activity {
 
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+        if (null != takePictureIntent.resolveActivity(getPackageManager())) {
 
             try {
 
@@ -262,52 +263,82 @@ public class SpotReportActivity extends Activity {
 
                 String latString = ((EditText)findViewById(R.id.aidLatitude)).getText().toString();
                 String lonString = ((EditText)findViewById(R.id.aidLongitude)).getText().toString();
-                String radius = ((EditText)findViewById(R.id.aidRadiusNum)).getText().toString();
-                String aidType = ((EditText)findViewById(R.id.aidType)).getText().toString();
+                int radius = Integer.parseInt(((EditText)findViewById(R.id.aidRadiusNum)).getText().toString());
+                String aidType = ((Spinner)findViewById(R.id.aidType)).getSelectedItem().toString();
+                int aidPosition = ((Spinner)findViewById(R.id.aidType)).getSelectedItemPosition();
                 String numPersons = ((EditText)findViewById(R.id.aidNum)).getText().toString();
-                String urgency = ((EditText)findViewById(R.id.aidUrgency)).getText().toString();
+                String urgency = ((Spinner)findViewById(R.id.aidUrgency)).getSelectedItem().toString();
+                int urgencyPosition = ((Spinner)findViewById(R.id.aidType)).getSelectedItemPosition();
                 String description = ((EditText)findViewById(R.id.aidDescription)).getText().toString();
                 String reporter = ((EditText)findViewById(R.id.aidReporter)).getText().toString();
 
-                // If the user has filled out the form completely
-//                if ((categoryPos == 0) || reportName.isEmpty()) {
-//
-//                    StringBuilder messageBuilder = new StringBuilder();
-//                    messageBuilder.append("The following fields have errors:\n\n");
-//
-//                    if (categoryPos == 0) {
-//                        messageBuilder.append("Report Category - Select report category\n\n");
-//                    }
-//
-//                    if (reportName.isEmpty()) {
-//                        messageBuilder.append("Report Name - Enter name\n\n");
-//                    }
-//
-//                    // Pop up error dialog, noting fields need to be corrected
-//                    new AlertDialog.Builder(this.parent)
-//                            .setTitle("Incomplete Form")
-//                            .setMessage(messageBuilder.toString())
-//                            .setCancelable(true)
-//                            .setPositiveButton("OK", null)
-//                            .show();
-//                }
-//                else {
-//
-//                    // Create and transmit report
-//                    Intent submitReportIntent = new Intent(ACTION_SUBMIT_REPORT);
-//                    submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-//                    submitReportIntent.putExtra(DATA_REPORT_CATEGORY, category);
-//                    submitReportIntent.putExtra(DATA_LOC, locationSource);
-//                    submitReportIntent.putExtra(DATA_REPORT_NAME, reportName);
-//                    submitReportIntent.putExtra(DATA_REPORT_DESCRIPTION, reportDescription);
-//                    String uriString = null;
-//                    if (imageUri != null) {
-//                        uriString = imageUri.toString();
-//                    }
-//                    submitReportIntent.putExtra(DATA_REPORT_IMAGE, uriString);
-//                    submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
-//                    sendBroadcast(submitReportIntent);
-//                }
+                ArrayList<String> errors = new ArrayList<>();
+
+                if (radius <= 0) {
+
+                    errors.add("Radius - Specify a radius > 0\n\n");
+                }
+
+                if(0 == numPersons.length()) {
+
+                    errors.add("Num Persons - Specify the number of persons\n\n");
+                }
+
+                if (0 == aidPosition) {
+
+                    errors.add("Aid Type - Specify aid needed\n\n");
+                }
+
+                if (0 == urgencyPosition) {
+
+                    errors.add("Urgency - Specify urgency level\n\n");
+                }
+
+                if(0 == description.length()) {
+
+                    errors.add("Description - Describe the need\n\n");
+                }
+
+                if(0 == reporter.length()) {
+
+                    errors.add("Reporter - Enter your name or id\n\n");
+                }
+
+                if(errors.isEmpty()) {
+
+                    // Create and transmit report
+                    Intent submitReportIntent = new Intent(ACTION_SUBMIT_AID_REPORT);
+                    submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+
+                    submitReportIntent.putExtra("lat", latString);
+                    submitReportIntent.putExtra("lon", lonString);
+                    submitReportIntent.putExtra("radius", radius);
+                    submitReportIntent.putExtra("aidType", aidType);
+                    submitReportIntent.putExtra("numPersons", numPersons);
+                    submitReportIntent.putExtra("urgency", urgency);
+                    submitReportIntent.putExtra("description", description);
+                    submitReportIntent.putExtra("reporter", reporter);
+                    submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
+                    sendBroadcast(submitReportIntent);
+                }
+                else {
+
+                    StringBuilder messageBuilder = new StringBuilder();
+                    messageBuilder.append("The following fields have errors:\n\n");
+
+                    for(String error: errors) {
+
+                        messageBuilder.append(error);
+                    }
+
+                    // Pop up error dialog, noting fields need to be corrected
+                    new AlertDialog.Builder(this.parent)
+                            .setTitle("Incomplete Form")
+                            .setMessage(messageBuilder.toString())
+                            .setCancelable(true)
+                            .setPositiveButton("OK", null)
+                            .show();
+                }
             });
         }
 
@@ -348,50 +379,61 @@ public class SpotReportActivity extends Activity {
 
                 String latString = ((EditText)findViewById(R.id.medLatitude)).getText().toString();
                 String lonString = ((EditText)findViewById(R.id.medLongitude)).getText().toString();
-                String radius = ((EditText)findViewById(R.id.medRadiusNum)).getText().toString();
+                int radius = Integer.parseInt(((EditText)findViewById(R.id.medRadiusNum)).getText().toString());
                 String description = ((EditText)findViewById(R.id.medSign)).getText().toString();
                 String measure = ((EditText)findViewById(R.id.medValue)).getText().toString();
                 boolean emergency = ((CheckBox)findViewById(R.id.isEmergency)).isChecked();
 
-                // If the user has filled out the form completely
-//                if ((categoryPos == 0) || reportName.isEmpty()) {
-//
-//                    StringBuilder messageBuilder = new StringBuilder();
-//                    messageBuilder.append("The following fields have errors:\n\n");
-//
-//                    if (categoryPos == 0) {
-//                        messageBuilder.append("Report Category - Select report category\n\n");
-//                    }
-//
-//                    if (reportName.isEmpty()) {
-//                        messageBuilder.append("Report Name - Enter name\n\n");
-//                    }
-//
-//                    // Pop up error dialog, noting fields need to be corrected
-//                    new AlertDialog.Builder(this.parent)
-//                            .setTitle("Incomplete Form")
-//                            .setMessage(messageBuilder.toString())
-//                            .setCancelable(true)
-//                            .setPositiveButton("OK", null)
-//                            .show();
-//                }
-//                else {
-//
-//                    // Create and transmit report
-//                    Intent submitReportIntent = new Intent(ACTION_SUBMIT_REPORT);
-//                    submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-//                    submitReportIntent.putExtra(DATA_REPORT_CATEGORY, category);
-//                    submitReportIntent.putExtra(DATA_LOC, locationSource);
-//                    submitReportIntent.putExtra(DATA_REPORT_NAME, reportName);
-//                    submitReportIntent.putExtra(DATA_REPORT_DESCRIPTION, reportDescription);
-//                    String uriString = null;
-//                    if (imageUri != null) {
-//                        uriString = imageUri.toString();
-//                    }
-//                    submitReportIntent.putExtra(DATA_REPORT_IMAGE, uriString);
-//                    submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
-//                    sendBroadcast(submitReportIntent);
-//                }
+                ArrayList<String> errors = new ArrayList<>();
+
+                if (radius <= 0) {
+
+                    errors.add("Radius - Specify a radius > 0\n\n");
+                }
+
+                if(0 == description.length()) {
+
+                    errors.add("Description - Describe medical condition\n\n");
+                }
+
+                if(0 == measure.length()) {
+
+                    errors.add("Measure - Enter measurement (heart rate, bp, etc).\n\n");
+                }
+
+                if(errors.isEmpty()) {
+
+                    // Create and transmit report
+                    Intent submitReportIntent = new Intent(ACTION_SUBMIT_MEDICAL_REPORT);
+                    submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+
+                    submitReportIntent.putExtra("lat", latString);
+                    submitReportIntent.putExtra("lon", lonString);
+                    submitReportIntent.putExtra("radius", radius);
+                    submitReportIntent.putExtra("description", description);
+                    submitReportIntent.putExtra("measure", measure);
+                    submitReportIntent.putExtra("emergency", emergency);
+                    submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
+                    sendBroadcast(submitReportIntent);
+                }
+                else {
+
+                    StringBuilder messageBuilder = new StringBuilder();
+                    messageBuilder.append("The following fields have errors:\n\n");
+
+                    for(String error: errors) {
+
+                        messageBuilder.append(error);
+                    }
+
+                    // Pop up error dialog, noting fields need to be corrected
+                    new AlertDialog.Builder(this.parent)
+                            .setTitle("Incomplete Form")
+                            .setMessage(messageBuilder.toString())
+                            .setCancelable(true)
+                            .setPositiveButton("OK", null)
+                            .show();
+                }
             });
         }
 
@@ -455,50 +497,68 @@ public class SpotReportActivity extends Activity {
 
                 String latString = ((EditText)findViewById(R.id.floodLatitude)).getText().toString();
                 String lonString = ((EditText)findViewById(R.id.floodLongitude)).getText().toString();
-                String radius = ((EditText)findViewById(R.id.floodRadiusNum)).getText().toString();
+                int radius = Integer.parseInt(((EditText)findViewById(R.id.floodRadiusNum)).getText().toString());
                 String featureType = ((Spinner)findViewById(R.id.featureType)).getSelectedItem().toString();
-                String depth = ((EditText)findViewById(R.id.floodDepthNum)).getText().toString();
+                int featureTypePosition = ((Spinner)findViewById(R.id.featureType)).getSelectedItemPosition();
+                int depth = Integer.parseInt(((EditText)findViewById(R.id.floodDepthNum)).getText().toString());
                 String method = ((Spinner)findViewById(R.id.observationMode)).getSelectedItem().toString();
+                int methodPosition = ((Spinner)findViewById(R.id.observationMode)).getSelectedItemPosition();
 
-                // If the user has filled out the form completely
-//                if ((categoryPos == 0) || reportName.isEmpty()) {
-//
-//                    StringBuilder messageBuilder = new StringBuilder();
-//                    messageBuilder.append("The following fields have errors:\n\n");
-//
-//                    if (categoryPos == 0) {
-//                        messageBuilder.append("Report Category - Select report category\n\n");
-//                    }
-//
-//                    if (reportName.isEmpty()) {
-//                        messageBuilder.append("Report Name - Enter name\n\n");
-//                    }
-//
-//                    // Pop up error dialog, noting fields need to be corrected
-//                    new AlertDialog.Builder(this.parent)
-//                            .setTitle("Incomplete Form")
-//                            .setMessage(messageBuilder.toString())
-//                            .setCancelable(true)
-//                            .setPositiveButton("OK", null)
-//                            .show();
-//                }
-//                else {
-//
-//                    // Create and transmit report
-//                    Intent submitReportIntent = new Intent(ACTION_SUBMIT_REPORT);
-//                    submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-//                    submitReportIntent.putExtra(DATA_REPORT_CATEGORY, category);
-//                    submitReportIntent.putExtra(DATA_LOC, locationSource);
-//                    submitReportIntent.putExtra(DATA_REPORT_NAME, reportName);
-//                    submitReportIntent.putExtra(DATA_REPORT_DESCRIPTION, reportDescription);
-//                    String uriString = null;
-//                    if (imageUri != null) {
-//                        uriString = imageUri.toString();
-//                    }
-//                    submitReportIntent.putExtra(DATA_REPORT_IMAGE, uriString);
-//                    submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
-//                    sendBroadcast(submitReportIntent);
-//                }
+                ArrayList<String> errors = new ArrayList<>();
+
+                if (radius <= 0) {
+
+                    errors.add("Radius - Specify a radius > 0\n\n");
+                }
+
+                if(0 == featureTypePosition) {
+
+                    errors.add("Feature Type - Specify a type\n\n");
+                }
+
+                if(depth <= 0) {
+
+                    errors.add("Depth - Specify a depth measurement > 0\n\n");
+                }
+
+                if(0 == methodPosition) {
+
+                    errors.add("Method - Specify method of observation\n\n");
+                }
+
+                if(errors.isEmpty()) {
+
+                    // Create and transmit report
+                    Intent submitReportIntent = new Intent(ACTION_SUBMIT_FLOODING_REPORT);
+                    submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+
+                    submitReportIntent.putExtra("lat", latString);
+                    submitReportIntent.putExtra("lon", lonString);
+                    submitReportIntent.putExtra("radius", radius);
+                    submitReportIntent.putExtra("featureType", featureType);
+                    submitReportIntent.putExtra("depth", depth);
+                    submitReportIntent.putExtra("method", method);
+                    submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
+                    sendBroadcast(submitReportIntent);
+                }
+                else {
+
+                    StringBuilder messageBuilder = new StringBuilder();
+                    messageBuilder.append("The following fields have errors:\n\n");
+
+                    for(String error: errors) {
+
+                        messageBuilder.append(error);
+                    }
+
+                    // Pop up error dialog, noting fields need to be corrected
+                    new AlertDialog.Builder(this.parent)
+                            .setTitle("Incomplete Form")
+                            .setMessage(messageBuilder.toString())
+                            .setCancelable(true)
+                            .setPositiveButton("OK", null)
+                            .show();
+                }
             });
         }
 
@@ -539,50 +599,70 @@ public class SpotReportActivity extends Activity {
 
                 String latString = ((EditText)findViewById(R.id.scLatitude)).getText().toString();
                 String lonString = ((EditText)findViewById(R.id.scLongitude)).getText().toString();
-                String radius = ((EditText)findViewById(R.id.scRadiusNum)).getText().toString();
+                int radius = Integer.parseInt(((EditText)findViewById(R.id.medRadiusNum)).getText().toString());
                 String type = ((Spinner)findViewById(R.id.closureType)).getSelectedItem().toString();
+                int typePosition = ((Spinner)findViewById(R.id.closureType)).getSelectedItemPosition();
                 String action = ((Spinner)findViewById(R.id.closureAction)).getSelectedItem().toString();
-                String referenceId = ((Spinner)findViewById(R.id.closureReference)).getSelectedItem().toString();
+                int actionPosition = ((Spinner)findViewById(R.id.closureAction)).getSelectedItemPosition();
+                Object referenceId = ((Spinner)findViewById(R.id.closureReference)).getSelectedItem();
 
-                // If the user has filled out the form completely
-//                if ((categoryPos == 0) || reportName.isEmpty()) {
-//
-//                    StringBuilder messageBuilder = new StringBuilder();
-//                    messageBuilder.append("The following fields have errors:\n\n");
-//
-//                    if (categoryPos == 0) {
-//                        messageBuilder.append("Report Category - Select report category\n\n");
-//                    }
-//
-//                    if (reportName.isEmpty()) {
-//                        messageBuilder.append("Report Name - Enter name\n\n");
-//                    }
-//
-//                    // Pop up error dialog, noting fields need to be corrected
-//                    new AlertDialog.Builder(this.parent)
-//                            .setTitle("Incomplete Form")
-//                            .setMessage(messageBuilder.toString())
-//                            .setCancelable(true)
-//                            .setPositiveButton("OK", null)
-//                            .show();
-//                }
-//                else {
-//
-//                    // Create and transmit report
-//                    Intent submitReportIntent = new Intent(ACTION_SUBMIT_REPORT);
-//                    submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-//                    submitReportIntent.putExtra(DATA_REPORT_CATEGORY, category);
-//                    submitReportIntent.putExtra(DATA_LOC, locationSource);
-//                    submitReportIntent.putExtra(DATA_REPORT_NAME, reportName);
-//                    submitReportIntent.putExtra(DATA_REPORT_DESCRIPTION, reportDescription);
-//                    String uriString = null;
-//                    if (imageUri != null) {
-//                        uriString = imageUri.toString();
-//                    }
-//                    submitReportIntent.putExtra(DATA_REPORT_IMAGE, uriString);
-//                    submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
-//                    sendBroadcast(submitReportIntent);
-//                }
+                String referenceIdString = null;
+
+                if (null != referenceId) {
+
+                    referenceIdString = referenceId.toString();
+                }
+
+                ArrayList<String> errors = new ArrayList<>();
+
+                if (radius <= 0) {
+
+                    errors.add("Radius - Specify a radius > 0\n\n");
+                }
+
+                if(0 == typePosition) {
+
+                    errors.add("Type - Specify a type\n\n");
+                }
+
+                if(0 == actionPosition) {
+
+                    errors.add("Action - Specify an action\n\n");
+                }
+
+                if(errors.isEmpty()) {
+
+                    // Create and transmit report
+                    Intent submitReportIntent = new Intent(ACTION_SUBMIT_STREET_CLOSURE_REPORT);
+                    submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+
+                    submitReportIntent.putExtra("lat", latString);
+                    submitReportIntent.putExtra("lon", lonString);
+                    submitReportIntent.putExtra("radius", radius);
+                    submitReportIntent.putExtra("type", type);
+                    submitReportIntent.putExtra("action", action);
+                    submitReportIntent.putExtra("referenceId", referenceIdString);
+                    submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
+                    sendBroadcast(submitReportIntent);
+                }
+                else {
+
+                    StringBuilder messageBuilder = new StringBuilder();
+                    messageBuilder.append("The following fields have errors:\n\n");
+
+                    for(String error: errors) {
+
+                        messageBuilder.append(error);
+                    }
+
+                    // Pop up error dialog, noting fields need to be corrected
+                    new AlertDialog.Builder(this.parent)
+                            .setTitle("Incomplete Form")
+                            .setMessage(messageBuilder.toString())
+                            .setCancelable(true)
+                            .setPositiveButton("OK", null)
+                            .show();
+                }
             });
         }
 
@@ -623,51 +703,75 @@ public class SpotReportActivity extends Activity {
 
                 String latString = ((EditText)findViewById(R.id.trackLatitude)).getText().toString();
                 String lonString = ((EditText)findViewById(R.id.trackLongitude)).getText().toString();
-                String confidence = ((EditText)findViewById(R.id.trackConfidenceNum)).getText().toString();
+                int confidence = Integer.parseInt(((EditText)findViewById(R.id.trackConfidenceNum)).getText().toString());
                 String resourceType = ((Spinner)findViewById(R.id.trackedResource)).getSelectedItem().toString();
+                int typePosition = ((Spinner)findViewById(R.id.trackedResource)).getSelectedItemPosition();
                 String resourceId = ((EditText)findViewById(R.id.trackResourceId)).getText().toString();
                 String resourceLabel = ((EditText)findViewById(R.id.trackLabel)).getText().toString();
                 String trackingMethod = ((Spinner)findViewById(R.id.trackedMethod)).getSelectedItem().toString();
+                int methodPosition = ((Spinner)findViewById(R.id.trackedMethod)).getSelectedItemPosition();
 
-                // If the user has filled out the form completely
-//                if ((categoryPos == 0) || reportName.isEmpty()) {
-//
-//                    StringBuilder messageBuilder = new StringBuilder();
-//                    messageBuilder.append("The following fields have errors:\n\n");
-//
-//                    if (categoryPos == 0) {
-//                        messageBuilder.append("Report Category - Select report category\n\n");
-//                    }
-//
-//                    if (reportName.isEmpty()) {
-//                        messageBuilder.append("Report Name - Enter name\n\n");
-//                    }
-//
-//                    // Pop up error dialog, noting fields need to be corrected
-//                    new AlertDialog.Builder(this.parent)
-//                            .setTitle("Incomplete Form")
-//                            .setMessage(messageBuilder.toString())
-//                            .setCancelable(true)
-//                            .setPositiveButton("OK", null)
-//                            .show();
-//                }
-//                else {
-//
-//                    // Create and transmit report
-//                    Intent submitReportIntent = new Intent(ACTION_SUBMIT_REPORT);
-//                    submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-//                    submitReportIntent.putExtra(DATA_REPORT_CATEGORY, category);
-//                    submitReportIntent.putExtra(DATA_LOC, locationSource);
-//                    submitReportIntent.putExtra(DATA_REPORT_NAME, reportName);
-//                    submitReportIntent.putExtra(DATA_REPORT_DESCRIPTION, reportDescription);
-//                    String uriString = null;
-//                    if (imageUri != null) {
-//                        uriString = imageUri.toString();
-//                    }
-//                    submitReportIntent.putExtra(DATA_REPORT_IMAGE, uriString);
-//                    submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
-//                    sendBroadcast(submitReportIntent);
-//                }
+                ArrayList<String> errors = new ArrayList<>();
+
+                if (confidence <= 0) {
+
+                    errors.add("confidence - Specify a confidence > 0\n\n");
+                }
+
+                if(0 == typePosition) {
+
+                    errors.add("Type - Specify a type\n\n");
+                }
+
+                if(0 == resourceId.length()) {
+
+                    errors.add("Resource Id - Specify a resource id\n\n");
+                }
+
+                if(0 == resourceLabel.length()) {
+
+                    errors.add("Resource Label - Specify a resource label\n\n");
+                }
+
+                if(0 == methodPosition) {
+
+                    errors.add("Tracking Method - Specify a method\n\n");
+                }
+
+                if(errors.isEmpty()) {
+
+                    // Create and transmit report
+                    Intent submitReportIntent = new Intent(ACTION_SUBMIT_TRACK_REPORT);
+                    submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+
+                    submitReportIntent.putExtra("lat", latString);
+                    submitReportIntent.putExtra("lon", lonString);
+                    submitReportIntent.putExtra("confidence", confidence);
+                    submitReportIntent.putExtra("resourceType", resourceType);
+                    submitReportIntent.putExtra("resourceId", resourceId);
+                    submitReportIntent.putExtra("resourceLabel", resourceLabel);
+                    submitReportIntent.putExtra("trackingMethod", trackingMethod);
+                    submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
+                    sendBroadcast(submitReportIntent);
+                }
+                else {
+
+                    StringBuilder messageBuilder = new StringBuilder();
+                    messageBuilder.append("The following fields have errors:\n\n");
+
+                    for(String error: errors) {
+
+                        messageBuilder.append(error);
+                    }
+
+                    // Pop up error dialog, noting fields need to be corrected
+                    new AlertDialog.Builder(this.parent)
+                            .setTitle("Incomplete Form")
+                            .setMessage(messageBuilder.toString())
+                            .setCancelable(true)
+                            .setPositiveButton("OK", null)
+                            .show();
+                }
             });
         }
 
@@ -698,12 +802,12 @@ public class SpotReportActivity extends Activity {
                 String reportDescription = ((TextView)findViewById(R.id.description)).getText().toString();
 
                 // If the user has filled out the form completely
-                if ((categoryPos == 0) || reportName.isEmpty()) {
+                if ((0 == categoryPos) || reportName.isEmpty()) {
 
                     StringBuilder messageBuilder = new StringBuilder();
                     messageBuilder.append("The following fields have errors:\n\n");
 
-                    if (categoryPos == 0) {
+                    if (0 == categoryPos) {
                         messageBuilder.append("Report Category - Select report category\n\n");
                     }
 
@@ -722,17 +826,18 @@ public class SpotReportActivity extends Activity {
                 else {
 
                     // Create and transmit report
-                    Intent submitReportIntent = new Intent(ACTION_SUBMIT_REPORT);
+                    Intent submitReportIntent = new Intent(ACTION_SUBMIT_IMAGE_REPORT);
                     submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-                    submitReportIntent.putExtra(DATA_REPORT_CATEGORY, category);
-                    submitReportIntent.putExtra(DATA_LOC, locationSource);
-                    submitReportIntent.putExtra(DATA_REPORT_NAME, reportName);
-                    submitReportIntent.putExtra(DATA_REPORT_DESCRIPTION, reportDescription);
+                    submitReportIntent.putExtra("item", category);
+                    submitReportIntent.putExtra("location", locationSource);
+                    submitReportIntent.putExtra("name", reportName);
+                    submitReportIntent.putExtra("description", reportDescription);
                     String uriString = null;
-                    if (imageUri != null) {
+                    if (null != imageUri) {
+
                         uriString = imageUri.toString();
                     }
-                    submitReportIntent.putExtra(DATA_REPORT_IMAGE, uriString);
+                    submitReportIntent.putExtra("uriString", uriString);
                     submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
                     sendBroadcast(submitReportIntent);
                 }
