@@ -599,7 +599,7 @@ public class SpotReportActivity extends Activity {
 
                 String latString = ((EditText)findViewById(R.id.scLatitude)).getText().toString();
                 String lonString = ((EditText)findViewById(R.id.scLongitude)).getText().toString();
-                int radius = Integer.parseInt(((EditText)findViewById(R.id.medRadiusNum)).getText().toString());
+                int radius = Integer.parseInt(((EditText)findViewById(R.id.scRadiusNum)).getText().toString());
                 String type = ((Spinner)findViewById(R.id.closureType)).getSelectedItem().toString();
                 int typePosition = ((Spinner)findViewById(R.id.closureType)).getSelectedItemPosition();
                 String action = ((Spinner)findViewById(R.id.closureAction)).getSelectedItem().toString();
