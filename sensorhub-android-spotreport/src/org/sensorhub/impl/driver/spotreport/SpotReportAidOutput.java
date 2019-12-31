@@ -200,17 +200,15 @@ public class SpotReportAidOutput extends AbstractSensorOutput<SpotReportDriver> 
 
         newRecord.setDoubleValue(0, samplingTime);
         newRecord.setStringValue(1, UUID.randomUUID().toString());
-
-        AbstractDataBlock locationData = ((DataBlockMixed) newRecord).getUnderlyingObject()[2];
-        locationData.setDoubleValue(0, Double.parseDouble(lat));
-        locationData.setDoubleValue(1, Double.parseDouble(lon));
-        locationData.setDoubleValue(2, 0.0);
-        newRecord.setIntValue(3, radius);
-        newRecord.setStringValue(4, aidType);
-        newRecord.setStringValue(5, numPersons);
-        newRecord.setStringValue(6, urgency);
-        newRecord.setStringValue(7, description);
-        newRecord.setStringValue(8, reporter);
+        newRecord.setDoubleValue(2, Double.parseDouble(lat));
+        newRecord.setDoubleValue(3, Double.parseDouble(lon));
+        newRecord.setDoubleValue(4, 0.0);
+        newRecord.setIntValue(5, radius);
+        newRecord.setStringValue(6, aidType);
+        newRecord.setStringValue(7, numPersons);
+        newRecord.setStringValue(8, urgency);
+        newRecord.setStringValue(9, description);
+        newRecord.setStringValue(10, reporter);
 
         // update latest record and send event
         latestRecord = newRecord;

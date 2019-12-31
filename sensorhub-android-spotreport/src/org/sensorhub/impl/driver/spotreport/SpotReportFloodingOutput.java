@@ -184,15 +184,13 @@ public class SpotReportFloodingOutput extends AbstractSensorOutput<SpotReportDri
 
         newRecord.setDoubleValue(0, samplingTime);
         newRecord.setStringValue(1, UUID.randomUUID().toString());
-
-        AbstractDataBlock locationData = ((DataBlockMixed) newRecord).getUnderlyingObject()[2];
-        locationData.setDoubleValue(0, Double.parseDouble(lat));
-        locationData.setDoubleValue(1, Double.parseDouble(lon));
-        locationData.setDoubleValue(2, 0.0);
-        newRecord.setIntValue(3, radius);
-        newRecord.setStringValue(4, featureType);
-        newRecord.setIntValue(5, depth);
-        newRecord.setStringValue(6, method);
+        newRecord.setDoubleValue(2, Double.parseDouble(lat));
+        newRecord.setDoubleValue(3, Double.parseDouble(lon));
+        newRecord.setDoubleValue(4, 0.0);
+        newRecord.setIntValue(5, radius);
+        newRecord.setStringValue(6, featureType);
+        newRecord.setIntValue(7, depth);
+        newRecord.setStringValue(8, method);
 
         // update latest record and send event
         latestRecord = newRecord;
