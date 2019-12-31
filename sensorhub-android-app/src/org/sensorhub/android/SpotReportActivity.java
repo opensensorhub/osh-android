@@ -52,6 +52,7 @@ public class SpotReportActivity extends Activity {
     private ImageView imageView;
     private Bitmap imageBitmap = null;
     private Uri imageUri;
+    private String lastAction = null;
 
     private SubmitRequestResultReceiver submitRequestResultReceiver;
 
@@ -220,9 +221,9 @@ public class SpotReportActivity extends Activity {
 
         private boolean layoutSwitched = false;
 
-        Activity parent;
+        SpotReportActivity parent;
 
-        ReportTypeListener(Activity parent) {
+        ReportTypeListener(SpotReportActivity parent) {
 
             this.parent = parent;
         }
@@ -307,9 +308,9 @@ public class SpotReportActivity extends Activity {
                 if(errors.isEmpty()) {
 
                     // Create and transmit report
+                    parent.lastAction = ACTION_SUBMIT_AID_REPORT;
                     Intent submitReportIntent = new Intent(ACTION_SUBMIT_AID_REPORT);
                     submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-
                     submitReportIntent.putExtra("lat", latString);
                     submitReportIntent.putExtra("lon", lonString);
                     submitReportIntent.putExtra("radius", radius);
@@ -404,9 +405,9 @@ public class SpotReportActivity extends Activity {
                 if(errors.isEmpty()) {
 
                     // Create and transmit report
+                    parent.lastAction = ACTION_SUBMIT_MEDICAL_REPORT;
                     Intent submitReportIntent = new Intent(ACTION_SUBMIT_MEDICAL_REPORT);
                     submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-
                     submitReportIntent.putExtra("lat", latString);
                     submitReportIntent.putExtra("lon", lonString);
                     submitReportIntent.putExtra("radius", radius);
@@ -529,9 +530,9 @@ public class SpotReportActivity extends Activity {
                 if(errors.isEmpty()) {
 
                     // Create and transmit report
+                    parent.lastAction = ACTION_SUBMIT_FLOODING_REPORT;
                     Intent submitReportIntent = new Intent(ACTION_SUBMIT_FLOODING_REPORT);
                     submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-
                     submitReportIntent.putExtra("lat", latString);
                     submitReportIntent.putExtra("lon", lonString);
                     submitReportIntent.putExtra("radius", radius);
@@ -633,9 +634,9 @@ public class SpotReportActivity extends Activity {
                 if(errors.isEmpty()) {
 
                     // Create and transmit report
+                    parent.lastAction = ACTION_SUBMIT_STREET_CLOSURE_REPORT;
                     Intent submitReportIntent = new Intent(ACTION_SUBMIT_STREET_CLOSURE_REPORT);
                     submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-
                     submitReportIntent.putExtra("lat", latString);
                     submitReportIntent.putExtra("lon", lonString);
                     submitReportIntent.putExtra("radius", radius);
@@ -741,9 +742,9 @@ public class SpotReportActivity extends Activity {
                 if(errors.isEmpty()) {
 
                     // Create and transmit report
+                    parent.lastAction = ACTION_SUBMIT_TRACK_REPORT;
                     Intent submitReportIntent = new Intent(ACTION_SUBMIT_TRACK_REPORT);
                     submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-
                     submitReportIntent.putExtra("lat", latString);
                     submitReportIntent.putExtra("lon", lonString);
                     submitReportIntent.putExtra("confidence", confidence);
@@ -826,6 +827,7 @@ public class SpotReportActivity extends Activity {
                 else {
 
                     // Create and transmit report
+                    parent.lastAction = ACTION_SUBMIT_IMAGE_REPORT;
                     Intent submitReportIntent = new Intent(ACTION_SUBMIT_IMAGE_REPORT);
                     submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
                     submitReportIntent.putExtra("item", category);
@@ -929,13 +931,30 @@ public class SpotReportActivity extends Activity {
                 title = "Report Submitted";
                 message = "Report Submitted Successfully";
 
-                clickListener = (DialogInterface dialogInterface, int i) -> {
+                if (lastAction == ACTION_SUBMIT_IMAGE_REPORT) {
+
+                    clickListener = (DialogInterface dialogInterface, int i) -> {
                         ((TextView) findViewById(R.id.reportName)).setText(null);
                         ((TextView) findViewById(R.id.description)).setText(null);
                         imageView.setImageBitmap(null);
                         imageUri = null;
                         imageBitmap = null;
                     };
+
+                }
+                else if (lastAction == ACTION_SUBMIT_MEDICAL_REPORT) {
+
+                    clickListener = (DialogInterface dialogInterface, int i) -> {
+                        ((EditText) findViewById(R.id.medSign)).setText(null);
+                        ((EditText) findViewById(R.id.medValue)).setText(null);
+                    };
+                }
+                else {
+
+                    clickListener = (DialogInterface dialogInterface, int i) -> { };
+                }
+
+                lastAction = null;
             }
 
             new AlertDialog.Builder(activity)
