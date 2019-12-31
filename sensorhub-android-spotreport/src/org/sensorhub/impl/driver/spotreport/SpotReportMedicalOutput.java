@@ -72,7 +72,7 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
     private static final String DATA_RECORD_REPORT_ID_LABEL = "id";
     private static final String DATA_RECORD_REPORT_LOC_LABEL = "location";
     private static final String DATA_RECORD_REPORT_RADIUS_LABEL = "radius";
-    private static final String DATA_RECORD_REPORT_DESCRIPTION_LABEL = "measure";
+    private static final String DATA_RECORD_REPORT_DESCRIPTION_LABEL = "description";
     private static final String DATA_RECORD_REPORT_MEASURE_LABEL = "measure";
     private static final String DATA_RECORD_REPORT_EMERGENCY_LABEL = "emergency";
 

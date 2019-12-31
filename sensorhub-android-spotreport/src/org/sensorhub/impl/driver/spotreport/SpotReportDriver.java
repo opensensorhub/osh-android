@@ -70,24 +70,24 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
         spotReportOutput.init();
 
         spotReportAidOutput = new SpotReportAidOutput(this);
-        this.addOutput(spotReportOutput, false);
-        spotReportOutput.init();
+        this.addOutput(spotReportAidOutput, false);
+        spotReportAidOutput.init();
 
         spotReportFloodingOutput = new SpotReportFloodingOutput(this);
-        this.addOutput(spotReportOutput, false);
-        spotReportOutput.init();
+        this.addOutput(spotReportFloodingOutput, false);
+        spotReportFloodingOutput.init();
 
         spotReportMedicalOutput = new SpotReportMedicalOutput(this);
-        this.addOutput(spotReportOutput, false);
-        spotReportOutput.init();
+        this.addOutput(spotReportMedicalOutput, false);
+        spotReportMedicalOutput.init();
 
         spotReportStreetClosureOutput = new SpotReportStreetClosureOutput(this);
-        this.addOutput(spotReportOutput, false);
-        spotReportOutput.init();
+        this.addOutput(spotReportStreetClosureOutput, false);
+        spotReportStreetClosureOutput.init();
 
         spotReportTrackingOutput = new SpotReportTrackingOutput(this);
-        this.addOutput(spotReportOutput, false);
-        spotReportOutput.init();
+        this.addOutput(spotReportTrackingOutput, false);
+        spotReportTrackingOutput.init();
     }
 
     @Override
