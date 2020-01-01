@@ -142,10 +142,9 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
                 "A description of the medical symptoms or issues being observed");
         dataStruct.addComponent(DATA_RECORD_REPORT_DESCRIPTION_LABEL, description);
 
-        Quantity measure = sweHelper.newQuantity(SWEHelper.getPropertyUri("Measure"),
+        Text measure = sweHelper.newText(SWEHelper.getPropertyUri("Measure"),
                 "Measure",
-                "Measurements of vital signs",
-                "ft.");
+                "Measurements of vital signs");
         dataStruct.addComponent(DATA_RECORD_REPORT_MEASURE_LABEL, measure);
 
         Boolean emergency = sweHelper.newBoolean(SWEHelper.getPropertyUri("Emergency"),
