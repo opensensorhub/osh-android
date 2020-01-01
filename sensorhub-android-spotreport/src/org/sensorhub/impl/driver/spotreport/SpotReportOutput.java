@@ -89,7 +89,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     SpotReportOutput(SpotReportDriver parentModule) {
 
         super(parentModule);
-        this.name = "spot_report_data";
+        this.name = parentModule.getName() + " Image";
         context = getParentModule().getConfiguration().androidContext;
     }
 

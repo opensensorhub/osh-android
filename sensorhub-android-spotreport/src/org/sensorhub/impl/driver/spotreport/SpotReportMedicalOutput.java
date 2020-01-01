@@ -92,7 +92,7 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
     SpotReportMedicalOutput(SpotReportDriver parentModule) {
 
         super(parentModule);
-        this.name = "medical_spot_report_data";
+        this.name = parentModule.getName() + " Medical";
         context = getParentModule().getConfiguration().androidContext;
     }
 
@@ -142,10 +142,10 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
                 "A description of the medical symptoms or issues being observed");
         dataStruct.addComponent(DATA_RECORD_REPORT_DESCRIPTION_LABEL, description);
 
-        Text measure = sweHelper.newText(SWEHelper.getPropertyUri("Measure"),
-                "Measure",
+        Text vitalSignMeasurement = sweHelper.newText(SWEHelper.getPropertyUri("VitalSignMeasurement"),
+                "Vital Sign Measurement",
                 "Measurements of vital signs");
-        dataStruct.addComponent(DATA_RECORD_REPORT_MEASURE_LABEL, measure);
+        dataStruct.addComponent(DATA_RECORD_REPORT_MEASURE_LABEL, vitalSignMeasurement);
 
         Boolean emergency = sweHelper.newBoolean(SWEHelper.getPropertyUri("Emergency"),
                 "Emergency",
@@ -163,11 +163,11 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
      * @param lon Longitude
      * @param radius Radius of validity
      * @param description Description of the medical situation needing attention
-     * @param measure Measurements of vital signs
+     * @param vitalSignMeasurement Measurements of vital signs
      * @param emergency Flag indicating if issue rises to level of medical emergency
      */
     private void submitReport(String lat, String lon, int radius, String description,
-                              String measure, boolean emergency) {
+                              String vitalSignMeasurement, boolean emergency) {
 
         double samplingTime = System.currentTimeMillis() / 1000.0;
 
@@ -189,7 +189,7 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
         newRecord.setDoubleValue(4, 0.0);
         newRecord.setIntValue(5, radius);
         newRecord.setStringValue(6, description);
-        newRecord.setStringValue(7, measure);
+        newRecord.setStringValue(7, vitalSignMeasurement);
         newRecord.setBooleanValue(8, emergency);
 
         // update latest record and send event
@@ -257,10 +257,10 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
                     String lon = intent.getStringExtra(DATA_LON);
                     int radius = intent.getIntExtra(DATA_RADIUS, 0);
                     String description = intent.getStringExtra(DATA_DESCRIPTION);
-                    String measure = intent.getStringExtra(DATA_MEASURE);
+                    String vitalSignMeasurement = intent.getStringExtra(DATA_MEASURE);
                     boolean emergency = intent.getBooleanExtra(DATA_EMERGENCY, false);
 
-                    submitReport(lat, lon, radius, description, measure, emergency);
+                    submitReport(lat, lon, radius, description, vitalSignMeasurement, emergency);
 
                     resultReceiver.send(SUBMIT_REPORT_SUCCESS, null);
 

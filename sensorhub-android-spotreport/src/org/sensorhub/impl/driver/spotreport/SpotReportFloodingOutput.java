@@ -91,7 +91,7 @@ public class SpotReportFloodingOutput extends AbstractSensorOutput<SpotReportDri
     SpotReportFloodingOutput(SpotReportDriver parentModule) {
 
         super(parentModule);
-        this.name = "flooding_spot_report_data";
+        this.name = parentModule.getName() + " Flooding";
         context = getParentModule().getConfiguration().androidContext;
     }
 

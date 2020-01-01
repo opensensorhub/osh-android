@@ -91,7 +91,7 @@ public class SpotReportStreetClosureOutput extends AbstractSensorOutput<SpotRepo
     SpotReportStreetClosureOutput(SpotReportDriver parentModule) {
 
         super(parentModule);
-        this.name = "street_closure_spot_report_data";
+        this.name = parentModule.getName() + " Street Closure";
         context = getParentModule().getConfiguration().androidContext;
     }
 

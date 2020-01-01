@@ -93,7 +93,7 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
     SpotReportTrackingOutput(SpotReportDriver parentModule) {
 
         super(parentModule);
-        this.name = "tracking_spot_report_data";
+        this.name = parentModule.getName() + " Tracking";
         context = getParentModule().getConfiguration().androidContext;
     }
 

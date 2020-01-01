@@ -95,7 +95,7 @@ public class SpotReportAidOutput extends AbstractSensorOutput<SpotReportDriver> 
     SpotReportAidOutput(SpotReportDriver parentModule) {
 
         super(parentModule);
-        this.name = "aid_spot_report_data";
+        this.name = parentModule.getName() + " Aid";
         context = getParentModule().getConfiguration().androidContext;
     }
 
