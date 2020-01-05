@@ -118,7 +118,13 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         // TODO: Switch this to SensorThings API if we want to demonstrate that capability
         // Get Beacon data
         RequestQueue requestQueue = Volley.newRequestQueue(this.getConfiguration().androidContext);
-        String url = "https://chainreaction31.github.io/scira-ble-page/beacons.json";   // TODO: make this configurable in the UI
+        Log.d(TAG, this.getConfiguration().configURL);
+        // Use a default URL to start, if the preferences at least start with http or https, then use that
+        String url = "https://chainreaction31.github.io/scira-ble-page/beacons.json";
+        String configURL = this.getConfiguration().configURL;
+        if(configURL.startsWith("https://") || configURL.startsWith("http://")){
+            url = configURL;
+        }
         JsonObjectRequest stringRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {

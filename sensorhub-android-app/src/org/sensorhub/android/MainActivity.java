@@ -241,6 +241,13 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if(enabled){
             BLEBeaconConfig beaconConfig = (BLEBeaconConfig)createSensorConfig(Sensors.BLELocation);
             beaconConfig.androidContext = this.getApplicationContext();
+            String configURL = prefs.getString("ble_config_url","https://chainreaction31.github.io/scira-ble-page/beacons.json");
+            if(!configURL.isEmpty() || !configURL.equals("")){
+                beaconConfig.configURL = configURL;
+            }else{
+                beaconConfig.configURL = "https://chainreaction31.github.io/scira-ble-page/beacons.json";
+            }
+
             sensorhubConfig.add(beaconConfig);
             addSosTConfig(beaconConfig, sosUser, sosPwd);
             Log.d(TAG, "onCreate: BLE Config Added");

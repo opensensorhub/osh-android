@@ -139,6 +139,11 @@
             android:key="ble_options"
             android:summary="Options for pushing data"
             android:title="BLE Output Options" />
+        <EditTextPreference
+            android:key="ble_config_url"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="BLE Configuration URL" />
     </PreferenceCategory>
 
     <PreferenceCategory

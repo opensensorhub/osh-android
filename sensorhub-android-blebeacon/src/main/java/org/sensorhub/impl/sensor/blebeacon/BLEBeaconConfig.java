@@ -14,6 +14,7 @@ public class BLEBeaconConfig extends SensorConfig {
     public String deviceName;
     public String runName;
     public String runDescription;
+    public String configURL;
 
     public transient Context androidContext;
 
