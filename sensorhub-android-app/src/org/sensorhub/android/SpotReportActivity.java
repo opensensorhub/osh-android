@@ -18,6 +18,7 @@ import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -63,6 +64,10 @@ public class SpotReportActivity extends Activity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_spot_report);
+//        setContentView(R.layout.spot_report_web_view);
+//        WebView webView = findViewById(R.id.webView);
+//        webView.getSettings().setJavaScriptEnabled(true);
+//        webView.loadUrl("http://192.168.0.230:3000");
 
         submitRequestResultReceiver = new SubmitRequestResultReceiver(this, new Handler());
 

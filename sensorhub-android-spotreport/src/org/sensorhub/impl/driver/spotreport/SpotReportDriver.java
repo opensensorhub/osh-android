@@ -43,7 +43,7 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
     private static final String LOCAL_REF_FRAME = "LOCAL_FRAME";
 
     protected String localFrameURI;
-    private SpotReportOutput spotReportOutput;
+//    private SpotReportImageOutput spotReportImageOutput;
     private SpotReportAidOutput spotReportAidOutput;
     private SpotReportFloodingOutput spotReportFloodingOutput;
     private SpotReportMedicalOutput spotReportMedicalOutput;
@@ -65,9 +65,9 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
         this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
 
         // create outputs
-        spotReportOutput = new SpotReportOutput(this);
-        this.addOutput(spotReportOutput, false);
-        spotReportOutput.init();
+//        spotReportImageOutput = new SpotReportImageOutput(this);
+//        this.addOutput(spotReportImageOutput, false);
+//        spotReportImageOutput.init();
 
         spotReportAidOutput = new SpotReportAidOutput(this);
         this.addOutput(spotReportAidOutput, false);
@@ -93,7 +93,7 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
     @Override
     public void start() throws SensorException {
 
-        spotReportOutput.start();
+//        spotReportImageOutput.start();
         spotReportAidOutput.start();
         spotReportFloodingOutput.start();
         spotReportMedicalOutput.start();
@@ -104,10 +104,10 @@ public class SpotReportDriver extends AbstractSensorModule<SpotReportConfig> {
     @Override
     public void stop() throws SensorException {
 
-        if (spotReportOutput != null) {
-
-            spotReportOutput.stop();
-        }
+//        if (spotReportImageOutput != null) {
+//
+//            spotReportImageOutput.stop();
+//        }
 
         if (spotReportAidOutput != null) {
 

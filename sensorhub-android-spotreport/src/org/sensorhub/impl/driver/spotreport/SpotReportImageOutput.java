@@ -51,10 +51,10 @@ import android.util.Log;
  * @author Nicolas Garay <nicolasgaray@icloud.com>
  * @since Nov 9, 2019
  */
-public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
+public class SpotReportImageOutput extends AbstractSensorOutput<SpotReportDriver> {
 
     // keep logger name short because in LogCat it's max 23 chars
-    private static final Logger log = LoggerFactory.getLogger(SpotReportOutput.class.getSimpleName());
+    private static final Logger log = LoggerFactory.getLogger(SpotReportImageOutput.class.getSimpleName());
 
     // Data Associated with Broadcast Receivers and Intents
     private static final String ACTION_SUBMIT_IMAGE_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_IMAGE";
@@ -86,7 +86,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     private Context context;
     private String name;
 
-    SpotReportOutput(SpotReportDriver parentModule) {
+    SpotReportImageOutput(SpotReportDriver parentModule) {
 
         super(parentModule);
         this.name = parentModule.getName() + " Image";
@@ -147,7 +147,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
     }
 
     /**
-     * Populate and submit an instance of the SpotReport containing no image.
+     * Populate and submit an instance of the SpotReport.
      *
      * @param category       The category for the spot report
      * @param locationSource The location source name for the spot report
@@ -297,7 +297,7 @@ public class SpotReportOutput extends AbstractSensorOutput<SpotReportDriver> {
 
             } catch (Exception e) {
 
-                Log.e("SpotReportOutput", e.toString());
+                Log.e("SpotReportImageOutput", e.toString());
                 resultReceiver.send(SUBMIT_REPORT_FAILURE, null);
             }
         }

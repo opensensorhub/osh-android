@@ -24,10 +24,8 @@ import net.opengis.swe.v20.Vector;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
-import org.vast.data.AbstractDataBlock;
-import org.vast.data.DataBlockMixed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vast.swe.SWEHelper;
 import org.vast.swe.helper.GeoPosHelper;
 
@@ -51,7 +49,7 @@ import java.util.UUID;
 public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDriver> {
 
     // keep logger name short because in LogCat it's max 23 chars
-//    private static final Logger log = LoggerFactory.getLogger(SpotReportOutput.class.getSimpleName());
+    private static final Logger log = LoggerFactory.getLogger(SpotReportTrackingOutput.class.getSimpleName());
 
     // Data Associated with Broadcast Receivers and Intents
     private static final String ACTION_SUBMIT_TRACK_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_TRACK";
@@ -163,7 +161,7 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
     }
 
     /**
-     * Populate and submit an instance of the SpotReport containing no image.
+     * Populate and submit an instance of the SpotReport.
      *
      * @param lat Latitude
      * @param lon Longitude
@@ -278,7 +276,7 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
 
             } catch (Exception e) {
 
-                Log.e("SpotReportOutput", e.toString());
+                Log.e("SpotReportTrackingOutput", e.toString());
                 resultReceiver.send(SUBMIT_REPORT_FAILURE, null);
             }
         }
