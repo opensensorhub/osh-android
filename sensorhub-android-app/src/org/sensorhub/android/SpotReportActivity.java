@@ -707,9 +707,9 @@ public class SpotReportActivity extends Activity {
             Button submitReportButton = findViewById(R.id.submitReport);
             submitReportButton.setOnClickListener((View view)-> {
 
-                String latString = ((EditText)findViewById(R.id.trackLatitude)).getText().toString();
-                String lonString = ((EditText)findViewById(R.id.trackLongitude)).getText().toString();
-                int confidence = Integer.parseInt(((EditText)findViewById(R.id.trackConfidenceNum)).getText().toString());
+                double latString = Double.valueOf(((EditText)findViewById(R.id.trackLatitude)).getText().toString());
+                double lonString = Double.valueOf(((EditText)findViewById(R.id.trackLongitude)).getText().toString());
+                double confidence = Double.valueOf(((EditText)findViewById(R.id.trackConfidenceNum)).getText().toString());
                 String resourceType = ((Spinner)findViewById(R.id.trackedResource)).getSelectedItem().toString();
                 int typePosition = ((Spinner)findViewById(R.id.trackedResource)).getSelectedItemPosition();
                 String resourceId = ((EditText)findViewById(R.id.trackResourceId)).getText().toString();

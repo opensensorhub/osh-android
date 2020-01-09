@@ -1,5 +1,8 @@
 package org.sensorhub.impl.sensor.blebeacon;
 
+import android.content.Intent;
+import android.util.Log;
+
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -12,6 +15,9 @@ import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.vast.swe.helper.GeoPosHelper;
 
 public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
+
+    private static final String ACTION_SUBMIT_TRACK_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_TRACK";
+
     private static final String URL_DEF = "http://sensorml.com/ont/swe/property/";
 
     String name;
@@ -75,9 +81,33 @@ public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
     }
 
     protected void sendMeasurement(Beacon beacon) {
+
         DataBlock dataBlock = posDataStruct.createDataBlock();
         double sampleTime = System.currentTimeMillis() / 1000;
         double[] locationDecDeg = parentSensor.getBeaconLocation(beacon);
+
+        Log.d("NearestBeaconOutput", "Publishing Intent");
+
+        Intent submitReportIntent = new Intent(ACTION_SUBMIT_TRACK_REPORT);
+        submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        submitReportIntent.putExtra("lat", locationDecDeg[0]);
+        submitReportIntent.putExtra("lon", locationDecDeg[1]);
+        double confidence = 0;
+
+        if (parentSensor.getBeaconDistance(beacon) > 0) {
+
+            confidence = (1 / parentSensor.getBeaconDistance(beacon));
+        }
+
+        submitReportIntent.putExtra("confidence", confidence);
+        submitReportIntent.putExtra("resourceType", "device");
+        submitReportIntent.putExtra("resourceId", parentSensor.getConfiguration().id);
+        submitReportIntent.putExtra("resourceLabel", parentSensor.getConfiguration().name);
+        submitReportIntent.putExtra("trackingMethod", "bt_beacon");
+        parentSensor.getConfiguration().androidContext.sendBroadcast(submitReportIntent);
+
+        Log.d("NearestBeaconOutput", "Published Intent");
+
 
         dataBlock.setDoubleValue(0, sampleTime);
         dataBlock.setDoubleValue(1, locationDecDeg[0]);

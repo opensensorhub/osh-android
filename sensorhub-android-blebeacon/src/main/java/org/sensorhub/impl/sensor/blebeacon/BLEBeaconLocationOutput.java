@@ -1,5 +1,8 @@
 package org.sensorhub.impl.sensor.blebeacon;
 
+import android.content.Intent;
+import android.util.Log;
+
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
@@ -11,6 +14,9 @@ import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.vast.swe.helper.GeoPosHelper;
 
 public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDriver> {
+
+    private static final String ACTION_SUBMIT_TRACK_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_TRACK";
+
     private static final String URL_DEF = "http://sensorml.com/ont/swe/property/";
 
     String name;
@@ -98,6 +104,29 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
     }
 
     protected void sendMeasurement(double[] estLocation, Beacon[] beacons) {
+
+        Log.d("BLEBeaconLocationOutput", "Publishing Intent");
+
+        Intent submitReportIntent = new Intent(ACTION_SUBMIT_TRACK_REPORT);
+        submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        submitReportIntent.putExtra("lat", estLocation[0]);
+        submitReportIntent.putExtra("lon", estLocation[1]);
+        double confidence = 0;
+
+        if (parentSensor.getBeaconDistance(beacons[0]) > 0) {
+
+            confidence = (1 / parentSensor.getBeaconDistance(beacons[0]));
+        }
+
+        submitReportIntent.putExtra("confidence", confidence);
+        submitReportIntent.putExtra("resourceType", "device");
+        submitReportIntent.putExtra("resourceId", parentSensor.getConfiguration().id);
+        submitReportIntent.putExtra("resourceLabel", parentSensor.getConfiguration().name);
+        submitReportIntent.putExtra("trackingMethod", "bt_beacon");
+        parentSensor.getConfiguration().androidContext.sendBroadcast(submitReportIntent);
+
+        Log.d("BLEBeaconLocationOutput", "Published Intent");
+
         DataBlock dataBlock = posDataStruct.createDataBlock();
         double sampleTime = System.currentTimeMillis() / 1000;
         // TODO: Handle null or {0,0,0} better

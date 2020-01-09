@@ -171,7 +171,7 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
      * @param resourceLabel A label associated with the resource
      * @param trackingMethod Method employed to perform tracking
      */
-    private void submitReport(String lat, String lon, int confidence, String resourceType,
+    private void submitReport(double lat, double lon, double confidence, String resourceType,
                               String resourceId, String resourceLabel, String trackingMethod) {
 
         double samplingTime = System.currentTimeMillis() / 1000.0;
@@ -189,10 +189,10 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
 
         newRecord.setDoubleValue(0, samplingTime);
         newRecord.setStringValue(1, UUID.randomUUID().toString());
-        newRecord.setDoubleValue(2, Double.parseDouble(lat));
-        newRecord.setDoubleValue(3, Double.parseDouble(lon));
+        newRecord.setDoubleValue(2, lat);
+        newRecord.setDoubleValue(3, lon);
         newRecord.setDoubleValue(4, 0.0);
-        newRecord.setIntValue(5, confidence);
+        newRecord.setDoubleValue(5, confidence);
         newRecord.setStringValue(6, resourceType);
         newRecord.setStringValue(7, resourceId);
         newRecord.setStringValue(8, resourceLabel);
@@ -259,9 +259,11 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
 
                 if (ACTION_SUBMIT_TRACK_REPORT.equals(intent.getAction())) {
 
-                    String lat = intent.getStringExtra(DATA_LAT);
-                    String lon = intent.getStringExtra(DATA_LON);
-                    int confidence = intent.getIntExtra(DATA_CONFIDENCE, 0);
+                    Log.d("SpotReportTrackingOutput", "Received Intent");
+
+                    double lat = intent.getDoubleExtra(DATA_LAT, 0.0);
+                    double lon = intent.getDoubleExtra(DATA_LON, 0.0);
+                    double confidence = intent.getDoubleExtra(DATA_CONFIDENCE, 0.0);
                     String resourceType = intent.getStringExtra(DATA_TYPE);
                     String resourceId = intent.getStringExtra(DATA_ID);
                     String resourceLabel = intent.getStringExtra(DATA_RESOURCE_LABEL);
@@ -270,14 +272,26 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
                     submitReport(lat, lon, confidence, resourceType, resourceId, resourceLabel,
                             trackingMethod);
 
-                    resultReceiver.send(SUBMIT_REPORT_SUCCESS, null);
+                    Log.d("SpotReportTrackingOutput", "Submitted Report");
 
+                    // If a response expected via result receiver sent with intent
+                    if (null != resultReceiver) {
+
+                        resultReceiver.send(SUBMIT_REPORT_SUCCESS, null);
+                    }
                 }
 
             } catch (Exception e) {
 
+                Log.d("SpotReportTrackingOutput", e.toString());
+
                 Log.e("SpotReportTrackingOutput", e.toString());
-                resultReceiver.send(SUBMIT_REPORT_FAILURE, null);
+
+                // If a response expected via result receiver sent with intent
+                if (null != resultReceiver) {
+
+                    resultReceiver.send(SUBMIT_REPORT_FAILURE, null);
+                }
             }
         }
     }

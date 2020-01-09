@@ -14,6 +14,7 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.android;
 
+import android.content.Intent;
 import android.os.Handler;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
@@ -40,6 +41,8 @@ import android.os.Bundle;
  */
 public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, LocationListener
 {
+    private static final String ACTION_SUBMIT_TRACK_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_TRACK";
+
     LocationManager locManager;
     LocationProvider locProvider;
     String name;
@@ -137,6 +140,17 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
     @Override
     public void onLocationChanged(Location location)
     {
+        Intent submitReportIntent = new Intent(ACTION_SUBMIT_TRACK_REPORT);
+        submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        submitReportIntent.putExtra("lat", location.getLatitude());
+        submitReportIntent.putExtra("lon", location.getLongitude());
+        submitReportIntent.putExtra("confidence", 16.0);
+        submitReportIntent.putExtra("resourceType", "device");
+        submitReportIntent.putExtra("resourceId", parentSensor.getConfiguration().id);
+        submitReportIntent.putExtra("resourceLabel", parentSensor.getConfiguration().name);
+        submitReportIntent.putExtra("trackingMethod", "gps");
+        parentSensor.getConfiguration().androidContext.sendBroadcast(submitReportIntent);
+
         /*log.debug("Location received from " + getName() + ": "
                   + location.getLatitude() + ", " +
                   + location.getLongitude() + ", " +
