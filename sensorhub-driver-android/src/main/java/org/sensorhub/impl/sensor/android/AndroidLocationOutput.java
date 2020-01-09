@@ -145,10 +145,10 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
         submitReportIntent.putExtra("lat", location.getLatitude());
         submitReportIntent.putExtra("lon", location.getLongitude());
         submitReportIntent.putExtra("confidence", 16.0);
-        submitReportIntent.putExtra("resourceType", "device");
-        submitReportIntent.putExtra("resourceId", parentSensor.getConfiguration().id);
+        submitReportIntent.putExtra("type", "device");
+        submitReportIntent.putExtra("resourceId", parentSensor.getConfiguration().name);
         submitReportIntent.putExtra("resourceLabel", parentSensor.getConfiguration().name);
-        submitReportIntent.putExtra("trackingMethod", "gps");
+        submitReportIntent.putExtra("method", "gps");
         parentSensor.getConfiguration().androidContext.sendBroadcast(submitReportIntent);
 
         /*log.debug("Location received from " + getName() + ": "

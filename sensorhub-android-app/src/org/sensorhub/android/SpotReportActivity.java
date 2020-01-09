@@ -753,10 +753,10 @@ public class SpotReportActivity extends Activity {
                     submitReportIntent.putExtra("lat", latString);
                     submitReportIntent.putExtra("lon", lonString);
                     submitReportIntent.putExtra("confidence", confidence);
-                    submitReportIntent.putExtra("resourceType", resourceType);
+                    submitReportIntent.putExtra("type", resourceType);
                     submitReportIntent.putExtra("resourceId", resourceId);
                     submitReportIntent.putExtra("resourceLabel", resourceLabel);
-                    submitReportIntent.putExtra("trackingMethod", trackingMethod);
+                    submitReportIntent.putExtra("method", trackingMethod);
                     submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
                     sendBroadcast(submitReportIntent);
                 }

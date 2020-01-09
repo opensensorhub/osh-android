@@ -100,10 +100,10 @@ public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
         }
 
         submitReportIntent.putExtra("confidence", confidence);
-        submitReportIntent.putExtra("resourceType", "device");
-        submitReportIntent.putExtra("resourceId", parentSensor.getConfiguration().id);
+        submitReportIntent.putExtra("type", "device");
+        submitReportIntent.putExtra("resourceId", parentSensor.getConfiguration().name);
         submitReportIntent.putExtra("resourceLabel", parentSensor.getConfiguration().name);
-        submitReportIntent.putExtra("trackingMethod", "bt_beacon");
+        submitReportIntent.putExtra("method", "bt_beacon");
         parentSensor.getConfiguration().androidContext.sendBroadcast(submitReportIntent);
 
         Log.d("NearestBeaconOutput", "Published Intent");
