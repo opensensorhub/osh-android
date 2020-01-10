@@ -63,6 +63,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
     private Map<String, Vect3d> url2Locations;
     private Map<String, Beacon> beaconMap;
     private Map<String, Date> lastRanged;
+    private Map<String, String> url2Room;
     private Triangulation triangulation;
     Comparator beaconComp;
     private double lastPoll;
@@ -73,6 +74,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         beaconMap = new HashMap<>();
         url2Locations = new HashMap<>();
         lastRanged = new HashMap<>();
+        url2Room = new HashMap<>();
 
 //        url2Locations.put("http://rpi4-1", new Vect3d(-86.2012028 * Math.PI / 180, 34.2520736 * Math.PI / 180, 283.0));
 //        url2Locations.put("http://opensensorhub.org", new Vect3d(-86.2012018 * Math.PI / 180, 34.2520221 * Math.PI / 180, 283.0));
@@ -141,6 +143,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
                                 beaconInfo.getJSONObject("location").getDouble("alt")
                         };
                         url2Locations.put(url, new Vect3d(beaconLocation[0], beaconLocation[1], beaconLocation[2]));
+                        url2Room.put(url, beaconInfo.optString("roomDesc", "None Provided"));
                     }
 
                 } catch (JSONException e) {
@@ -266,7 +269,8 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
             beaconArrayList.addAll(beaconMap.values());
             beaconArrayList.sort(beaconComp);
             Beacon nearest = beaconArrayList.get(0);
-            nearestBeaconOutput.sendMeasurement(nearest);
+            String roomDesc = url2Room.get(UrlBeaconUrlCompressor.uncompress(nearest.getId1().toByteArray()));
+            nearestBeaconOutput.sendMeasurement(nearest, roomDesc);
             return new double[]{};
         }
         if (beaconMap.size() == 3) {
