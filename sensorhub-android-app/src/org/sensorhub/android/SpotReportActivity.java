@@ -59,8 +59,9 @@ public class SpotReportActivity extends Activity {
     private Uri imageUri;
     private String lastAction = null;
     private MqttService mqttService;
-    private String[] topics = {"/FloodTrend", "/FlashFlood", "/RoadClosure",
-            "/PersonAssist", "/MedAlert", "/Track"};
+    private String[] topics = {"/Datastreams(236)/Observations" };
+    //, "/FloodTrend", "Datastreams(192)/FlashFlood", "/RoadClosure",
+    //        "/PersonAssist", "/MedAlert", "/Track"};
 
     private SubmitRequestResultReceiver submitRequestResultReceiver;
 
@@ -72,7 +73,7 @@ public class SpotReportActivity extends Activity {
 
             mqttService = ((MqttService.LocalBinder) service).getService();
 
-            mqttService.connect("https://ogc-hub.compusult.com", 1883, Arrays.asList(topics));
+            mqttService.connect("ogc-hub.compusult.com", 1883, Arrays.asList(topics));
         }
 
         public void onServiceDisconnected(ComponentName className) {

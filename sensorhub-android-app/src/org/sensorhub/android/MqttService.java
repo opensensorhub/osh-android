@@ -57,7 +57,12 @@ public class MqttService extends Service {
                 .serverPort(port)
                 .buildAsync();
 
-        client.connect()
+        client.connectWith()
+                .simpleAuth()
+                    .username("botts")
+                    .password("scira04".getBytes())
+                .applySimpleAuth()
+                .send()
                 .whenComplete((connAck, throwable) -> {
 
                     if (throwable != null) {
