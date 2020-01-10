@@ -2,8 +2,11 @@ package org.sensorhub.android;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.icu.text.SimpleDateFormat;
@@ -13,12 +16,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
-import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -32,6 +35,7 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 
@@ -54,10 +58,29 @@ public class SpotReportActivity extends Activity {
     private Bitmap imageBitmap = null;
     private Uri imageUri;
     private String lastAction = null;
+    private MqttService mqttService;
+    private String[] topics = {"/Datastreams(236)/Observations" };
+    //, "/FloodTrend", "Datastreams(192)/FlashFlood", "/RoadClosure",
+    //        "/PersonAssist", "/MedAlert", "/Track"};
 
     private SubmitRequestResultReceiver submitRequestResultReceiver;
 
     private ReportTypeListener reportTypeListener = new ReportTypeListener(this);
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+
+        public void onServiceConnected(ComponentName className, IBinder service) {
+
+            mqttService = ((MqttService.LocalBinder) service).getService();
+
+            mqttService.connect("ogc-hub.compusult.com", 1883, Arrays.asList(topics));
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+
+            mqttService = null;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,17 +90,34 @@ public class SpotReportActivity extends Activity {
 //        setContentView(R.layout.spot_report_web_view);
 //        WebView webView = findViewById(R.id.webView);
 //        webView.getSettings().setJavaScriptEnabled(true);
-//        webView.loadUrl("http://192.168.0.230:3000");
+//        webView.loadUrl("http://scira.georobotix.io:8181/");
 
         submitRequestResultReceiver = new SubmitRequestResultReceiver(this, new Handler());
 
         Spinner spinner = findViewById(R.id.reportType);
 
         spinner.setOnItemSelectedListener(reportTypeListener);
+
+        // bind to SensorHub service
+        Intent intent = new Intent(this, MqttService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     protected void onDestroy() {
+
+        for (String topic : topics) {
+
+            try {
+
+                mqttService.unsubscribe(topic);
+
+            } catch (Exception e) {
+
+                Log.e("SpotReport", "Failed on unsubscribe of topic:" + topic);
+            }
+        }
+
         super.onDestroy();
     }
 
