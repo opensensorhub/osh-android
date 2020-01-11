@@ -29,6 +29,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -44,16 +45,16 @@ class MqttHelper {
     private MqttAndroidClient client;
     private List<String> subscribedTopics = new ArrayList<>();
 
-    MqttHelper(Context context, String endpoint, String username, String password, List<String> topics) {
+    MqttHelper(Context context, String endpoint, String username, String password, Map<String, String> topics) {
 
         String clientId = MqttClient.generateClientId();
 
         client = new MqttAndroidClient(context, endpoint, clientId);
 
-        connect(topics, username, password);
+        connect(username, password, topics);
     }
 
-    void connect(List<String> topics, String username, String password) {
+    void connect(String username, String password, Map<String, String> topics) {
 
         try {
 
@@ -79,7 +80,7 @@ class MqttHelper {
                     disconnectedBufferOptions.setDeleteOldestMessages(false);
                     client.setBufferOpts(disconnectedBufferOptions);
 
-                    for (String topic: topics) {
+                    for (String topic: topics.keySet()) {
 
                         subscribe(topic);
                     }
@@ -107,28 +108,29 @@ class MqttHelper {
 
         try {
 
-            client.subscribe(topic, 0, null, new IMqttActionListener() {
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
+            client.subscribe(topic, 0, null,
+                    new IMqttActionListener() {
+                        @Override
+                        public void onSuccess(IMqttToken asyncActionToken) {
 
-                    Log.d(TAG,"Subscribed");
-                    subscribedTopics.add(topic);
-                }
+                            Log.d(TAG,"Subscribed - Topic: " + topic);
+                            subscribedTopics.add(topic);
+                        }
 
-                @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        @Override
+                        public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
 
-                    Log.d(TAG, "Subscribe fail", exception);
-                }
-            },
-            new IMqttMessageListener() {
+                            Log.d(TAG, "Subscribe fail", exception);
+                        }
+                    },
+                    new IMqttMessageListener() {
 
-                @Override
-                public void messageArrived(String topic, MqttMessage message) throws Exception {
+                        @Override
+                        public void messageArrived(String topic, MqttMessage message) throws Exception {
 
-                    Log.d(TAG, "Topic: " + topic + "\n" + message.toString());
-                }
-            });
+                            Log.d(TAG, "Topic: " + topic + "\n" + message.toString());
+                        }
+                    });
 
         } catch (MqttException ex) {
 

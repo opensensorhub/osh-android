@@ -1,9 +1,11 @@
 package org.sensorhub.android;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.icu.text.SimpleDateFormat;
@@ -15,6 +17,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
@@ -35,8 +38,8 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 
 public class SpotReportActivity extends Activity {
@@ -59,15 +62,26 @@ public class SpotReportActivity extends Activity {
     private Bitmap imageBitmap = null;
     private Uri imageUri;
     private String lastAction = null;
+
     private MqttHelper mqttService;
-    private String[] topics = { "Datastreams(2)/Observations" };
-    //, "/FloodTrend", "Datastreams(192)/FlashFlood", "/RoadClosure",
-    //        "/PersonAssist", "/MedAlert", "/Track"};
+    private HashMap<String, String> topics = new HashMap<>();
+    private static final String MQTT_USER = "botts";
+    private static final String MQTT_PASSWORD = "scira04";
+    private static final String MQTT_URL = "tcp://ogc-hub.compusult.com:1883";
+    private static final String FLOODING_TOPIC_ID = "Datastreams(192)/Observations";
+    private static final String FLOODING_FRIENDLY_NAME = "FLOODING";
+    private static final String STREET_CLOSURE_TOPIC_ID = "Datastreams(232)/Observations";
+    private static final String STREET_CLOSURE_FRIENDLY_NAME = "ROAD CLOSURE";
+    private static final String AID_TOPIC_ID = "Datastreams(235)/Observations";
+    private static final String AID_FRIENDLY_NAME = "PERSON ASSIST";
+    private static final String TRACK_TOPIC_ID = "Datastreams(236)/Observations";
+    private static final String TRACK_FRIENDLY_NAME = "TRACK";
+    private static final String MED_TOPIC_ID = "Datastreams(237)/Observations";
+    private static final String MED_FRIENDLY_NAME = "MED ALERT";
 
     private SubmitRequestResultReceiver submitRequestResultReceiver;
 
     private ReportTypeListener reportTypeListener = new ReportTypeListener(this);
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,11 +99,16 @@ public class SpotReportActivity extends Activity {
 
         spinner.setOnItemSelectedListener(reportTypeListener);
 
+
+        topics.put("Observations", "Test Topic");
+        topics.put(FLOODING_TOPIC_ID, FLOODING_FRIENDLY_NAME);
+        topics.put(STREET_CLOSURE_TOPIC_ID, STREET_CLOSURE_FRIENDLY_NAME);
+        topics.put(AID_TOPIC_ID, AID_FRIENDLY_NAME);
+        topics.put(TRACK_TOPIC_ID, TRACK_FRIENDLY_NAME);
+        topics.put(MED_TOPIC_ID, MED_FRIENDLY_NAME);
+
         mqttService = new MqttHelper(getApplicationContext(),
-                "tcp://ogc-hub.compusult.com:1883",
-                "botts",
-                "scira04",
-                Arrays.asList(topics));
+                MQTT_URL, MQTT_USER, MQTT_PASSWORD, topics);
 
         mqttService.setCallback(new MqttCallbackExtended() {
 
@@ -122,7 +141,7 @@ public class SpotReportActivity extends Activity {
     @Override
     protected void onDestroy() {
 
-        for (String topic : topics) {
+        for (String topic : topics.keySet()) {
 
             try {
 
@@ -243,29 +262,33 @@ public class SpotReportActivity extends Activity {
 
             String selectedItem = parent.getItemAtPosition(position).toString();
 
-            LocationManager locationManager = (LocationManager) this.parent.getSystemService(LOCATION_SERVICE);
+            if (PackageManager.PERMISSION_GRANTED ==
+                    ContextCompat.checkSelfPermission(parent.getContext(), Manifest.permission.ACCESS_FINE_LOCATION)) {
 
-            if (selectedItem.equalsIgnoreCase("GPS")) {
+                LocationManager locationManager = (LocationManager) this.parent.getSystemService(LOCATION_SERVICE);
 
-                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if (selectedItem.equalsIgnoreCase("GPS")) {
 
-            } else if (selectedItem.equalsIgnoreCase("Network")) {
+                    location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            }
+                } else if (selectedItem.equalsIgnoreCase("Network")) {
 
-            if (null != location) {
-
-                if(latId != 0) {
-
-                    ((TextView) findViewById(latId)).setText(
-                            String.format(Locale.ENGLISH, "%f", location.getLatitude()));
+                    location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                 }
 
-                if(lonId != 0) {
+                if (null != location) {
 
-                    ((TextView) findViewById(lonId)).setText(
-                            String.format(Locale.ENGLISH, "%f", location.getLongitude()));
+                    if(latId != 0) {
+
+                        ((TextView) findViewById(latId)).setText(
+                                String.format(Locale.ENGLISH, "%f", location.getLatitude()));
+                    }
+
+                    if(lonId != 0) {
+
+                        ((TextView) findViewById(lonId)).setText(
+                                String.format(Locale.ENGLISH, "%f", location.getLongitude()));
+                    }
                 }
             }
         }
