@@ -2,11 +2,8 @@ package org.sensorhub.android;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.icu.text.SimpleDateFormat;
@@ -16,7 +13,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
@@ -32,6 +28,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,6 +41,7 @@ import java.util.Locale;
 
 public class SpotReportActivity extends Activity {
 
+    private static final String TAG = "SpotReportActivity";
     // Data Associated with Broadcast Receivers and Intents
     private static final int REQUEST_IMAGE_CAPTURE = 1;
 
@@ -58,8 +59,8 @@ public class SpotReportActivity extends Activity {
     private Bitmap imageBitmap = null;
     private Uri imageUri;
     private String lastAction = null;
-    private MqttService mqttService;
-    private String[] topics = {"/Datastreams(236)/Observations" };
+    private MqttHelper mqttService;
+    private String[] topics = { "Datastreams(2)/Observations" };
     //, "/FloodTrend", "Datastreams(192)/FlashFlood", "/RoadClosure",
     //        "/PersonAssist", "/MedAlert", "/Track"};
 
@@ -67,20 +68,6 @@ public class SpotReportActivity extends Activity {
 
     private ReportTypeListener reportTypeListener = new ReportTypeListener(this);
 
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-
-        public void onServiceConnected(ComponentName className, IBinder service) {
-
-            mqttService = ((MqttService.LocalBinder) service).getService();
-
-            mqttService.connect("ogc-hub.compusult.com", 1883, Arrays.asList(topics));
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-
-            mqttService = null;
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,9 +85,38 @@ public class SpotReportActivity extends Activity {
 
         spinner.setOnItemSelectedListener(reportTypeListener);
 
-        // bind to SensorHub service
-        Intent intent = new Intent(this, MqttService.class);
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        mqttService = new MqttHelper(getApplicationContext(),
+                "tcp://ogc-hub.compusult.com:1883",
+                "botts",
+                "scira04",
+                Arrays.asList(topics));
+
+        mqttService.setCallback(new MqttCallbackExtended() {
+
+            @Override
+            public void connectComplete(boolean reconnect, String serverURI) {
+
+                Log.d(TAG, "Connection complete: " + reconnect + " " + serverURI);
+            }
+
+            @Override
+            public void connectionLost(Throwable cause) {
+
+                Log.d(TAG, "Connection lost", cause);
+            }
+
+            @Override
+            public void messageArrived(String topic, MqttMessage message) throws Exception {
+
+                Log.d(TAG, "Topic: " + topic + "\n" + message.toString());
+            }
+
+            @Override
+            public void deliveryComplete(IMqttDeliveryToken token) {
+
+                Log.d(TAG, "Delivery complete");
+            }
+        });
     }
 
     @Override
@@ -117,6 +133,8 @@ public class SpotReportActivity extends Activity {
                 Log.e("SpotReport", "Failed on unsubscribe of topic:" + topic);
             }
         }
+
+        mqttService.disconnect();
 
         super.onDestroy();
     }
