@@ -30,21 +30,22 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.sensorhub.android.mqtt.IMqttSubscriber;
+import org.sensorhub.android.mqtt.MqttConnectionListener;
+import org.sensorhub.android.mqtt.MqttHelper;
+import org.sensorhub.android.mqtt.MqttMessageHandler;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
 
-public class SpotReportActivity extends Activity {
+public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
     private static final String TAG = "SpotReportActivity";
+
     // Data Associated with Broadcast Receivers and Intents
     private static final int REQUEST_IMAGE_CAPTURE = 1;
 
@@ -63,21 +64,28 @@ public class SpotReportActivity extends Activity {
     private Uri imageUri;
     private String lastAction = null;
 
-    private MqttHelper mqttService;
-    private HashMap<String, String> topics = new HashMap<>();
+    private MqttHelper mqttHelper;
+
     private static final String MQTT_USER = "botts";
     private static final String MQTT_PASSWORD = "scira04";
     private static final String MQTT_URL = "tcp://ogc-hub.compusult.com:1883";
+
     private static final String FLOODING_TOPIC_ID = "Datastreams(192)/Observations";
-    private static final String FLOODING_FRIENDLY_NAME = "FLOODING";
     private static final String STREET_CLOSURE_TOPIC_ID = "Datastreams(232)/Observations";
-    private static final String STREET_CLOSURE_FRIENDLY_NAME = "ROAD CLOSURE";
     private static final String AID_TOPIC_ID = "Datastreams(235)/Observations";
-    private static final String AID_FRIENDLY_NAME = "PERSON ASSIST";
     private static final String TRACK_TOPIC_ID = "Datastreams(236)/Observations";
-    private static final String TRACK_FRIENDLY_NAME = "TRACK";
     private static final String MED_TOPIC_ID = "Datastreams(237)/Observations";
-    private static final String MED_FRIENDLY_NAME = "MED ALERT";
+
+    private static final String[] topics = {
+            "Observations",
+            FLOODING_TOPIC_ID,
+            STREET_CLOSURE_TOPIC_ID,
+            AID_TOPIC_ID,
+            TRACK_TOPIC_ID,
+            MED_TOPIC_ID
+        };
+
+    private final MqttMessageHandler mqttMessageListener = new MqttMessageHandler(this);
 
     private SubmitRequestResultReceiver submitRequestResultReceiver;
 
@@ -99,61 +107,45 @@ public class SpotReportActivity extends Activity {
 
         spinner.setOnItemSelectedListener(reportTypeListener);
 
+        mqttHelper = new MqttHelper();
 
-        topics.put("Observations", "Test Topic");
-        topics.put(FLOODING_TOPIC_ID, FLOODING_FRIENDLY_NAME);
-        topics.put(STREET_CLOSURE_TOPIC_ID, STREET_CLOSURE_FRIENDLY_NAME);
-        topics.put(AID_TOPIC_ID, AID_FRIENDLY_NAME);
-        topics.put(TRACK_TOPIC_ID, TRACK_FRIENDLY_NAME);
-        topics.put(MED_TOPIC_ID, MED_FRIENDLY_NAME);
+        IMqttToken connection = mqttHelper.connect(getApplicationContext(), MQTT_USER, MQTT_PASSWORD, MQTT_URL);
+        connection.setActionCallback(new MqttConnectionListener(mqttHelper, this));
+    }
 
-        mqttService = new MqttHelper(getApplicationContext(),
-                MQTT_URL, MQTT_USER, MQTT_PASSWORD, topics);
+    @Override
+    public void subscribeToTopics() {
 
-        mqttService.setCallback(new MqttCallbackExtended() {
+        Log.d(TAG, "subscribeToTopics");
 
-            @Override
-            public void connectComplete(boolean reconnect, String serverURI) {
+        for(String topic : topics) {
 
-                Log.d(TAG, "Connection complete: " + reconnect + " " + serverURI);
-            }
+            mqttHelper.subscribe(topic, mqttMessageListener);
+        }
+    }
 
-            @Override
-            public void connectionLost(Throwable cause) {
+    @Override
+    public void onMessage() {
 
-                Log.d(TAG, "Connection lost", cause);
-            }
-
-            @Override
-            public void messageArrived(String topic, MqttMessage message) throws Exception {
-
-                Log.d(TAG, "Topic: " + topic + "\n" + message.toString());
-            }
-
-            @Override
-            public void deliveryComplete(IMqttDeliveryToken token) {
-
-                Log.d(TAG, "Delivery complete");
-            }
-        });
+        Log.d(TAG, "onMessage");
     }
 
     @Override
     protected void onDestroy() {
 
-        for (String topic : topics.keySet()) {
+        for (String topic : topics) {
 
             try {
 
-                mqttService.unsubscribe(topic);
+                mqttHelper.unsubscribe(topic);
 
             } catch (Exception e) {
 
-                Log.e("SpotReport", "Failed on unsubscribe of topic:" + topic);
+                Log.e(TAG, "Failed on unsubscribe of topic:" + topic);
             }
         }
 
-        mqttService.disconnect();
+        mqttHelper.disconnect();
 
         super.onDestroy();
     }
@@ -199,7 +191,7 @@ public class SpotReportActivity extends Activity {
             } catch (IOException e) {
 
                 // Error occurred while creating the File
-                Log.e("SpotReport", e.toString());
+                Log.e(TAG, e.toString());
             }
         }
     }
@@ -221,7 +213,7 @@ public class SpotReportActivity extends Activity {
 
                 } catch (Exception e) {
 
-                    Log.e("SpotReport", e.toString());
+                    Log.e(TAG, e.toString());
                 }
             }
         }
