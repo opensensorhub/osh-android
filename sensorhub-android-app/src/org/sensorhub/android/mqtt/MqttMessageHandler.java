@@ -13,6 +13,9 @@
  ******************************* END LICENSE BLOCK ***************************/
 package org.sensorhub.android.mqtt;
 
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -20,13 +23,15 @@ import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-public class MqttMessageHandler implements IMqttActionListener, IMqttMessageListener {
+public class MqttMessageHandler extends Handler implements IMqttActionListener, IMqttMessageListener {
 
     private static final String TAG = "MqttMessageHandler";
 
     private IMqttSubscriber subscriber;
 
     public MqttMessageHandler(IMqttSubscriber subscriber) {
+
+        super();
 
         this.subscriber = subscriber;
     }
@@ -47,7 +52,17 @@ public class MqttMessageHandler implements IMqttActionListener, IMqttMessageList
     public void messageArrived(String topic, MqttMessage message) throws Exception {
 
         Log.d(TAG, "Topic: " + topic);
+        Bundle bundle = new Bundle();
+        bundle.putString("mqtt-message", message.toString());
+        Message msg = new Message();
+        msg.setData(bundle);
+        this.sendMessage(msg);
+    }
 
-        subscriber.onMessage(message.toString());
+    @Override
+    public void handleMessage(Message message) {
+
+        String mqttMessage = message.getData().getString("mqtt-message");
+        subscriber.onMessage(mqttMessage);
     }
 }
