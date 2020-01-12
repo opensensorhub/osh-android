@@ -43,7 +43,7 @@ public class MqttConnectionListener implements IMqttActionListener {
         options.setBufferSize(100);
         options.setPersistBuffer(false);
         options.setDeleteOldestMessages(false);
-        mqttHelper.setDsiconnectedBufferOptions(options);
+        mqttHelper.setDisconnectedBufferOptions(options);
 
         subscriber.subscribeToTopics();
     }

@@ -68,7 +68,7 @@ public class MqttHelper {
         return connectionToken;
     }
 
-    public void setDsiconnectedBufferOptions(DisconnectedBufferOptions options) {
+    public void setDisconnectedBufferOptions(DisconnectedBufferOptions options) {
 
         client.setBufferOpts(options);
     }
@@ -111,6 +111,8 @@ public class MqttHelper {
                 public void onSuccess(IMqttToken asyncActionToken) {
 
                     Log.d(TAG, "Disconnected");
+                    client.unregisterResources();
+                    client.close();
                 }
 
                 @Override
