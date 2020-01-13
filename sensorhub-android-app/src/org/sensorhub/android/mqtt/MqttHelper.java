@@ -40,6 +40,32 @@ public class MqttHelper {
     public MqttHelper() {
     }
 
+    public IMqttToken connect(Context context, String url) {
+
+        IMqttToken connectionToken = null;
+
+        String clientId = MqttClient.generateClientId();
+
+        client = new MqttAndroidClient(context, url, clientId);
+
+        try {
+
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setConnectionTimeout(3000);
+            options.setKeepAliveInterval(300);
+            options.setAutomaticReconnect(true);
+            options.setCleanSession(false);
+
+            connectionToken = client.connect(options);
+
+        }catch(Exception e) {
+
+            Log.d(TAG, "Connection failure", e);
+        }
+
+        return connectionToken;
+    }
+
     public IMqttToken connect(Context context, String username, String password, String url) {
 
         IMqttToken connectionToken = null;
@@ -55,8 +81,8 @@ public class MqttHelper {
             options.setKeepAliveInterval(300);
             options.setAutomaticReconnect(true);
             options.setCleanSession(false);
-            options.setUserName(username);
-            options.setPassword(password.toCharArray());
+//            options.setUserName(username);
+//            options.setPassword(password.toCharArray());
 
             connectionToken = client.connect(options);
 

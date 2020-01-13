@@ -13,20 +13,32 @@
  ******************************* END LICENSE BLOCK ***************************/
 package org.sensorhub.android.spotreport;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.icu.text.SimpleDateFormat;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
+import android.webkit.HttpAuthHandler;
+import android.webkit.WebChromeClient;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -40,6 +52,7 @@ import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONStringer;
 import org.sensorhub.android.R;
 import org.sensorhub.android.mqtt.IMqttSubscriber;
 import org.sensorhub.android.mqtt.MqttConnectionListener;
@@ -68,7 +81,8 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
     private static final String MQTT_USER = "botts";
     private static final String MQTT_PASSWORD = "scira04";
-    private static final String MQTT_URL = "tcp://ogc-hub.compusult.com:1883";
+//    private static final String MQTT_URL = "tcp://ogc-hub.compusult.com:1883";
+    private static final String MQTT_URL = "tcp://test.mosquitto.org:1883";
 
     private static final String FLOODING_TOPIC_ID = "Datastreams(192)/Observations";
     private static final String STREET_CLOSURE_TOPIC_ID = "Datastreams(232)/Observations";
@@ -78,6 +92,7 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
     private static final String[] topics = {
             "Observations",
+            "sensors/garage_temp_f",
             FLOODING_TOPIC_ID,
             STREET_CLOSURE_TOPIC_ID,
             AID_TOPIC_ID,
@@ -93,26 +108,39 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
     private Uri imageUri;
     private String lastAction = null;
     private List<String> streetClosureIds = new ArrayList<>();
+    double[] routeEndpoint = {0.0, 0.0};
+
+    enum Forms {
+
+        NONE,
+        WEB,
+        AID,
+        STREET_CLOSURE,
+        FLOOD,
+        MEDICAL,
+        TRACK,
+        IMAGE
+    }
+
+    Forms currentForm = Forms.NONE;
 
     private final ReportTypeListener reportTypeListener = new ReportTypeListener(this);
+
+    private final TaskAcceptanceListener taskAcceptanceListener = new TaskAcceptanceListener(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_spot_report);
-//        setContentView(R.layout.spot_report_web_view);
-//        WebView webView = findViewById(R.id.webView);
-//        webView.getSettings().setJavaScriptEnabled(true);
-//        webView.loadUrl("http://scira.georobotix.io:8181/");
-
         Spinner spinner = findViewById(R.id.reportType);
-
         spinner.setOnItemSelectedListener(reportTypeListener);
 
         mqttHelper = new MqttHelper();
 
-        IMqttToken connection = mqttHelper.connect(this, MQTT_USER, MQTT_PASSWORD, MQTT_URL);
+//        IMqttToken connection = mqttHelper.connect(this, MQTT_USER, MQTT_PASSWORD, MQTT_URL);
+        IMqttToken connection = mqttHelper.connect(this, MQTT_URL);
         connection.setActionCallback(new MqttConnectionListener(mqttHelper, this));
     }
 
@@ -134,6 +162,27 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
         mqttHelper.disconnect();
 
         super.onDestroy();
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        if (currentForm == Forms.WEB) {
+
+            currentForm = Forms.NONE;
+            if(!getActionBar().isShowing()) {
+
+                getActionBar().show();
+            }
+            setContentView(R.layout.activity_spot_report);
+            Spinner spinner = findViewById(R.id.reportType);
+            spinner.setOnItemSelectedListener(reportTypeListener);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
+        else {
+
+            super.onBackPressed();
+        }
     }
 
     @Override
@@ -199,7 +248,7 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                                     "\"type\":\"Feature\"," +
                                     "\"geometry\":{" +
                                         "\"type\": \"Circle\"," +
-                                        "\"coordinates\": [-52.8047,47.5185]," +
+                                        "\"coordinates\": [-90.219345, 38.6639]," +
                                         "\"radius\":250," +
                                         "\"properties\": {" +
                                             "\"radius_units\": \"ft\"" +
@@ -237,6 +286,9 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                     .append("\tLat: ")
                     .append(latitude);
 
+            routeEndpoint[0] = longitude;
+            routeEndpoint[1] = latitude;
+
             if(type.equalsIgnoreCase("streetclosure")) {
 
                 title = "Street Closure";
@@ -244,6 +296,12 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                         .append("Radius: ")
                         .append(geometry.getDouble("radius"));
                 streetClosureIds.add(id);
+
+                Spinner closureIds = findViewById(R.id.closureReference);
+                if(null != closureIds) {
+
+                    ((ArrayAdapter)closureIds.getAdapter()).notifyDataSetChanged();
+                }
             }
             else if (type.equalsIgnoreCase("flood")) {
 
@@ -268,16 +326,17 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                 showAlert = false;
             }
 
-//            if(showAlert) {
-//
-//                // Pop up error dialog, noting fields need to be corrected
-//                new AlertDialog.Builder(this)
-//                        .setTitle(title)
-//                        .setMessage(alert.toString())
-//                        .setCancelable(true)
-//                        .setPositiveButton("ACCEPT", null)
-//                        .show();
-//            }
+            if(showAlert && currentForm != Forms.WEB) {
+
+                // Pop up error dialog, noting fields need to be corrected
+                new AlertDialog.Builder(this)
+                        .setTitle(title)
+                        .setMessage(alert.toString())
+                        .setCancelable(true)
+                        .setNegativeButton("DISMISS", null)
+                        .setPositiveButton("ACCEPT", taskAcceptanceListener)
+                        .show();
+            }
 
         } catch (JSONException exception) {
 
@@ -365,6 +424,12 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
     void initializeAidLayout() {
 
+        currentForm = Forms.AID;
+
+        if(!getActionBar().isShowing()) {
+
+            getActionBar().show();
+        }
         setContentView(R.layout.spot_report_aid);
         EditText text = findViewById(R.id.aidRadiusNum);
         text.setEnabled(false);
@@ -480,6 +545,12 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
     void initializeStreetClosureLayout() {
 
+        currentForm = Forms.STREET_CLOSURE;
+
+        if(!getActionBar().isShowing()) {
+
+            getActionBar().show();
+        }
         setContentView(R.layout.spot_report_streetclosure);
         findViewById(R.id.scLatitude).setEnabled(false);
         findViewById(R.id.scLongitude).setEnabled(false);
@@ -590,6 +661,12 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
     void initializeFloodLayout() {
 
+        currentForm = Forms.FLOOD;
+
+        if(!getActionBar().isShowing()) {
+
+            getActionBar().show();
+        }
         setContentView(R.layout.spot_report_flooding);
         findViewById(R.id.floodLatitude).setEnabled(false);
         findViewById(R.id.floodLongitude).setEnabled(false);
@@ -715,6 +792,12 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
     void initializeMedicalLayout() {
 
+        currentForm = Forms.MEDICAL;
+
+        if(!getActionBar().isShowing()) {
+
+            getActionBar().show();
+        }
         setContentView(R.layout.spot_report_medical);
         findViewById(R.id.medLatitude).setEnabled(false);
         findViewById(R.id.medLongitude).setEnabled(false);
@@ -810,6 +893,12 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
     void initializeTrackLayout() {
 
+        currentForm = Forms.MEDICAL;
+
+        if(!getActionBar().isShowing()) {
+
+            getActionBar().show();
+        }
         setContentView(R.layout.spot_report_track);
         findViewById(R.id.trackLatitude).setEnabled(false);
         findViewById(R.id.trackLongitude).setEnabled(false);
@@ -919,8 +1008,14 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
     void initializeImageCaptureLayout() {
 
+        currentForm = Forms.IMAGE;
+
         setImageView();
 
+        if(!getActionBar().isShowing()) {
+
+            getActionBar().show();
+        }
         setContentView(R.layout.spot_report_image_capture);
 
         Button captureImageButton = findViewById(R.id.captureImage);
@@ -986,5 +1081,151 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                 sendBroadcast(submitReportIntent);
             }
         });
+    }
+
+    private class TaskAcceptanceListener implements DialogInterface.OnClickListener {
+
+        Context context;
+        int loadingCount = 0;
+
+        public TaskAcceptanceListener(Context context) {
+
+            this.context = context;
+        }
+
+        private JSONObject buildRequest() {
+
+            JSONObject jsonRequest = null;
+
+            try
+            {
+                int grant = ContextCompat.checkSelfPermission(context,
+                        Manifest.permission.ACCESS_FINE_LOCATION);
+
+                if (PackageManager.PERMISSION_GRANTED == grant) {
+
+                    LocationManager locationManager =
+                            (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+
+                    Location location =
+                            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+                    JSONArray jsonStartCoord = new JSONArray();
+//                                    jsonStartCoord.put(location.getLongitude());
+//                                    jsonStartCoord.put(location.getLatitude());
+                    jsonStartCoord.put(-90.286654);
+                    jsonStartCoord.put(38.566002);
+
+                    JSONArray jsonStopCoord = new JSONArray();
+                    jsonStopCoord.put(routeEndpoint[0]);
+                    jsonStopCoord.put(routeEndpoint[1]);
+//                                    jsonStopCoord.put(-90.219345);
+//                                    jsonStopCoord.put(38.6639);
+
+                    JSONArray jsonCoordArray = new JSONArray();
+                    jsonCoordArray.put(jsonStartCoord);
+                    jsonCoordArray.put(jsonStopCoord);
+
+                    JSONObject waypointsJson = new JSONObject();
+                    waypointsJson.put("type", "MultiPoint");
+                    waypointsJson.put("coordinates", jsonCoordArray);
+
+                    jsonRequest = new JSONObject();
+                    jsonRequest.put("name", "TestRoute");
+                    jsonRequest.put("waypoints", waypointsJson);
+                    jsonRequest.put("dataset", "SCIRA");
+                    jsonRequest.put("context", "evacuation");
+                }
+
+            } catch (JSONException e) {
+
+                Log.e(TAG, "Failed to build JSON payload for route");
+            }
+
+            return jsonRequest;
+        }
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+
+            if (currentForm != Forms.WEB) {
+
+                currentForm = Forms.WEB;
+
+                getActionBar().hide();
+                setContentView(R.layout.spot_report_web_view);
+                WebView webView = findViewById(R.id.webView);
+                WebView.setWebContentsDebuggingEnabled(true);
+                webView.getSettings().setJavaScriptEnabled(true);
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+                webView.loadUrl("http://192.168.0.230:3000");
+//                webView.loadUrl("http://scira.georobotix.io:8181/");
+
+                webView.setWebViewClient(new WebViewClient() {
+
+                    @Override
+                    public void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler,
+                                                          String host, String realm) {
+
+                        handler.proceed("user", "user@SCIRA");
+                    }
+
+                    @Override
+                    public void onPageFinished(WebView view, String url) {
+
+                        JSONObject jsonRequest = buildRequest();
+
+                        if (null != jsonRequest) {
+
+                            String routeUrl = "'http://skymanticswps.eastus.azurecontainer.io:8080/scira/routes?mode=sync'";
+
+                            StringBuilder request = new StringBuilder();
+                            request.append("javascript:makeRouteRequest(")
+                                    .append(routeUrl)
+                                    .append(",")
+                                    .append("'")
+                                    .append(jsonRequest.toString())
+                                    .append("'")
+                                    .append(")");
+
+                            Log.d(TAG, request.toString());
+
+                            view.evaluateJavascript(request.toString(), null);
+                        }
+                    }
+                });
+
+//                webView.setWebChromeClient(new WebChromeClient() {
+//
+//                    @Override
+//                    public void onProgressChanged(WebView view, int newProgress) {
+//
+//                        ++loadingCount;
+//
+//                        if(100 == newProgress && loadingCount % 2 == 0) {
+//
+//                            JSONObject jsonRequest = buildRequest();
+//
+//                            if (null != jsonRequest) {
+//
+//                                StringBuilder request = new StringBuilder();
+//                                request.append("javascript:makeRouteRequest(")
+//                                        .append("'http://skymanticswps.eastus.azurecontainer.io:8080/scira/routes?mode=sync'")
+//                                        .append(",")
+//                                        .append("'")
+//                                        .append(json.toString())
+//                                        .append("'")
+//                                        .append(")");
+//
+//                                Log.d(TAG, request.toString());
+//
+//                                view.evaluateJavascript(request.toString(), null);
+//                            }
+//                        }
+//                    }
+//                });
+            }
+        }
     }
 }
