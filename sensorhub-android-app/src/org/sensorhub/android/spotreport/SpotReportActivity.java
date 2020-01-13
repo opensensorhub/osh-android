@@ -1195,36 +1195,6 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                         }
                     }
                 });
-
-//                webView.setWebChromeClient(new WebChromeClient() {
-//
-//                    @Override
-//                    public void onProgressChanged(WebView view, int newProgress) {
-//
-//                        ++loadingCount;
-//
-//                        if(100 == newProgress && loadingCount % 2 == 0) {
-//
-//                            JSONObject jsonRequest = buildRequest();
-//
-//                            if (null != jsonRequest) {
-//
-//                                StringBuilder request = new StringBuilder();
-//                                request.append("javascript:makeRouteRequest(")
-//                                        .append("'http://skymanticswps.eastus.azurecontainer.io:8080/scira/routes?mode=sync'")
-//                                        .append(",")
-//                                        .append("'")
-//                                        .append(json.toString())
-//                                        .append("'")
-//                                        .append(")");
-//
-//                                Log.d(TAG, request.toString());
-//
-//                                view.evaluateJavascript(request.toString(), null);
-//                            }
-//                        }
-//                    }
-//                });
             }
         }
     }
