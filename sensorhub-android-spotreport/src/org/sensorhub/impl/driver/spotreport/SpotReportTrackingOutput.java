@@ -271,6 +271,8 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
      */
     private class SpotReportReceiver extends BroadcastReceiver {
 
+        int count = 0;
+
         @Override
         public void onReceive(Context context, Intent intent) {
 
@@ -278,7 +280,9 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
 
             try {
 
-                if (ACTION_SUBMIT_TRACK_REPORT.equals(intent.getAction())) {
+                if (ACTION_SUBMIT_TRACK_REPORT.equals(intent.getAction()) && count == 10) {
+
+                    count = 0;
 
                     Log.d("SpotReportTrackingOutput", "Received Intent");
 
@@ -308,6 +312,10 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
 
                         resultReceiver.send(SUBMIT_REPORT_SUCCESS, null);
                     }
+                }
+                else {
+
+                    ++count;
                 }
 
             } catch (Exception e) {
