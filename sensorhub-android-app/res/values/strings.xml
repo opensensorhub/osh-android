@@ -110,15 +110,17 @@
         <item>All</item>
     </string-array>
 
-    <string-array name="spot_report_closure_action">
+    <string-array name="spot_report_action_items">
         <item>Select...</item>
-        <item>Close</item>
         <item>Open</item>
+        <item>Close</item>
     </string-array>
 
-    <string name="spot_report_closure_action">Action:</string>
+    <string name="spot_report_action">Action:</string>
+    <string name="spot_report_id">Ref. Id:</string>
+
+
     <string name="spot_report_closure_type">Type:</string>
-    <string name="spot_report_closure_reference">Ref. Id:</string>
 
     <string-array name="spot_report_flood_feature_type">
         <item>Select...</item>

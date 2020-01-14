@@ -49,6 +49,47 @@
             android:orientation="horizontal">
 
             <TextView
+                android:id="@+id/closureActLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="5dp"
+                android:text="@string/spot_report_action" />
+
+            <Spinner
+                android:id="@+id/closureAction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/spot_report_action_items" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/closureRefLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="5dp"
+                android:text="@string/spot_report_id" />
+
+            <Spinner
+                android:id="@+id/closureReference"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
                 android:id="@+id/medLatLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

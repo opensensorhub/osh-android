@@ -36,7 +36,6 @@ import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.webkit.HttpAuthHandler;
-import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
@@ -52,7 +51,6 @@ import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONStringer;
 import org.sensorhub.android.R;
 import org.sensorhub.android.mqtt.IMqttSubscriber;
 import org.sensorhub.android.mqtt.MqttConnectionListener;
@@ -1086,7 +1084,6 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
     private class TaskAcceptanceListener implements DialogInterface.OnClickListener {
 
         Context context;
-        int loadingCount = 0;
 
         public TaskAcceptanceListener(Context context) {
 
@@ -1111,16 +1108,16 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                             locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
                     JSONArray jsonStartCoord = new JSONArray();
-//                                    jsonStartCoord.put(location.getLongitude());
-//                                    jsonStartCoord.put(location.getLatitude());
-                    jsonStartCoord.put(-90.286654);
-                    jsonStartCoord.put(38.566002);
+                    jsonStartCoord.put(location.getLongitude());
+                    jsonStartCoord.put(location.getLatitude());
+//                    jsonStartCoord.put(-90.286654);
+//                    jsonStartCoord.put(38.566002);
 
                     JSONArray jsonStopCoord = new JSONArray();
                     jsonStopCoord.put(routeEndpoint[0]);
                     jsonStopCoord.put(routeEndpoint[1]);
-//                                    jsonStopCoord.put(-90.219345);
-//                                    jsonStopCoord.put(38.6639);
+//                    jsonStopCoord.put(-90.219345);
+//                    jsonStopCoord.put(38.6639);
 
                     JSONArray jsonCoordArray = new JSONArray();
                     jsonCoordArray.put(jsonStartCoord);
@@ -1159,8 +1156,8 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                 webView.getSettings().setJavaScriptEnabled(true);
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
-                webView.loadUrl("http://192.168.0.230:3000");
-//                webView.loadUrl("http://scira.georobotix.io:8181/");
+//                webView.loadUrl("http://192.168.0.230:3000");
+                webView.loadUrl("http://scira.georobotix.io:8181/");
 
                 webView.setWebViewClient(new WebViewClient() {
 
