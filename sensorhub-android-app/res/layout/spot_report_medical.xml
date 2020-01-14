@@ -49,14 +49,14 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/closureActLabel"
+                android:id="@+id/actionLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_action" />
 
             <Spinner
-                android:id="@+id/closureAction"
+                android:id="@+id/action"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:entries="@array/spot_report_action_items" />
@@ -70,14 +70,14 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/closureRefLabel"
+                android:id="@+id/spotReportIdLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="5dp"
                 android:text="@string/spot_report_id" />
 
             <Spinner
-                android:id="@+id/closureReference"
+                android:id="@+id/spotReportId"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
         </LinearLayout>

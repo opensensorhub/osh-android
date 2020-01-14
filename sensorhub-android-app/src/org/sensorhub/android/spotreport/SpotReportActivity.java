@@ -38,6 +38,7 @@ import android.view.View;
 import android.webkit.HttpAuthHandler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -258,88 +259,88 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                         "\"encodingType\":\"application/vnd.geo+json\"" +
                     "}";
 
-        try {
-
-            JSONObject reader = new JSONObject(message);
-
-            JSONObject observation = reader.getJSONObject("result");
-            String id = observation.getString("id");
-            String timeStamp = observation.getString("timeStamp");
-            String type = observation.getString("observationType");
-            JSONObject params = observation.getJSONObject("params");
-            String action = params.getString("action");
-            JSONObject location = params.getJSONObject("location");
-            JSONObject geometry = location.getJSONObject("geometry");
-            JSONArray coords = geometry.getJSONArray("coordinates");
-            double longitude = coords.getDouble(0);
-            double latitude = coords.getDouble(1);
-
-            boolean showAlert = true;
-            String title = null;
-            StringBuilder alert = new StringBuilder();
-            alert.append("Location: \n")
-                    .append("\tLon: ")
-                    .append(longitude)
-                    .append("\n")
-                    .append("\tLat: ")
-                    .append(latitude);
-
-            routeEndpoint[0] = longitude;
-            routeEndpoint[1] = latitude;
-
-            if(type.equalsIgnoreCase("streetclosure")) {
-
-                title = "Street Closure";
-                alert.append("\n")
-                        .append("Radius: ")
-                        .append(geometry.getDouble("radius"));
-                streetClosureIds.add(id);
-
-                Spinner closureIds = findViewById(R.id.closureReference);
-                if(null != closureIds) {
-
-                    ((ArrayAdapter)closureIds.getAdapter()).notifyDataSetChanged();
-                }
-            }
-            else if (type.equalsIgnoreCase("flood")) {
-
-                title = "Flood Report";
-                alert.append("\n")
-                        .append("Radius: ")
-                        .append(geometry.getDouble("radius"));
-            }
-            else if (type.equalsIgnoreCase("med")) {
-
-                title = "Medical Emergency";
-                alert.append("\n")
-                        .append("Radius: ")
-                        .append(geometry.getDouble("radius"));
-            }
-            else if (type.equalsIgnoreCase("aid")) {
-
-                title = "Assist Person(s)";
-            }
-            else {
-
-                showAlert = false;
-            }
-
-            if(showAlert && currentForm != Forms.WEB) {
-
-                // Pop up error dialog, noting fields need to be corrected
-                new AlertDialog.Builder(this)
-                        .setTitle(title)
-                        .setMessage(alert.toString())
-                        .setCancelable(true)
-                        .setNegativeButton("DISMISS", null)
-                        .setPositiveButton("ACCEPT", taskAcceptanceListener)
-                        .show();
-            }
-
-        } catch (JSONException exception) {
-
-            Log.d(TAG, "Failed parsing JSON message");
-        }
+//        try {
+//
+//            JSONObject reader = new JSONObject(message);
+//
+//            JSONObject observation = reader.getJSONObject("result");
+//            String id = observation.getString("id");
+//            String timeStamp = observation.getString("timeStamp");
+//            String type = observation.getString("observationType");
+//            JSONObject params = observation.getJSONObject("params");
+//            String action = params.getString("action");
+//            JSONObject location = params.getJSONObject("location");
+//            JSONObject geometry = location.getJSONObject("geometry");
+//            JSONArray coords = geometry.getJSONArray("coordinates");
+//            double longitude = coords.getDouble(0);
+//            double latitude = coords.getDouble(1);
+//
+//            boolean showAlert = true;
+//            String title = null;
+//            StringBuilder alert = new StringBuilder();
+//            alert.append("Location: \n")
+//                    .append("\tLon: ")
+//                    .append(longitude)
+//                    .append("\n")
+//                    .append("\tLat: ")
+//                    .append(latitude);
+//
+//            routeEndpoint[0] = longitude;
+//            routeEndpoint[1] = latitude;
+//
+//            if(type.equalsIgnoreCase("streetclosure")) {
+//
+//                title = "Street Closure";
+//                alert.append("\n")
+//                        .append("Radius: ")
+//                        .append(geometry.getDouble("radius"));
+//                streetClosureIds.add(id);
+//
+//                Spinner closureIds = findViewById(R.id.closureReference);
+//                if(null != closureIds) {
+//
+//                    ((ArrayAdapter)closureIds.getAdapter()).notifyDataSetChanged();
+//                }
+//            }
+//            else if (type.equalsIgnoreCase("flood")) {
+//
+//                title = "Flood Report";
+//                alert.append("\n")
+//                        .append("Radius: ")
+//                        .append(geometry.getDouble("radius"));
+//            }
+//            else if (type.equalsIgnoreCase("med")) {
+//
+//                title = "Medical Emergency";
+//                alert.append("\n")
+//                        .append("Radius: ")
+//                        .append(geometry.getDouble("radius"));
+//            }
+//            else if (type.equalsIgnoreCase("aid")) {
+//
+//                title = "Assist Person(s)";
+//            }
+//            else {
+//
+//                showAlert = false;
+//            }
+//
+//            if(showAlert && currentForm != Forms.WEB) {
+//
+//                // Pop up error dialog, noting fields need to be corrected
+//                new AlertDialog.Builder(this)
+//                        .setTitle(title)
+//                        .setMessage(alert.toString())
+//                        .setCancelable(true)
+//                        .setNegativeButton("DISMISS", null)
+//                        .setPositiveButton("ACCEPT", taskAcceptanceListener)
+//                        .show();
+//            }
+//
+//        } catch (JSONException exception) {
+//
+//            Log.d(TAG, "Failed parsing JSON message");
+//        }
     }
 
     void setLastAction(String action) {
@@ -429,6 +430,28 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
             getActionBar().show();
         }
         setContentView(R.layout.spot_report_aid);
+
+        ((Spinner)findViewById(R.id.action)).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                String selectedItem = parent.getItemAtPosition(position).toString();
+
+                View reportIdView = findViewById(R.id.spotReportId);
+                reportIdView.setEnabled(false);
+
+                if (selectedItem.equalsIgnoreCase("close")) {
+
+                    reportIdView.setEnabled(true);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
         EditText text = findViewById(R.id.aidRadiusNum);
         text.setEnabled(false);
         text.setText(String.format(Locale.ENGLISH, "%d", 0));
@@ -550,10 +573,32 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
             getActionBar().show();
         }
         setContentView(R.layout.spot_report_streetclosure);
+
+        ((Spinner)findViewById(R.id.action)).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                String selectedItem = parent.getItemAtPosition(position).toString();
+
+                View reportIdView = findViewById(R.id.spotReportId);
+                reportIdView.setEnabled(false);
+
+                if (selectedItem.equalsIgnoreCase("close")) {
+
+                    reportIdView.setEnabled(true);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
         findViewById(R.id.scLatitude).setEnabled(false);
         findViewById(R.id.scLongitude).setEnabled(false);
 
-        Spinner closureIds = findViewById(R.id.closureReference);
+        Spinner closureIds = findViewById(R.id.spotReportId);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item, streetClosureIds);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -593,9 +638,9 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
             int radius = Integer.parseInt(((EditText)findViewById(R.id.scRadiusNum)).getText().toString());
             String type = ((Spinner)findViewById(R.id.closureType)).getSelectedItem().toString();
             int typePosition = ((Spinner)findViewById(R.id.closureType)).getSelectedItemPosition();
-            String action = ((Spinner)findViewById(R.id.closureAction)).getSelectedItem().toString();
-            int actionPosition = ((Spinner)findViewById(R.id.closureAction)).getSelectedItemPosition();
-            Object referenceId = ((Spinner)findViewById(R.id.closureReference)).getSelectedItem();
+            String action = ((Spinner)findViewById(R.id.action)).getSelectedItem().toString();
+            int actionPosition = ((Spinner)findViewById(R.id.action)).getSelectedItemPosition();
+            Object referenceId = ((Spinner)findViewById(R.id.spotReportId)).getSelectedItem();
 
             String referenceIdString = null;
 
@@ -666,6 +711,28 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
             getActionBar().show();
         }
         setContentView(R.layout.spot_report_flooding);
+
+        ((Spinner)findViewById(R.id.action)).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                String selectedItem = parent.getItemAtPosition(position).toString();
+
+                View reportIdView = findViewById(R.id.spotReportId);
+                reportIdView.setEnabled(false);
+
+                if (selectedItem.equalsIgnoreCase("close")) {
+
+                    reportIdView.setEnabled(true);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
         findViewById(R.id.floodLatitude).setEnabled(false);
         findViewById(R.id.floodLongitude).setEnabled(false);
 
@@ -797,6 +864,28 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
             getActionBar().show();
         }
         setContentView(R.layout.spot_report_medical);
+
+        ((Spinner)findViewById(R.id.action)).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                String selectedItem = parent.getItemAtPosition(position).toString();
+
+                View reportIdView = findViewById(R.id.spotReportId);
+                reportIdView.setEnabled(false);
+
+                if (selectedItem.equalsIgnoreCase("close")) {
+
+                    reportIdView.setEnabled(true);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
         findViewById(R.id.medLatitude).setEnabled(false);
         findViewById(R.id.medLongitude).setEnabled(false);
 
