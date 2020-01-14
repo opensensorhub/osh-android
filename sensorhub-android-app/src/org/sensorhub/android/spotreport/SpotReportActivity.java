@@ -62,8 +62,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
@@ -80,8 +83,8 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
     private static final String MQTT_USER = "botts";
     private static final String MQTT_PASSWORD = "scira04";
-//    private static final String MQTT_URL = "tcp://ogc-hub.compusult.com:1883";
-    private static final String MQTT_URL = "tcp://test.mosquitto.org:1883";
+    private static final String MQTT_URL = "tcp://ogc-hub.compusult.com:1883";
+//    private static final String MQTT_URL = "tcp://test.mosquitto.org:1883";
 
     private static final String FLOODING_TOPIC_ID = "Datastreams(192)/Observations";
     private static final String STREET_CLOSURE_TOPIC_ID = "Datastreams(232)/Observations";
@@ -91,7 +94,7 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
     private static final String[] topics = {
             "Observations",
-            "sensors/garage_temp_f",
+//            "sensors/garage_temp_f",
             FLOODING_TOPIC_ID,
             STREET_CLOSURE_TOPIC_ID,
             AID_TOPIC_ID,
@@ -106,7 +109,12 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
     private Bitmap imageBitmap = null;
     private Uri imageUri;
     private String lastAction = null;
-    private List<String> streetClosureIds = new ArrayList<>();
+    private List<String> aidReportIds = new ArrayList<>();
+    private List<String> streetClosureReportIds = new ArrayList<>();
+    private List<String> floodReportIds = new ArrayList<>();
+    private List<String> medicalReportIds = new ArrayList<>();
+    private Map<String, JSONObject> receivedTasks = new HashMap<String, JSONObject>();
+
     double[] routeEndpoint = {0.0, 0.0};
 
     enum Forms {
@@ -138,8 +146,8 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
         mqttHelper = new MqttHelper();
 
-//        IMqttToken connection = mqttHelper.connect(this, MQTT_USER, MQTT_PASSWORD, MQTT_URL);
-        IMqttToken connection = mqttHelper.connect(this, MQTT_URL);
+        IMqttToken connection = mqttHelper.connect(this, MQTT_USER, MQTT_PASSWORD, MQTT_URL);
+//        IMqttToken connection = mqttHelper.connect(this, MQTT_URL);
         connection.setActionCallback(new MqttConnectionListener(mqttHelper, this));
     }
 
@@ -259,88 +267,110 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                         "\"encodingType\":\"application/vnd.geo+json\"" +
                     "}";
 
-//        try {
-//
-//            JSONObject reader = new JSONObject(message);
-//
-//            JSONObject observation = reader.getJSONObject("result");
-//            String id = observation.getString("id");
-//            String timeStamp = observation.getString("timeStamp");
-//            String type = observation.getString("observationType");
-//            JSONObject params = observation.getJSONObject("params");
-//            String action = params.getString("action");
-//            JSONObject location = params.getJSONObject("location");
-//            JSONObject geometry = location.getJSONObject("geometry");
-//            JSONArray coords = geometry.getJSONArray("coordinates");
-//            double longitude = coords.getDouble(0);
-//            double latitude = coords.getDouble(1);
-//
-//            boolean showAlert = true;
-//            String title = null;
-//            StringBuilder alert = new StringBuilder();
-//            alert.append("Location: \n")
-//                    .append("\tLon: ")
-//                    .append(longitude)
-//                    .append("\n")
-//                    .append("\tLat: ")
-//                    .append(latitude);
-//
-//            routeEndpoint[0] = longitude;
-//            routeEndpoint[1] = latitude;
-//
-//            if(type.equalsIgnoreCase("streetclosure")) {
-//
-//                title = "Street Closure";
-//                alert.append("\n")
-//                        .append("Radius: ")
-//                        .append(geometry.getDouble("radius"));
-//                streetClosureIds.add(id);
-//
-//                Spinner closureIds = findViewById(R.id.closureReference);
-//                if(null != closureIds) {
-//
-//                    ((ArrayAdapter)closureIds.getAdapter()).notifyDataSetChanged();
-//                }
-//            }
-//            else if (type.equalsIgnoreCase("flood")) {
-//
-//                title = "Flood Report";
-//                alert.append("\n")
-//                        .append("Radius: ")
-//                        .append(geometry.getDouble("radius"));
-//            }
-//            else if (type.equalsIgnoreCase("med")) {
-//
-//                title = "Medical Emergency";
-//                alert.append("\n")
-//                        .append("Radius: ")
-//                        .append(geometry.getDouble("radius"));
-//            }
-//            else if (type.equalsIgnoreCase("aid")) {
-//
-//                title = "Assist Person(s)";
-//            }
-//            else {
-//
-//                showAlert = false;
-//            }
-//
-//            if(showAlert && currentForm != Forms.WEB) {
-//
-//                // Pop up error dialog, noting fields need to be corrected
-//                new AlertDialog.Builder(this)
-//                        .setTitle(title)
-//                        .setMessage(alert.toString())
-//                        .setCancelable(true)
-//                        .setNegativeButton("DISMISS", null)
-//                        .setPositiveButton("ACCEPT", taskAcceptanceListener)
-//                        .show();
-//            }
-//
-//        } catch (JSONException exception) {
-//
-//            Log.d(TAG, "Failed parsing JSON message");
-//        }
+        try {
+
+            JSONObject receivedTask = new JSONObject(message);
+            JSONObject observation = receivedTask.getJSONObject("result");
+            String id = observation.getString("id");
+            JSONObject params = observation.getJSONObject("params");
+            String action = params.getString("action");
+
+            String type = observation.getString("observationType");
+            JSONObject location = params.getJSONObject("location");
+            JSONObject geometry = location.getJSONObject("geometry");
+            JSONArray coords = geometry.getJSONArray("coordinates");
+            double longitude = coords.getDouble(0);
+            double latitude = coords.getDouble(1);
+
+            boolean showAlert = true;
+            String title = null;
+            StringBuilder alert = new StringBuilder();
+            alert.append("Location: \n")
+                    .append("\tLon: ")
+                    .append(longitude)
+                    .append("\n")
+                    .append("\tLat: ")
+                    .append(latitude);
+
+            routeEndpoint[0] = longitude;
+            routeEndpoint[1] = latitude;
+
+            List<String> reportIds = null;
+            Spinner reportIdsSpinner = findViewById(R.id.spotReportId);
+
+            if(type.equalsIgnoreCase("streetclosure")) {
+
+                title = "Street Closure";
+                alert.append("\n")
+                        .append("Radius: ")
+                        .append(geometry.getDouble("radius"));
+                reportIds = streetClosureReportIds;
+            }
+            else if (type.equalsIgnoreCase("flood")) {
+
+                title = "Flood Report";
+                alert.append("\n")
+                        .append("Radius: ")
+                        .append(geometry.getDouble("radius"));
+                reportIds = floodReportIds;
+            }
+            else if (type.equalsIgnoreCase("med")) {
+
+                title = "Medical Emergency";
+                alert.append("\n")
+                        .append("Radius: ")
+                        .append(geometry.getDouble("radius"));
+                reportIds = medicalReportIds;
+            }
+            else if (type.equalsIgnoreCase("aid")) {
+
+                title = "Assist Person(s)";
+                reportIds = aidReportIds;
+            }
+            else {
+
+                showAlert = false;
+            }
+
+            if(action.equalsIgnoreCase("open") && showAlert && currentForm != Forms.WEB) {
+
+                // Store the task as a JSONObject
+                receivedTasks.put(id, new JSONObject(message));
+
+                // Ad the id to the list of ids
+                reportIds.add(id);
+
+                if(null != reportIdsSpinner) {
+
+                    ((ArrayAdapter)reportIdsSpinner.getAdapter()).notifyDataSetChanged();
+                }
+
+                // Pop up error dialog, noting fields need to be corrected
+                new AlertDialog.Builder(this)
+                        .setTitle(title)
+                        .setMessage(alert.toString())
+                        .setCancelable(true)
+                        .setNegativeButton("DISMISS", null)
+                        .setPositiveButton("ACCEPT", taskAcceptanceListener)
+                        .show();
+
+            } else if(action.equalsIgnoreCase("close")) {
+
+                // Remove the task
+                receivedTasks.remove(id);
+
+                reportIds.remove(id);
+
+                if(null != reportIdsSpinner) {
+
+                    ((ArrayAdapter)reportIdsSpinner.getAdapter()).notifyDataSetChanged();
+                }
+            }
+
+        } catch (JSONException exception) {
+
+            Log.d(TAG, "Failed parsing JSON message");
+        }
     }
 
     void setLastAction(String action) {
@@ -452,11 +482,19 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
             }
         });
 
+        findViewById(R.id.aidLatitude).setEnabled(false);
+        findViewById(R.id.aidLongitude).setEnabled(false);
+
+        Spinner closureIds = findViewById(R.id.spotReportId);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, streetClosureReportIds);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        closureIds.setAdapter(adapter);
+
         EditText text = findViewById(R.id.aidRadiusNum);
         text.setEnabled(false);
         text.setText(String.format(Locale.ENGLISH, "%d", 0));
-        findViewById(R.id.aidLatitude).setEnabled(false);
-        findViewById(R.id.aidLongitude).setEnabled(false);
+
         ((SeekBar)findViewById(R.id.aidRadiusValue)).setOnSeekBarChangeListener(
                 new SeekBar.OnSeekBarChangeListener() {
                     @Override
@@ -493,6 +531,14 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
             int urgencyPosition = ((Spinner)findViewById(R.id.aidUrgency)).getSelectedItemPosition();
             String description = ((EditText)findViewById(R.id.aidDescription)).getText().toString();
             String reporter = ((EditText)findViewById(R.id.aidReporter)).getText().toString();
+            String action = ((Spinner)findViewById(R.id.action)).getSelectedItem().toString();
+            String spotReportId = ((Spinner)findViewById(R.id.spotReportId)).getSelectedItem().toString();
+
+            if(action.equalsIgnoreCase("open")) {
+
+                // Generate a new report id
+                spotReportId = UUID.randomUUID().toString();
+            }
 
             ArrayList<String> errors = new ArrayList<>();
 
@@ -540,6 +586,8 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                 submitReportIntent.putExtra("urgency", urgency);
                 submitReportIntent.putExtra("description", description);
                 submitReportIntent.putExtra("reporter", reporter);
+                submitReportIntent.putExtra("action", action);
+                submitReportIntent.putExtra("id", spotReportId);
                 submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
                 sendBroadcast(submitReportIntent);
             }
@@ -600,13 +648,14 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
         Spinner closureIds = findViewById(R.id.spotReportId);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, streetClosureIds);
+                android.R.layout.simple_spinner_item, streetClosureReportIds);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         closureIds.setAdapter(adapter);
 
         EditText text = findViewById(R.id.scRadiusNum);
         text.setEnabled(false);
         text.setText(String.format(Locale.ENGLISH, "%d", 0));
+
         ((SeekBar)findViewById(R.id.scRadiusValue)).setOnSeekBarChangeListener(
                 new SeekBar.OnSeekBarChangeListener() {
                     @Override
@@ -638,15 +687,14 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
             int radius = Integer.parseInt(((EditText)findViewById(R.id.scRadiusNum)).getText().toString());
             String type = ((Spinner)findViewById(R.id.closureType)).getSelectedItem().toString();
             int typePosition = ((Spinner)findViewById(R.id.closureType)).getSelectedItemPosition();
-            String action = ((Spinner)findViewById(R.id.action)).getSelectedItem().toString();
             int actionPosition = ((Spinner)findViewById(R.id.action)).getSelectedItemPosition();
-            Object referenceId = ((Spinner)findViewById(R.id.spotReportId)).getSelectedItem();
+            String action = ((Spinner)findViewById(R.id.action)).getSelectedItem().toString();
+            String spotReportId = ((Spinner)findViewById(R.id.spotReportId)).getSelectedItem().toString();
 
-            String referenceIdString = null;
+            if(action.equalsIgnoreCase("open")) {
 
-            if (null != referenceId) {
-
-                referenceIdString = referenceId.toString();
+                // Generate a new report id
+                spotReportId = UUID.randomUUID().toString();
             }
 
             ArrayList<String> errors = new ArrayList<>();
@@ -677,7 +725,7 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                 submitReportIntent.putExtra("radius", radius);
                 submitReportIntent.putExtra("type", type);
                 submitReportIntent.putExtra("action", action);
-                submitReportIntent.putExtra("referenceId", referenceIdString);
+                submitReportIntent.putExtra("id", spotReportId);
                 submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
                 sendBroadcast(submitReportIntent);
             }
@@ -736,9 +784,16 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
         findViewById(R.id.floodLatitude).setEnabled(false);
         findViewById(R.id.floodLongitude).setEnabled(false);
 
+        Spinner closureIds = findViewById(R.id.spotReportId);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, streetClosureReportIds);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        closureIds.setAdapter(adapter);
+
         EditText text = findViewById(R.id.floodRadiusNum);
         text.setEnabled(false);
         text.setText(String.format(Locale.ENGLISH, "%d", 0));
+
         ((SeekBar)findViewById(R.id.floodRadiusValue)).setOnSeekBarChangeListener(
                 new SeekBar.OnSeekBarChangeListener() {
                     @Override
@@ -796,6 +851,14 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
             int depth = Integer.parseInt(((EditText)findViewById(R.id.floodDepthNum)).getText().toString());
             String method = ((Spinner)findViewById(R.id.observationMode)).getSelectedItem().toString();
             int methodPosition = ((Spinner)findViewById(R.id.observationMode)).getSelectedItemPosition();
+            String action = ((Spinner)findViewById(R.id.action)).getSelectedItem().toString();
+            String spotReportId = ((Spinner)findViewById(R.id.spotReportId)).getSelectedItem().toString();
+
+            if(action.equalsIgnoreCase("open")) {
+
+                // Generate a new report id
+                spotReportId = UUID.randomUUID().toString();
+            }
 
             ArrayList<String> errors = new ArrayList<>();
 
@@ -831,6 +894,8 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                 submitReportIntent.putExtra("featureType", featureType);
                 submitReportIntent.putExtra("depth", depth);
                 submitReportIntent.putExtra("method", method);
+                submitReportIntent.putExtra("action", action);
+                submitReportIntent.putExtra("id", spotReportId);
                 submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
                 sendBroadcast(submitReportIntent);
             }
@@ -889,9 +954,16 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
         findViewById(R.id.medLatitude).setEnabled(false);
         findViewById(R.id.medLongitude).setEnabled(false);
 
+        Spinner closureIds = findViewById(R.id.spotReportId);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, streetClosureReportIds);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        closureIds.setAdapter(adapter);
+
         EditText text = findViewById(R.id.medRadiusNum);
         text.setEnabled(false);
         text.setText(String.format(Locale.ENGLISH, "%d", 0));
+
         ((SeekBar)findViewById(R.id.medRadiusValue)).setOnSeekBarChangeListener(
                 new SeekBar.OnSeekBarChangeListener() {
                     @Override
@@ -924,6 +996,14 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
             String description = ((EditText)findViewById(R.id.medSign)).getText().toString();
             String measure = ((EditText)findViewById(R.id.medValue)).getText().toString();
             boolean emergency = ((CheckBox)findViewById(R.id.isEmergency)).isChecked();
+            String action = ((Spinner)findViewById(R.id.action)).getSelectedItem().toString();
+            String spotReportId = ((Spinner)findViewById(R.id.spotReportId)).getSelectedItem().toString();
+
+            if(action.equalsIgnoreCase("open")) {
+
+                // Generate a new report id
+                spotReportId = UUID.randomUUID().toString();
+            }
 
             ArrayList<String> errors = new ArrayList<>();
 
@@ -954,6 +1034,8 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                 submitReportIntent.putExtra("description", description);
                 submitReportIntent.putExtra("measure", measure);
                 submitReportIntent.putExtra("emergency", emergency);
+                submitReportIntent.putExtra("action", action);
+                submitReportIntent.putExtra("id", spotReportId);
                 submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
                 sendBroadcast(submitReportIntent);
             }
@@ -1069,6 +1151,8 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                 submitReportIntent.putExtra("resourceId", resourceId);
                 submitReportIntent.putExtra("resourceLabel", resourceLabel);
                 submitReportIntent.putExtra("method", trackingMethod);
+                submitReportIntent.putExtra("action", "open");
+                submitReportIntent.putExtra("id", UUID.randomUUID().toString());
                 submitReportIntent.putExtra(Intent.EXTRA_RESULT_RECEIVER, submitRequestResultReceiver);
                 sendBroadcast(submitReportIntent);
             }

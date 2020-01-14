@@ -56,11 +56,12 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
     private static final int SUBMIT_REPORT_FAILURE = 0;
     private static final int SUBMIT_REPORT_SUCCESS = 1;
 
+    private static final String DATA_ID = "id";
     private static final String DATA_LAT = "lat";
     private static final String DATA_LON = "lon";
     private static final String DATA_CONFIDENCE = "confidence";
     private static final String DATA_TYPE = "type";
-    private static final String DATA_ID = "resourceId";
+    private static final String DATA_RESOURCE_ID = "resourceId";
     private static final String DATA_RESOURCE_LABEL = "resourceLabel";
     private static final String DATA_METHOD = "method";
     private static final String DATA_FEATURE_REFERENCE = "featureReference";
@@ -286,7 +287,7 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
                     double lon = intent.getDoubleExtra(DATA_LON, 0.0);
                     double confidence = intent.getDoubleExtra(DATA_CONFIDENCE, 0.0);
                     String resourceType = intent.getStringExtra(DATA_TYPE);
-                    String resourceId = intent.getStringExtra(DATA_ID);
+                    String resourceId = intent.getStringExtra(DATA_RESOURCE_ID);
                     String resourceLabel = intent.getStringExtra(DATA_RESOURCE_LABEL);
                     String trackingMethod = intent.getStringExtra(DATA_METHOD);
                     String referenceId = intent.getStringExtra(DATA_FEATURE_REFERENCE);

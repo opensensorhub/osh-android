@@ -81,8 +81,8 @@ public class MqttHelper {
             options.setKeepAliveInterval(300);
             options.setAutomaticReconnect(true);
             options.setCleanSession(false);
-//            options.setUserName(username);
-//            options.setPassword(password.toCharArray());
+            options.setUserName(username);
+            options.setPassword(password.toCharArray());
 
             connectionToken = client.connect(options);
 
