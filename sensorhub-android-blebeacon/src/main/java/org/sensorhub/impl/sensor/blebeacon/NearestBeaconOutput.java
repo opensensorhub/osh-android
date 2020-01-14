@@ -12,6 +12,7 @@ import org.altbeacon.beacon.Beacon;
 import org.sensorhub.algo.vecmath.Vect3d;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
+import org.vast.swe.SWEHelper;
 import org.vast.swe.helper.GeoPosHelper;
 
 public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
@@ -52,6 +53,7 @@ public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
 
         posDataStruct.addComponent("time", fac.newTimeStampIsoUTC());
         posDataStruct.addComponent("nearest_beacon", nearBeacon);
+        posDataStruct.addComponent("roomDesc", new SWEHelper().newText(URL_DEF + "roomDesc", null, null));
 
         // output encoding
         dataEncoding = fac.newTextEncoding(",", "\n");
@@ -80,7 +82,7 @@ public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
         return 1.0;
     }
 
-    protected void sendMeasurement(Beacon beacon) {
+    protected void sendMeasurement(Beacon beacon, String roomDesc) {
 
         DataBlock dataBlock = posDataStruct.createDataBlock();
         double sampleTime = System.currentTimeMillis() / 1000;
@@ -104,6 +106,7 @@ public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
         submitReportIntent.putExtra("resourceId", parentSensor.getConfiguration().name);
         submitReportIntent.putExtra("resourceLabel", parentSensor.getConfiguration().name);
         submitReportIntent.putExtra("method", "bt_beacon");
+        submitReportIntent.putExtra("featureReference", roomDesc);  // TODO: make sure spot report can receive this
         parentSensor.getConfiguration().androidContext.sendBroadcast(submitReportIntent);
 
         Log.d("NearestBeaconOutput", "Published Intent");
@@ -115,6 +118,7 @@ public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
         dataBlock.setDoubleValue(3, locationDecDeg[2]);
 //        dataBlock.setDoubleValue(4, beacon.getDistance());
         dataBlock.setDoubleValue(4, parentSensor.getBeaconDistance(beacon));
+        dataBlock.setStringValue(5, roomDesc);
 
         // update latest record and send event
         latestRecordTime = System.currentTimeMillis();
