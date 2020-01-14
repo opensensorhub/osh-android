@@ -92,6 +92,8 @@ public class TaskAcceptanceListener implements DialogInterface.OnClickListener {
 
                 spotReportActivity.sendAidMessage(latitude, longitude, radius, aidType,
                         numPersons, urgency, description, reporter, "ongoing", id);
+
+                spotReportActivity.taskAccepted(id, type);
             }
             else if("flood".equalsIgnoreCase(type)) {
 
@@ -102,6 +104,8 @@ public class TaskAcceptanceListener implements DialogInterface.OnClickListener {
 
                 spotReportActivity.sendFloodMessage(latitude, longitude, radius, featureType,
                         (int)depth, method, "ongoing", id);
+
+                spotReportActivity.taskAccepted(id, type);
             }
 //            else if ("med".equalsIgnoreCase(type)) {
 //
@@ -110,6 +114,8 @@ public class TaskAcceptanceListener implements DialogInterface.OnClickListener {
 //
 //                spotReportActivity.sendMedicalMessage(latitude, longitude, radius, description,
 //                        String measure, boolean emergency, "ongoing", id);
+//
+//                spotReportActivity.taskAccepted(id, type);
 //            }
             else {
 
@@ -118,6 +124,8 @@ public class TaskAcceptanceListener implements DialogInterface.OnClickListener {
 
                 spotReportActivity.sendStreetClosureMessage(latitude, longitude, radius, closureType,
                         "ongoing", id);
+
+                spotReportActivity.taskAccepted(id, type);
             }
 
         } catch(JSONException e) {

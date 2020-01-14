@@ -53,10 +53,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class SpotReportActivity extends Activity implements IMqttSubscriber {
@@ -102,7 +102,6 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
     private List<String> streetClosureReportIds = new ArrayList<>();
     private List<String> floodReportIds = new ArrayList<>();
     private List<String> medicalReportIds = new ArrayList<>();
-    private Map<String, String> receivedTasks = new HashMap<>();
 
     enum Forms {
 
@@ -137,35 +136,44 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
         IMqttToken connection = mqttHelper.connect(this, MQTT_USER, MQTT_PASSWORD, MQTT_URL);
         connection.setActionCallback(new MqttConnectionListener(mqttHelper, this));
 
-//        sharedPreferences = getSharedPreferences(APP_PREFERENCES, MODE_PRIVATE);
-//
-//        aidReportIds.addAll(sharedPreferences.getStringSet("aidReportIds", null));
-//
-//        streetClosureReportIds.addAll(sharedPreferences.getStringSet("streetClosureReportIds", null));
-//
-//        floodReportIds.addAll(sharedPreferences.getStringSet("floodReportIds", null));
-//
-//        medicalReportIds.addAll(sharedPreferences.getStringSet("medicalReportIds", null));
-//
-//        for (String id :aidReportIds) {
-//            String message = sharedPreferences.getString(id, null);
-//            receivedTasks.put(id, message);
-//        }
-//
-//        for (String id :streetClosureReportIds) {
-//            String message = sharedPreferences.getString(id, null);
-//            receivedTasks.put(id, message);
-//        }
-//
-//        for (String id :floodReportIds) {
-//            String message = sharedPreferences.getString(id, null);
-//            receivedTasks.put(id, message);
-//        }
-//
-//        for (String id :medicalReportIds) {
-//            String message = sharedPreferences.getString(id, null);
-//            receivedTasks.put(id, message);
-//        }
+        sharedPreferences = getSharedPreferences(APP_PREFERENCES, MODE_PRIVATE);
+
+        Set<String> aidReports = sharedPreferences.getStringSet("aidReportIds", null);
+
+        if(null != aidReports) {
+            for (String id : aidReports) {
+
+                aidReportIds.add(id);
+            }
+        }
+
+        Set<String> closureReports =
+                sharedPreferences.getStringSet("streetClosureReportIds", null);
+
+        if(null != closureReports) {
+            for (String id : closureReports) {
+
+                streetClosureReportIds.add(id);
+            }
+        }
+
+        Set<String> floodReports = sharedPreferences.getStringSet("floodReportIds", null);
+
+        if(null != floodReports) {
+            for (String id : floodReports) {
+
+                floodReportIds.add(id);
+            }
+        }
+
+        Set<String> medReports = sharedPreferences.getStringSet("medicalReportIds", null);
+
+        if(null != medReports) {
+            for (String id : medReports) {
+
+                medicalReportIds.add(id);
+            }
+        }
     }
 
     @Override
@@ -324,9 +332,6 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
             if(action.equalsIgnoreCase("open") && showAlert && currentForm != Forms.WEB) {
 
-                // Store the task
-                receivedTasks.put(id, message);
-
                 // Ad the id to the list of ids
                 reportIds.add(id);
 
@@ -347,9 +352,6 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
 
             } else if(action.equalsIgnoreCase("close")) {
 
-                // Remove the task
-                receivedTasks.remove(id);
-
                 reportIds.remove(id);
 
                 if(null != reportIdsSpinner) {
@@ -358,10 +360,62 @@ public class SpotReportActivity extends Activity implements IMqttSubscriber {
                 }
             }
 
+            persistReports();
+
         } catch (JSONException exception) {
 
             Log.d(TAG, "Failed parsing JSON message");
         }
+    }
+
+    void persistReports() {
+
+        sharedPreferences.edit().clear();
+        Set<String> data = new HashSet<>();
+        data.addAll(aidReportIds);
+        sharedPreferences.edit().putStringSet("aidReportIds", data);
+        data = new HashSet<>();
+        data.addAll(streetClosureReportIds);
+        sharedPreferences.edit().putStringSet("streetClosureReportIds", data);
+        data = new HashSet<>();
+        data.addAll(floodReportIds);
+        sharedPreferences.edit().putStringSet("floodReportIds", data);
+        data = new HashSet<>();
+        data.addAll(medicalReportIds);
+        sharedPreferences.edit().putStringSet("medicalReportIds", data);
+    }
+
+    void taskAccepted(String id, String type) {
+
+        List<String> reportIds = null;
+        Spinner reportIdsSpinner = findViewById(R.id.spotReportId);
+
+        if(type.equalsIgnoreCase("streetclosure")) {
+
+            reportIds = streetClosureReportIds;
+        }
+        else if (type.equalsIgnoreCase("flood")) {
+
+            reportIds = floodReportIds;
+        }
+        else if (type.equalsIgnoreCase("med")) {
+
+            reportIds = medicalReportIds;
+        }
+        else if (type.equalsIgnoreCase("aid")) {
+
+            reportIds = aidReportIds;
+        }
+
+        // Ad the id to the list of ids
+        reportIds.remove(id);
+
+        if(null != reportIdsSpinner) {
+
+            ((ArrayAdapter)reportIdsSpinner.getAdapter()).notifyDataSetChanged();
+        }
+
+        persistReports();
     }
 
     Forms getCurrentForm() {
