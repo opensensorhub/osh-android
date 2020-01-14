@@ -56,6 +56,7 @@ public class SpotReportAidOutput extends AbstractSensorOutput<SpotReportDriver> 
     private static final int SUBMIT_REPORT_FAILURE = 0;
     private static final int SUBMIT_REPORT_SUCCESS = 1;
 
+    private static final String DATA_ID = "id";
     private static final String DATA_LAT = "lat";
     private static final String DATA_LON = "lon";
     private static final String DATA_RADIUS = "radius";
@@ -64,6 +65,7 @@ public class SpotReportAidOutput extends AbstractSensorOutput<SpotReportDriver> 
     private static final String DATA_URGENCY = "urgency";
     private static final String DATA_DESCRIPTION = "description";
     private static final String DATA_REPORTER = "reporter";
+    private static final String DATA_ACTION = "action";
     private SpotReportReceiver broadcastReceiver = new SpotReportReceiver();
 
     // SWE DataBlock elements
@@ -76,6 +78,7 @@ public class SpotReportAidOutput extends AbstractSensorOutput<SpotReportDriver> 
     private static final String DATA_RECORD_REPORT_URGENCY_LABEL = "urgency";
     private static final String DATA_RECORD_REPORT_DESCRIPTION_LABEL = "description";
     private static final String DATA_RECORD_REPORT_REPORTER_LABEL = "reporter";
+    private static final String DATA_RECORD_REPORT_ACTION_LABEL = "action";
 
     private static final String DATA_RECORD_NAME = "Aid Spot Report";
     private static final String DATA_RECORD_DESCRIPTION =
@@ -163,6 +166,11 @@ public class SpotReportAidOutput extends AbstractSensorOutput<SpotReportDriver> 
                 "An identifier of the person who submitted the report");
         dataStruct.addComponent(DATA_RECORD_REPORT_REPORTER_LABEL, reporter);
 
+        Text action = sweHelper.newText(SWEHelper.getPropertyUri("Action"),
+                "Action",
+                "The action associated with the event");
+        dataStruct.addComponent(DATA_RECORD_REPORT_ACTION_LABEL, action);
+
         // Setup data encoding *********************************************************************
         this.dataEncoding = sweHelper.newTextEncoding(",", "\n");
     }
@@ -170,6 +178,7 @@ public class SpotReportAidOutput extends AbstractSensorOutput<SpotReportDriver> 
     /**
      * Populate and submit an instance of the SpotReport.
      *
+     * @param id
      * @param lat Latitude
      * @param lon Longitude
      * @param radius Radius of validity
@@ -179,9 +188,9 @@ public class SpotReportAidOutput extends AbstractSensorOutput<SpotReportDriver> 
      * @param description Description of the observation
      * @param reporter Identifier for person making the report
      */
-    private void submitReport(String lat, String lon, int radius, String aidType,
+    private void submitReport(String id, String lat, String lon, int radius, String aidType,
                               String numPersons, String urgency, String description,
-                              String reporter) {
+                              String reporter, String action) {
 
         double samplingTime = System.currentTimeMillis() / 1000.0;
 
@@ -197,7 +206,7 @@ public class SpotReportAidOutput extends AbstractSensorOutput<SpotReportDriver> 
         }
 
         newRecord.setDoubleValue(0, samplingTime);
-        newRecord.setStringValue(1, UUID.randomUUID().toString());
+        newRecord.setStringValue(1, id);
         newRecord.setDoubleValue(2, Double.parseDouble(lat));
         newRecord.setDoubleValue(3, Double.parseDouble(lon));
         newRecord.setDoubleValue(4, 0.0);
@@ -207,6 +216,7 @@ public class SpotReportAidOutput extends AbstractSensorOutput<SpotReportDriver> 
         newRecord.setStringValue(8, urgency);
         newRecord.setStringValue(9, description);
         newRecord.setStringValue(10, reporter);
+        newRecord.setStringValue(11, action);
 
         // update latest record and send event
         latestRecord = newRecord;
@@ -269,6 +279,7 @@ public class SpotReportAidOutput extends AbstractSensorOutput<SpotReportDriver> 
 
                 if (ACTION_SUBMIT_AID_REPORT.equals(intent.getAction())) {
 
+                    String id = intent.getStringExtra(DATA_ID);
                     String lat = intent.getStringExtra(DATA_LAT);
                     String lon = intent.getStringExtra(DATA_LON);
                     int radius = intent.getIntExtra(DATA_RADIUS, 0);
@@ -277,8 +288,9 @@ public class SpotReportAidOutput extends AbstractSensorOutput<SpotReportDriver> 
                     String urgency = intent.getStringExtra(DATA_URGENCY);
                     String description = intent.getStringExtra(DATA_DESCRIPTION);
                     String reporter = intent.getStringExtra(DATA_REPORTER);
+                    String action = intent.getStringExtra(DATA_ACTION);
 
-                    submitReport(lat, lon, radius, aidType, numPersons, urgency, description, reporter);
+                    submitReport(id, lat, lon, radius, aidType, numPersons, urgency, description, reporter, action);
 
                     resultReceiver.send(SUBMIT_REPORT_SUCCESS, null);
 

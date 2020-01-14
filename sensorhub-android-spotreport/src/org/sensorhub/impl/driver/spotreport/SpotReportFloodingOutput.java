@@ -56,12 +56,14 @@ public class SpotReportFloodingOutput extends AbstractSensorOutput<SpotReportDri
     private static final int SUBMIT_REPORT_FAILURE = 0;
     private static final int SUBMIT_REPORT_SUCCESS = 1;
 
+    private static final String DATA_ID = "id";
     private static final String DATA_LAT = "lat";
     private static final String DATA_LON = "lon";
     private static final String DATA_RADIUS = "radius";
     private static final String DATA_FEATURE_TYPE = "featureType";
     private static final String DATA_DEPTH = "depth";
     private static final String DATA_METHOD = "method";
+    private static final String DATA_ACTION = "action";
     private SpotReportReceiver broadcastReceiver = new SpotReportReceiver();
 
     // SWE DataBlock elements
@@ -72,6 +74,7 @@ public class SpotReportFloodingOutput extends AbstractSensorOutput<SpotReportDri
     private static final String DATA_RECORD_REPORT_FEATURE_TYPE_LABEL = "featureType";
     private static final String DATA_RECORD_REPORT_DEPTH_LABEL = "depth";
     private static final String DATA_RECORD_REPORT_METHOD_LABEL = "method";
+    private static final String DATA_RECORD_REPORT_ACTION_LABEL = "action";
 
     private static final String DATA_RECORD_NAME = "Flooding Spot Report";
     private static final String DATA_RECORD_DESCRIPTION =
@@ -150,6 +153,11 @@ public class SpotReportFloodingOutput extends AbstractSensorOutput<SpotReportDri
                 "An identifier for the method of observation used in determining flooding depth");
         dataStruct.addComponent(DATA_RECORD_REPORT_METHOD_LABEL, method);
 
+        Text action = sweHelper.newText(SWEHelper.getPropertyUri("Action"),
+                "Action",
+                "The action associated with the event");
+        dataStruct.addComponent(DATA_RECORD_REPORT_ACTION_LABEL, action);
+
         // Setup data encoding *********************************************************************
         this.dataEncoding = sweHelper.newTextEncoding(",", "\n");
     }
@@ -157,15 +165,17 @@ public class SpotReportFloodingOutput extends AbstractSensorOutput<SpotReportDri
     /**
      * Populate and submit an instance of the SpotReport.
      *
+     * @param id
      * @param lat Latitude
      * @param lon Longitude
      * @param radius Radius of validity
      * @param featureType Type of feature observed
      * @param depth Depth in feet of the flooding
      * @param method Method used to report observation
+     * @param action
      */
-    private void submitReport(String lat, String lon, int radius, String featureType,
-                              int depth, String method) {
+    private void submitReport(String id, String lat, String lon, int radius, String featureType,
+                              int depth, String method, String action) {
 
         double samplingTime = System.currentTimeMillis() / 1000.0;
 
@@ -181,7 +191,7 @@ public class SpotReportFloodingOutput extends AbstractSensorOutput<SpotReportDri
         }
 
         newRecord.setDoubleValue(0, samplingTime);
-        newRecord.setStringValue(1, UUID.randomUUID().toString());
+        newRecord.setStringValue(1, id);
         newRecord.setDoubleValue(2, Double.parseDouble(lat));
         newRecord.setDoubleValue(3, Double.parseDouble(lon));
         newRecord.setDoubleValue(4, 0.0);
@@ -189,6 +199,7 @@ public class SpotReportFloodingOutput extends AbstractSensorOutput<SpotReportDri
         newRecord.setStringValue(6, featureType);
         newRecord.setIntValue(7, depth);
         newRecord.setStringValue(8, method);
+        newRecord.setStringValue(9, action);
 
         // update latest record and send event
         latestRecord = newRecord;
@@ -251,14 +262,16 @@ public class SpotReportFloodingOutput extends AbstractSensorOutput<SpotReportDri
 
                 if (ACTION_SUBMIT_FLOODING_REPORT.equals(intent.getAction())) {
 
+                    String id = intent.getStringExtra(DATA_ID);
                     String lat = intent.getStringExtra(DATA_LAT);
                     String lon = intent.getStringExtra(DATA_LON);
                     int radius = intent.getIntExtra(DATA_RADIUS, 0);
                     String featureType = intent.getStringExtra(DATA_FEATURE_TYPE);
                     int depth = intent.getIntExtra(DATA_DEPTH, 0);
                     String method = intent.getStringExtra(DATA_METHOD);
+                    String action = intent.getStringExtra(DATA_ACTION);
 
-                    submitReport(lat, lon, radius, featureType, depth, method);
+                    submitReport(id, lat, lon, radius, featureType, depth, method, action);
 
                     resultReceiver.send(SUBMIT_REPORT_SUCCESS, null);
 

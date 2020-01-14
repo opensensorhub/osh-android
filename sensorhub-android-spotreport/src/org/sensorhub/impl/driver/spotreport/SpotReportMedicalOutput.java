@@ -57,12 +57,14 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
     private static final int SUBMIT_REPORT_FAILURE = 0;
     private static final int SUBMIT_REPORT_SUCCESS = 1;
 
+    private static final String DATA_ID = "id";
     private static final String DATA_LAT = "lat";
     private static final String DATA_LON = "lon";
     private static final String DATA_RADIUS = "radius";
     private static final String DATA_DESCRIPTION = "description";
     private static final String DATA_MEASURE = "measure";
     private static final String DATA_EMERGENCY = "emergency";
+    private static final String DATA_ACTION = "action";
     private SpotReportReceiver broadcastReceiver = new SpotReportReceiver();
 
     // SWE DataBlock elements
@@ -73,6 +75,7 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
     private static final String DATA_RECORD_REPORT_DESCRIPTION_LABEL = "description";
     private static final String DATA_RECORD_REPORT_MEASURE_LABEL = "measure";
     private static final String DATA_RECORD_REPORT_EMERGENCY_LABEL = "emergency";
+    private static final String DATA_RECORD_REPORT_ACTION_LABEL = "action";
 
     private static final String DATA_RECORD_NAME = "Medical Spot Report";
     private static final String DATA_RECORD_DESCRIPTION =
@@ -150,6 +153,11 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
                 "Flag indicating if issue rises to level of medical emergency");
         dataStruct.addComponent(DATA_RECORD_REPORT_EMERGENCY_LABEL, emergency);
 
+        Text action = sweHelper.newText(SWEHelper.getPropertyUri("Action"),
+                "Action",
+                "The action associated with the event");
+        dataStruct.addComponent(DATA_RECORD_REPORT_ACTION_LABEL, action);
+
         // Setup data encoding *********************************************************************
         this.dataEncoding = sweHelper.newTextEncoding(",", "\n");
     }
@@ -157,15 +165,17 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
     /**
      * Populate and submit an instance of the SpotReport.
      *
+     * @param id
      * @param lat Latitude
      * @param lon Longitude
      * @param radius Radius of validity
      * @param description Description of the medical situation needing attention
      * @param vitalSignMeasurement Measurements of vital signs
      * @param emergency Flag indicating if issue rises to level of medical emergency
+     * @param action
      */
-    private void submitReport(String lat, String lon, int radius, String description,
-                              String vitalSignMeasurement, boolean emergency) {
+    private void submitReport(String id, String lat, String lon, int radius, String description,
+                              String vitalSignMeasurement, boolean emergency, String action) {
 
         double samplingTime = System.currentTimeMillis() / 1000.0;
 
@@ -181,7 +191,7 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
         }
 
         newRecord.setDoubleValue(0, samplingTime);
-        newRecord.setStringValue(1, UUID.randomUUID().toString());
+        newRecord.setStringValue(1, id);
         newRecord.setDoubleValue(2, Double.parseDouble(lat));
         newRecord.setDoubleValue(3, Double.parseDouble(lon));
         newRecord.setDoubleValue(4, 0.0);
@@ -189,6 +199,7 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
         newRecord.setStringValue(6, description);
         newRecord.setStringValue(7, vitalSignMeasurement);
         newRecord.setBooleanValue(8, emergency);
+        newRecord.setStringValue(9, action);
 
         // update latest record and send event
         latestRecord = newRecord;
@@ -251,14 +262,16 @@ public class SpotReportMedicalOutput extends AbstractSensorOutput<SpotReportDriv
 
                 if (ACTION_SUBMIT_MEDICAL_REPORT.equals(intent.getAction())) {
 
+                    String id = intent.getStringExtra(DATA_ID);
                     String lat = intent.getStringExtra(DATA_LAT);
                     String lon = intent.getStringExtra(DATA_LON);
                     int radius = intent.getIntExtra(DATA_RADIUS, 0);
                     String description = intent.getStringExtra(DATA_DESCRIPTION);
                     String vitalSignMeasurement = intent.getStringExtra(DATA_MEASURE);
                     boolean emergency = intent.getBooleanExtra(DATA_EMERGENCY, false);
+                    String action = intent.getStringExtra(DATA_ACTION);
 
-                    submitReport(lat, lon, radius, description, vitalSignMeasurement, emergency);
+                    submitReport(id, lat, lon, radius, description, vitalSignMeasurement, emergency, action);
 
                     resultReceiver.send(SUBMIT_REPORT_SUCCESS, null);
 

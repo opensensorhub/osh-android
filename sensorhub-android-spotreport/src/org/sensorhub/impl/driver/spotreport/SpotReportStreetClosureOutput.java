@@ -56,6 +56,7 @@ public class SpotReportStreetClosureOutput extends AbstractSensorOutput<SpotRepo
     private static final int SUBMIT_REPORT_FAILURE = 0;
     private static final int SUBMIT_REPORT_SUCCESS = 1;
 
+    private static final String DATA_ID = "id";
     private static final String DATA_LAT = "lat";
     private static final String DATA_LON = "lon";
     private static final String DATA_RADIUS = "radius";
@@ -156,6 +157,7 @@ public class SpotReportStreetClosureOutput extends AbstractSensorOutput<SpotRepo
     /**
      * Populate and submit an instance of the SpotReport.
      *
+     * @param id
      * @param lat Latitude
      * @param lon Longitude
      * @param radius Radius of validity
@@ -163,7 +165,7 @@ public class SpotReportStreetClosureOutput extends AbstractSensorOutput<SpotRepo
      * @param action Describes the action, close or open
      * @param reference Reference id of related observation
      */
-    private void submitReport(String lat, String lon, int radius, String type,
+    private void submitReport(String id, String lat, String lon, int radius, String type,
                               String action, String reference) {
 
         double samplingTime = System.currentTimeMillis() / 1000.0;
@@ -180,7 +182,7 @@ public class SpotReportStreetClosureOutput extends AbstractSensorOutput<SpotRepo
         }
 
         newRecord.setDoubleValue(0, samplingTime);
-        newRecord.setStringValue(1, UUID.randomUUID().toString());
+        newRecord.setStringValue(1, id);
         newRecord.setDoubleValue(2, Double.parseDouble(lat));
         newRecord.setDoubleValue(3, Double.parseDouble(lon));
         newRecord.setDoubleValue(4, 0.0);
@@ -250,6 +252,7 @@ public class SpotReportStreetClosureOutput extends AbstractSensorOutput<SpotRepo
 
                 if (ACTION_SUBMIT_STREET_CLOSURE_REPORT.equals(intent.getAction())) {
 
+                    String id = intent.getStringExtra(DATA_ID);
                     String lat = intent.getStringExtra(DATA_LAT);
                     String lon = intent.getStringExtra(DATA_LON);
                     int radius = intent.getIntExtra(DATA_RADIUS, 0);
@@ -262,7 +265,7 @@ public class SpotReportStreetClosureOutput extends AbstractSensorOutput<SpotRepo
                         reference = "";
                     }
 
-                    submitReport(lat, lon, radius, type, action, reference);
+                    submitReport(id, lat, lon, radius, type, action, reference);
 
                     resultReceiver.send(SUBMIT_REPORT_SUCCESS, null);
 
