@@ -196,15 +196,15 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
         double samplingTime = System.currentTimeMillis() / 1000.0;
 
         // generate new data record
-        DataBlock newRecord;
+        DataBlock newRecord = dataStruct.createDataBlock();
 
-        if (latestRecord == null) {
-
-            newRecord = dataStruct.createDataBlock();
-        } else {
-
-            newRecord = latestRecord.renew();
-        }
+//        if (latestRecord == null) {
+//
+//            newRecord = dataStruct.createDataBlock();
+//        } else {
+//
+//            newRecord = latestRecord.renew();
+//        }
 
         newRecord.setDoubleValue(0, samplingTime);
         newRecord.setStringValue(1, id);
@@ -220,7 +220,7 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
         newRecord.setStringValue(11, action);
 
         // update latest record and send event
-        latestRecord = newRecord;
+//        latestRecord = newRecord;
         latestRecordTime = System.currentTimeMillis();
         eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, newRecord));
     }

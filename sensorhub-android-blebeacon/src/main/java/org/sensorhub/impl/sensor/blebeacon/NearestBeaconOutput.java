@@ -107,6 +107,7 @@ public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
         submitReportIntent.putExtra("resourceLabel", parentSensor.getConfiguration().name);
         submitReportIntent.putExtra("method", "bt_beacon");
         submitReportIntent.putExtra("featureReference", roomDesc);  // TODO: make sure spot report can receive this
+        submitReportIntent.putExtra("action", "open");
         parentSensor.getConfiguration().androidContext.sendBroadcast(submitReportIntent);
 
         Log.d("NearestBeaconOutput", "Published Intent");
