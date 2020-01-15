@@ -286,7 +286,8 @@ public class SpotReportTrackingOutput extends AbstractSensorOutput<SpotReportDri
 
                     Log.d("SpotReportTrackingOutput", "Received Intent");
 
-                    String id = intent.getStringExtra(DATA_ID);
+//                    String id = intent.getStringExtra(DATA_ID);
+                    String id = UUID.randomUUID().toString();
                     double lat = intent.getDoubleExtra(DATA_LAT, 0.0);
                     double lon = intent.getDoubleExtra(DATA_LON, 0.0);
                     double confidence = intent.getDoubleExtra(DATA_CONFIDENCE, 0.0);
