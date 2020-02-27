@@ -41,7 +41,7 @@ import android.os.Bundle;
  */
 public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, LocationListener
 {
-    private static final String ACTION_SUBMIT_TRACK_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_TRACK";
+//    private static final String ACTION_SUBMIT_TRACK_REPORT = "org.sensorhub.android.intent.SPOT_REPORT_TRACK";
 
     LocationManager locManager;
     LocationProvider locProvider;
@@ -140,17 +140,6 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
     @Override
     public void onLocationChanged(Location location)
     {
-        Intent submitReportIntent = new Intent(ACTION_SUBMIT_TRACK_REPORT);
-        submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-        submitReportIntent.putExtra("lat", location.getLatitude());
-        submitReportIntent.putExtra("lon", location.getLongitude());
-        submitReportIntent.putExtra("confidence", 16.0);
-        submitReportIntent.putExtra("type", "device");
-        submitReportIntent.putExtra("resourceId", parentSensor.getConfiguration().name);
-        submitReportIntent.putExtra("resourceLabel", parentSensor.getConfiguration().name);
-        submitReportIntent.putExtra("method", "gps");
-        parentSensor.getConfiguration().androidContext.sendBroadcast(submitReportIntent);
-
         /*log.debug("Location received from " + getName() + ": "
                   + location.getLatitude() + ", " +
                   + location.getLongitude() + ", " +

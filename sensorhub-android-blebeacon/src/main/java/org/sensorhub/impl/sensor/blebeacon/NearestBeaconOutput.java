@@ -88,31 +88,6 @@ public class NearestBeaconOutput extends AbstractSensorOutput<BLEBeaconDriver> {
         double sampleTime = System.currentTimeMillis() / 1000;
         double[] locationDecDeg = parentSensor.getBeaconLocation(beacon);
 
-        Log.d("NearestBeaconOutput", "Publishing Intent");
-
-        Intent submitReportIntent = new Intent(ACTION_SUBMIT_TRACK_REPORT);
-        submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-        submitReportIntent.putExtra("lat", locationDecDeg[0]);
-        submitReportIntent.putExtra("lon", locationDecDeg[1]);
-        double confidence = 0;
-
-        if (parentSensor.getBeaconDistance(beacon) > 0) {
-
-            confidence = (1 / parentSensor.getBeaconDistance(beacon));
-        }
-
-        submitReportIntent.putExtra("confidence", confidence);
-        submitReportIntent.putExtra("type", "device");
-        submitReportIntent.putExtra("resourceId", parentSensor.getConfiguration().name);
-        submitReportIntent.putExtra("resourceLabel", parentSensor.getConfiguration().name);
-        submitReportIntent.putExtra("method", "bt_beacon");
-        submitReportIntent.putExtra("featureReference", roomDesc);  // TODO: make sure spot report can receive this
-        submitReportIntent.putExtra("action", "open");
-        parentSensor.getConfiguration().androidContext.sendBroadcast(submitReportIntent);
-
-        Log.d("NearestBeaconOutput", "Published Intent");
-
-
         dataBlock.setDoubleValue(0, sampleTime);
         dataBlock.setDoubleValue(1, locationDecDeg[0]);
         dataBlock.setDoubleValue(2, locationDecDeg[1]);

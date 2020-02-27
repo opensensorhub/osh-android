@@ -48,7 +48,7 @@ import org.sensorhub.android.comm.BluetoothCommProvider;
 import org.sensorhub.android.comm.BluetoothCommProviderConfig;
 import org.sensorhub.android.comm.ble.BleConfig;
 import org.sensorhub.android.comm.ble.BleNetwork;
-import org.sensorhub.android.spotreport.SpotReportActivity;
+//import org.sensorhub.android.spotreport.SpotReportActivity;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.module.IModuleConfigRepository;
@@ -59,7 +59,7 @@ import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
-import org.sensorhub.impl.driver.spotreport.SpotReportConfig;
+//import org.sensorhub.impl.driver.spotreport.SpotReportConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.persistence.GenericStreamStorage;
 import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
@@ -106,7 +106,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         FlirOne,
         DJIDrone,
         ProxySensor,
-        SpotReport,
+//        SpotReport,
         BLELocation
     }
 
@@ -228,12 +228,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
 
         // Spot Report
-        SpotReportConfig spotReportConfig = (SpotReportConfig)createSensorConfig(Sensors.SpotReport);
+        /*SpotReportConfig spotReportConfig = (SpotReportConfig)createSensorConfig(Sensors.SpotReport);
         sensorhubConfig.add(spotReportConfig);
 //        if (isPushingSensor(Sensors.SpotReport))
         {
             addSosTConfig(spotReportConfig, sosUser, sosPwd);
-        }
+        }*/
 
         enabled = prefs.getBoolean("ble_enable", false);
         if(enabled){
@@ -498,14 +498,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             ((FlirOneCameraConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
         } else if (Sensors.ProxySensor.equals(sensor)) {
             sensorConfig = new ProxySensorConfig();
-        }
-        else if (Sensors.SpotReport.equals(sensor))
-        {
-            sensorConfig = new SpotReportConfig();
-            sensorConfig.id = "urn:android:spotreport:" + deviceID;
-            sensorConfig.name = "Spot Report [" + deviceName + "]";
-            sensorConfig.autoStart = true;
-            ((SpotReportConfig) sensorConfig).androidContext = this.getApplicationContext();
         } else if(Sensors.BLELocation.equals(sensor)){
             sensorConfig = new BLEBeaconConfig();
             sensorConfig.id = "BLE_BEACON_SCANNER";
@@ -961,10 +953,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         } else if (id == R.id.action_stop_proxy) {
             testStopProxyBroadcast();
         }
-        else if(id == R.id.action_report) {
-            startActivity(new Intent(this, SpotReportActivity.class));
-            return true;
-        }
+//        else if(id == R.id.action_report) {
+//            startActivity(new Intent(this, SpotReportActivity.class));
+//            return true;
+//        }
 
         return super.onOptionsItemSelected(item);
     }

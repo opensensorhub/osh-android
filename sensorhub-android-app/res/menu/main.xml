@@ -13,10 +13,10 @@
         android:orderInCategory="110"
         android:title="@string/action_start" />
 
-    <item
-        android:id="@+id/action_report"
-        android:orderInCategory="149"
-        android:title="@string/spot_report" />
+<!--    <item-->
+<!--        android:id="@+id/action_report"-->
+<!--        android:orderInCategory="149"-->
+<!--        android:title="@string/spot_report" />-->
     <item
         android:id="@+id/action_stop"
         android:orderInCategory="120"

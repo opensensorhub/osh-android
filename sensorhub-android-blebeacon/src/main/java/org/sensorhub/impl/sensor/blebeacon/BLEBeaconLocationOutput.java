@@ -105,28 +105,6 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
 
     protected void sendMeasurement(double[] estLocation, Beacon[] beacons) {
 
-        Log.d("BLEBeaconLocationOutput", "Publishing Intent");
-
-        Intent submitReportIntent = new Intent(ACTION_SUBMIT_TRACK_REPORT);
-        submitReportIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-        submitReportIntent.putExtra("lat", estLocation[0]);
-        submitReportIntent.putExtra("lon", estLocation[1]);
-        double confidence = 0;
-
-        if (parentSensor.getBeaconDistance(beacons[0]) > 0) {
-
-            confidence = (1 / parentSensor.getBeaconDistance(beacons[0]));
-        }
-
-        submitReportIntent.putExtra("confidence", confidence);
-        submitReportIntent.putExtra("type", "device");
-        submitReportIntent.putExtra("resourceId", parentSensor.getConfiguration().name);
-        submitReportIntent.putExtra("resourceLabel", parentSensor.getConfiguration().name);
-        submitReportIntent.putExtra("method", "bt_beacon");
-        parentSensor.getConfiguration().androidContext.sendBroadcast(submitReportIntent);
-
-        Log.d("BLEBeaconLocationOutput", "Published Intent");
-
         DataBlock dataBlock = posDataStruct.createDataBlock();
         double sampleTime = System.currentTimeMillis() / 1000;
         // TODO: Handle null or {0,0,0} better
