@@ -1,4 +1,4 @@
-ext.oshCoreVersion = '1.4.0a'
+ext.oshCoreVersion = '1.4.0-alpha'
 ext.compileSdkVersion = 28
 ext.minSdkVersion = 26
 ext.targetSdkVersion = 26
