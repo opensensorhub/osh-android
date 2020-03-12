@@ -110,26 +110,39 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
         // rotate to ENU
         att.rotate(look, look);
                 
-        double heading = 90. - Math.toDegrees(Math.atan2(look.y, look.x)); 
+        /*double heading = 90. - Math.toDegrees(Math.atan2(look.y, look.x));
         if (heading > 180.)
             heading -= 360.;
         double pitch = 0.0;//Math.toDegrees(Math.atan2(look.y, look.x)) - 90.;
-        double roll = 0.0;
-        
-        /*double sqw = q.w*q.w;
-        double sqx = q.x*q.x;
-        double sqy = q.y*q.y;
-        double sqz = q.z*q.z;
-        System.out.println(q0);
-        euler.z = Math.atan2(2.0 * (q.x*q.y + q.z*q.W), sqx - sqy - sqz + sqw);     // heading
-        euler.y = Math.atan2(2.0 * (q.y*q.z + q.x*q.w), -sqx - sqy + sqz + sqw);    // pitch
-        euler.x = Math.asin(-2.0 * (q.x*q.z - q.y*q.w));                            // roll
+        double roll = 0.0;*/
+
+        // Conversion from Orientation Quat to Euler
+        // Use JPL Quaternion [q0, q1, q2, q3] = [qw, qx, qy, qz]
+        double[] q = {att.s, att.x, att.y, att.z};
+        double[] qSQ = {q[0]*q[0], q[1]*q[1], q[2]*q[2], q[3]*q[3]};
+
+//        double sqw = q.w*q.w;
+//        double sqx = q.x*q.x;
+//        double sqy = q.y*q.y;
+//        double sqz = q.z*q.z;
+
+        euler.z = Math.atan2(2 * (q[1]*q[2] + q[3]*q[0]), qSQ[1] - qSQ[2] - qSQ[3] + qSQ[0]);       // heading
+        euler.y = Math.atan2(2 * (q[2]*q[3] + q[1]*q[0]), -qSQ[1] - qSQ[2] + qSQ[3] + qSQ[0]);      // pitch
+        euler.x = Math.asin(-2 * (q[1]*q[3] - q[2]*q[0]));                                          // roll
+
+//        euler.z = Math.atan2(2.0 * (q.x*q.y + q.z*q.W), sqx - sqy - sqz + sqw);     // heading
+//        euler.y = Math.atan2(2.0 * (q.y*q.z + q.x*q.w), -sqx - sqy + sqz + sqw);    // pitch
+//        euler.x = Math.asin(-2.0 * (q.x*q.z - q.y*q.w));                            // roll
         euler.scale(180./Math.PI);
-        
-        double oldx = euler.x; // convert to ENU
-        euler.x = euler.y;
-        euler.y = oldx;
-        euler.z = -euler.z;*/
+
+        double heading = euler.z;
+        double pitch = euler.y;
+        double roll = euler.x;
+
+//        double oldx = euler.x; // convert to ENU
+//        euler.x = euler.y;
+//        euler.y = oldx;
+//        euler.z = -euler.z;
         
         // build and populate datablock
         DataBlock dataBlock = dataStruct.createDataBlock();
