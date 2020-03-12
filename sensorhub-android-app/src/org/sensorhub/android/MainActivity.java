@@ -30,6 +30,8 @@ import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -74,6 +76,7 @@ import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.blebeacon.BLEBeaconConfig;
 import org.sensorhub.impl.sensor.swe.ProxySensor.ProxySensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
+import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
@@ -96,6 +99,7 @@ import static android.content.ContentValues.TAG;
 
 public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener {
     public static final String ACTION_BROADCAST_RECEIVER = "org.sensorhub.android.BROADCAST_RECEIVER";
+    public static final String ANDROID_SENSORS_MODULE_ID = "ANDROID_SENSORS";
 
     String deviceID;
     String deviceName;
@@ -200,7 +204,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         boolean enabled = prefs.getBoolean("trupulse_enable", false);
         if (enabled) {
             String truPulseDevice = prefs.getString("trupulse_datasource", "SIMULATED");
-            TruPulseConfig truPulseConfig = truPulseDevice == "SIMULATED"
+            TruPulseConfig truPulseConfig = "SIMULATED".equals(truPulseDevice)
                     ? (TruPulseConfig) createSensorConfig(Sensors.TruPulseSim)
                     : (TruPulseConfig) createSensorConfig(Sensors.TruPulse);
             sensorhubConfig.add(truPulseConfig);
@@ -253,29 +257,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             addSosTConfig(beaconConfig, sosUser, sosPwd);
             Log.d(TAG, "onCreate: BLE Config Added");
         }
-
-        /*
-        // DJI Drone
-        enabled = prefs.getBoolean("dji_enabled", false);
-        if (enabled)
-        {
-            DjiConfig djiConfig = new DjiConfig();
-            djiConfig.id = "DJI_DRONE";
-            djiConfig.name = "DJI Aircraft [" + deviceName + "]";
-            djiConfig.autoStart = true;
-            djiConfig.androidContext = this.getApplicationContext();
-            djiConfig.camPreviewTexture = boundService.getVideoTexture();
-            showVideo = true;
-            sensorhubConfig.add(djiConfig);
-            addSosTConfig(djiConfig, sosUser, sosPwd);
-
-            SensorDataProviderConfig djiDataProviderConfig = new SensorDataProviderConfig();
-            djiDataConsumerConfig.sensorID = djiConfig.id;
-            djiDataConsumerConfig.offeringID = djiConfig.id+"-sos";
-            djiDataConsumerConfig.enabled = true;
-            sosConfig.dataConsumers.add(djiDataConsumerConfig);
-        }
-        */
 
         /*
         // Get SOS-T URL from config
@@ -428,7 +409,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         if (Sensors.Android.equals(sensor)) {
             sensorConfig = new AndroidSensorsConfig();
-            sensorConfig.id = "urn:android:device:" + deviceID;
+            sensorConfig.id = ANDROID_SENSORS_MODULE_ID;
             sensorConfig.name = "Android Sensors [" + deviceName + "]";
             sensorConfig.autoStart = true;
 
@@ -456,7 +437,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             ((AndroidSensorsConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
             ((AndroidSensorsConfig) sensorConfig).runName = runName;
         } else if (Sensors.TruPulse.equals(sensor)) {
-            sensorConfig = new TruPulseConfig();
+            sensorConfig = createTruPulseConfig();
             sensorConfig.id = "TRUPULSE_SENSOR";
             sensorConfig.name = "TruPulse Range Finder [" + deviceName + "]";
             sensorConfig.autoStart = true;
@@ -467,7 +448,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             ((TruPulseConfig) sensorConfig).commSettings = btConf;
             ((TruPulseConfig) sensorConfig).serialNumber = deviceID;
         } else if (Sensors.TruPulseSim.equals(sensor)) {
-            sensorConfig = new TruPulseConfig();
+            sensorConfig = createTruPulseConfig();
             sensorConfig.id = "TRUPULSE_SENSOR_SIMULATED";
             sensorConfig.name = "Simulated TruPulse Range Finder [" + deviceName + "]";
             sensorConfig.autoStart = true;
@@ -511,6 +492,37 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
 
         return sensorConfig;
+    }
+
+    private TruPulseConfig createTruPulseConfig() {
+
+        // get handle to AndroidSensorsConfig
+        AndroidSensorsConfig androidSensorsConfig = (AndroidSensorsConfig)sensorhubConfig.get(ANDROID_SENSORS_MODULE_ID);
+
+        // add target geolocation processing if GPS is enabled
+        if (androidSensorsConfig != null && androidSensorsConfig.activateGpsLocation)
+        {
+            String gpsOutputName = null;
+            if (getApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION))
+            {
+                LocationManager locationManager = (LocationManager)getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+                List<String> locProviders = locationManager.getAllProviders();
+                for (String provName: locProviders)
+                {
+                    LocationProvider locProvider = locationManager.getProvider(provName);
+                    if (locProvider.requiresSatellite())
+                        gpsOutputName = locProvider.getName().replaceAll(" ", "_") + "_data";
+                }
+            }
+
+            TruPulseWithGeolocConfig trupulseConfig = new TruPulseWithGeolocConfig();
+            trupulseConfig.locationSourceID = androidSensorsConfig.id;
+            trupulseConfig.locationOutputName = gpsOutputName;
+            return trupulseConfig;
+        }
+
+        // else only output raw range finder data
+        return new TruPulseConfig();
     }
 
     protected void addStorageConfig(SensorConfig sensorConf, StreamStorageConfig storageConf) {

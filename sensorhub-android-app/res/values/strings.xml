@@ -61,7 +61,7 @@
     </string-array>
     <string-array name="trupulse_datasource_values">
         <item>STREAM</item>
-        <item>SIMULATE</item>
+        <item>SIMULATED</item>
     </string-array>
     <string name="trupulse_datasource_default">STREAM</string>
 
