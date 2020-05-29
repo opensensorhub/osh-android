@@ -10,5 +10,8 @@
     <string-array name="video_codec_list">
         <item>JPEG</item>
         <item>H264</item>
+        <item>H265</item>
+        <item>VP9</item>
+        <item>VP8</item>
     </string-array>
 </resources>
