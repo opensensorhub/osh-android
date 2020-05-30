@@ -64,12 +64,14 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     Looper bgLooper;
     int cameraId;
     Camera camera;
-    int imgHeight, imgWidth, frameRate;
+    int imgHeight, imgWidth, frameRate = 25;
     byte[] imgBuf1, imgBuf2;
     byte[] codecInfoData;
     MediaCodec mCodec;
     BufferInfo bufferInfo = new BufferInfo();
     SurfaceTexture previewTexture;
+
+    int bitrate = 5 * 1000 * 1000;
 
     String name;
     DataComponent dataStruct;
@@ -89,14 +91,11 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         // init camera hardware and H264 codec
         initCam();
         initCodec();
-
-        // create SWE Common data structure and encoding
-        VideoCamHelper fac = new VideoCamHelper();
-        DataStream videoStream = fac.newVideoOutputH264(getName(), imgWidth, imgHeight);
-        dataStruct = videoStream.getElementType();
-        dataEncoding = videoStream.getEncoding();
+        initOutputStructure();
     }
 
+
+    protected abstract void initOutputStructure();
 
     protected void initCam() throws SensorException
     {
@@ -142,38 +141,48 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             }
             catch (InterruptedException e)
             {
+
             }
         }
         
+        initVideoCapture(info);
+    }
+
+
+    private static final float BPP = 0.25f;
+    private int calcBitRate(int mWidth,int mHeight, int frameRate) {
+        final int bitrate = (int)(BPP * frameRate * mWidth * mHeight);
+        return bitrate;
+    }
+
+    protected abstract void initCodec() throws SensorException;
+
+    protected void initVideoCapture(Camera.CameraInfo info) throws SensorException {
+        // default for Most of the CODECs
         // if camera was successfully opened, prepare for video capture
         if (camera != null)
         {
             try
             {
                 Parameters camParams = camera.getParameters();
-                
-//                // get supported preview sizes
-//                for (Camera.Size imgSize : camParams.getSupportedPreviewSizes())
-//                {
-//                    if (imgSize.width >= 800 && imgSize.width <= 1300)
-//                    {
-//                        imgWidth = imgSize.height;
-//                        imgHeight = imgSize.width;
-//                        break;
-//                    }
-//                }
-                frameRate = 25;
 
-                imgWidth = 1280;
-                imgHeight= 720;
-
+                // get supported preview sizes
+                for (Camera.Size imgSize : camParams.getSupportedPreviewSizes())
+                {
+                    if (imgSize.width >= 1100 && imgSize.width <= 1300)
+                    {
+                        imgWidth = imgSize.width;
+                        imgHeight = imgSize.height;
+                        break;
+                    }
+                }
                 // set parameters
                 camParams.setPreviewSize(imgWidth, imgHeight);
                 camParams.setVideoStabilization(camParams.isVideoStabilizationSupported());
                 camParams.setPreviewFormat(ImageFormat.NV21);
                 camParams.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
                 camera.setParameters(camParams);
-        
+
                 // setup buffers and callback
                 int bufSize = imgWidth * imgHeight * ImageFormat.getBitsPerPixel(ImageFormat.NV21) / 8;
                 imgBuf1 = new byte[bufSize];
@@ -193,16 +202,6 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             throw new SensorException("Cannot open camera " + cameraId);
         }
     }
-
-
-    private static final float BPP = 0.25f;
-    private int calcBitRate(int mWidth,int mHeight, int frameRate) {
-        final int bitrate = (int)(BPP * frameRate * mWidth * mHeight);
-        return bitrate;
-    }
-
-    protected abstract void initCodec() throws SensorException;
-
 
     @Override
     public void start(Handler eventHandler) throws SensorException
@@ -393,7 +392,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     }
 
 
-    protected final double getJulianTimeStamp(long sensorTimeStampUs)
+    protected double getJulianTimeStamp(long sensorTimeStampUs)
     {
         long sensorTimeMillis = sensorTimeStampUs / 1000;
 

@@ -1,16 +1,15 @@
 /***************************** BEGIN LICENSE BLOCK ***************************
 
-The contents of this file are subject to the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one
-at http://mozilla.org/MPL/2.0/.
+ The contents of this file are subject to the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one
+ at http://mozilla.org/MPL/2.0/.
 
-Software distributed under the License is distributed on an "AS IS" basis,
-WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-for the specific language governing rights and limitations under the License.
- 
-Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
- 
-******************************* END LICENSE BLOCK ***************************/
+ Software distributed under the License is distributed on an "AS IS" basis,
+ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ for the specific language governing rights and limitations under the License.
+
+ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
+ ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.sensor.android.video;
 
@@ -18,10 +17,12 @@ import java.io.ByteArrayOutputStream;
 
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
+
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataStream;
+
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
@@ -30,6 +31,7 @@ import org.sensorhub.impl.sensor.android.IAndroidOutput;
 import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
 import org.vast.data.AbstractDataBlock;
 import org.vast.data.DataBlockMixed;
+
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
@@ -50,96 +52,41 @@ import android.os.SystemClock;
  */
 @SuppressWarnings("deprecation")
 public class AndroidCameraOutputMJPEG extends AndroidCameraOutput {
-
-    Looper bgLooper;
-    int cameraId;
-    Camera camera;
-    int imgHeight, imgWidth, frameRate;
-    byte[] imgBuf1, imgBuf2;
+    ByteArrayOutputStream jpegBuf = new ByteArrayOutputStream();
     YuvImage yuvImg1, yuvImg2;
     Rect imgArea;
-    ByteArrayOutputStream jpegBuf = new ByteArrayOutputStream();
-    SurfaceTexture previewTexture;
 
-    String name;
-    DataComponent dataStruct;
-    DataEncoding dataEncoding;
-    int samplingPeriod;
-    long systemTimeOffset = -1L;
-
-
-    public AndroidCameraOutputMJPEG(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture) throws SensorException
-    {
+    public AndroidCameraOutputMJPEG(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture) throws SensorException {
         super(parentModule, cameraId, previewTexture, "camera" + cameraId + "_MJPEG");
     }
-    
-    @Override
-    protected void initCam() throws SensorException
-    {
-        android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
-        android.hardware.Camera.getCameraInfo(cameraId, info);
 
-        // handle camera in its own thread
-        // this is to avoid running in the same thread as other sensors
-        Thread bgThread = new Thread() {
-            public void run()
-            {
-                try
-                {
-                    // we need an Android looper to process camera messages
-                    Looper.prepare();
-                    bgLooper = Looper.myLooper();
-                    
-                    // open camera and get parameters
-                    camera = Camera.open(cameraId);
-                    
-                    // start processing messages
-                    Looper.loop();
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
-                
-                synchronized (this)
-                {
-                    notify();
-                }
-            }
-        };      
-        bgThread.start();
-        
-        // wait until camera is opened
-        synchronized (bgThread)
-        {
-            try
-            {
-                bgThread.wait(1000);
-            }
-            catch (InterruptedException e)
-            {
-            }
-        }
-        
+
+    @Override
+    protected void initOutputStructure() {
+        // create output structure
+        VideoCamHelper fac = new VideoCamHelper();
+        DataStream videoStream = fac.newVideoOutputMJPEG(getName(), imgWidth, imgHeight);
+        dataStruct = videoStream.getElementType();
+        dataEncoding = videoStream.getEncoding();
+    }
+
+    @Override
+    protected void initVideoCapture(Camera.CameraInfo info) throws SensorException {
         // if camera was successfully opened, prepare for video capture
-        if (camera != null)
-        {
-            try
-            {
+        if (camera != null) {
+            try {
                 Parameters camParams = camera.getParameters();
-                
+
                 // get supported preview sizes
-                for (Camera.Size imgSize: camParams.getSupportedPreviewSizes())
-                {
-                    if (imgSize.width >= 600 && imgSize.width <= 800)
-                    {
+                for (Camera.Size imgSize : camParams.getSupportedPreviewSizes()) {
+                    if (imgSize.width >= 600 && imgSize.width <= 800) {
                         imgWidth = imgSize.width;
                         imgHeight = imgSize.height;
                         break;
                     }
                 }
                 frameRate = 1;
-                
+
                 // set parameters
                 camParams.setPreviewSize(imgWidth, imgHeight);
                 camParams.setPreviewFormat(ImageFormat.NV21);
@@ -148,7 +95,7 @@ public class AndroidCameraOutputMJPEG extends AndroidCameraOutput {
 
                 // setup buffers and callback
                 imgArea = new Rect(0, 0, imgWidth, imgHeight);
-                int bufSize = imgWidth*imgHeight*ImageFormat.getBitsPerPixel(ImageFormat.NV21)/8;
+                int bufSize = imgWidth * imgHeight * ImageFormat.getBitsPerPixel(ImageFormat.NV21) / 8;
                 imgBuf1 = new byte[bufSize];
                 yuvImg1 = new YuvImage(imgBuf1, ImageFormat.NV21, imgWidth, imgHeight, null);
                 imgBuf2 = new byte[bufSize];
@@ -157,57 +104,60 @@ public class AndroidCameraOutputMJPEG extends AndroidCameraOutput {
                 camera.addCallbackBuffer(imgBuf2);
                 camera.setPreviewCallbackWithBuffer(AndroidCameraOutputMJPEG.this);
                 camera.setDisplayOrientation(info.orientation);
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 throw new SensorException("Cannot initialize camera " + cameraId, e);
             }
-        }
-        else
-        {
+        } else {
             throw new SensorException("Cannot open camera " + cameraId);
         }
     }
 
     @Override
-    protected void initCodec() throws SensorException {
-
-    }
+    protected void initCodec() throws SensorException {}
 
 
     @Override
-    public void onPreviewFrame(byte[] data, Camera camera)
-    {
+    public void onPreviewFrame(byte[] data, Camera camera) {
         long timeStamp = SystemClock.elapsedRealtimeNanos();
-        
+
         // select current buffer
         YuvImage yuvImg = (data == imgBuf1) ? yuvImg1 : yuvImg2;
-        
+
         // compress as JPEG
         jpegBuf.reset();
         yuvImg.compressToJpeg(imgArea, 90, jpegBuf);
-        
+
         // release buffer for next frame
         camera.addCallbackBuffer(data);
-        
+
         // generate new data record
         DataBlock newRecord;
         if (latestRecord == null)
             newRecord = dataStruct.createDataBlock();
         else
             newRecord = latestRecord.renew();
-        
+
         // set time stamp
         double samplingTime = getJulianTimeStamp(timeStamp);
         newRecord.setDoubleValue(0, samplingTime);
-        
+
         // set encoded data
-        AbstractDataBlock frameData = ((DataBlockMixed)newRecord).getUnderlyingObject()[1];
+        AbstractDataBlock frameData = ((DataBlockMixed) newRecord).getUnderlyingObject()[1];
         frameData.setUnderlyingObject(jpegBuf.toByteArray());
-        
+
         // send event
         latestRecord = newRecord;
         latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, AndroidCameraOutputMJPEG.this, latestRecord));          
+        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, AndroidCameraOutputMJPEG.this, latestRecord));
+    }
+
+    @Override
+    protected double getJulianTimeStamp(long sensorTimeStampNanos) {
+        long sensorTimeMillis = sensorTimeStampNanos / 1000000;
+
+        if (systemTimeOffset < 0)
+            systemTimeOffset = System.currentTimeMillis() - sensorTimeMillis;
+
+        return (systemTimeOffset + sensorTimeMillis) / 1000.;
     }
 }
