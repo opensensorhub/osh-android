@@ -38,8 +38,10 @@ import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
 @SuppressWarnings("deprecation")
 public class AndroidCameraOutputH265 extends AndroidCameraOutput {
 
+    private static final String COMPRESSION = "H265";
+
     public AndroidCameraOutputH265(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture) throws SensorException {
-        super(parentModule,cameraId,previewTexture,"camera" + cameraId + "_H265");
+        super(parentModule,cameraId,previewTexture,"camera" + cameraId + "_" + COMPRESSION);
     }
 
     @Override
@@ -47,7 +49,7 @@ public class AndroidCameraOutputH265 extends AndroidCameraOutput {
         // create SWE Common data structure and encoding
         VideoCamHelper fac = new VideoCamHelper();
         // use the one of H264
-        DataStream videoStream = fac.newVideoOutputCODEC(getName(), imgWidth, imgHeight,"H265");
+        DataStream videoStream = fac.newVideoOutputCODEC(getName(), imgWidth, imgHeight,COMPRESSION);
         dataStruct = videoStream.getElementType();
         dataEncoding = videoStream.getEncoding();
     }

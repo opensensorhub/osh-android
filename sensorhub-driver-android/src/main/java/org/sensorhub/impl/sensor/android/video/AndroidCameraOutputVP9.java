@@ -57,8 +57,10 @@ import java.nio.ByteBuffer;
 @SuppressWarnings("deprecation")
 public class AndroidCameraOutputVP9 extends AndroidCameraOutput
 {
+    private static final String COMPRESSION = "VP9";
+
     public AndroidCameraOutputVP9(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture) throws SensorException {
-        super(parentModule,cameraId,previewTexture,"camera" + cameraId + "_VP9");
+        super(parentModule,cameraId,previewTexture,"camera" + cameraId + "_" + COMPRESSION);
     }
 
 
@@ -66,7 +68,7 @@ public class AndroidCameraOutputVP9 extends AndroidCameraOutput
     protected void initOutputStructure() {
         // create SWE Common data structure and encoding
         VideoCamHelper fac = new VideoCamHelper();
-        DataStream videoStream = fac.newVideoOutputCODEC(getName(), imgWidth, imgHeight,"VP9");
+        DataStream videoStream = fac.newVideoOutputCODEC(getName(), imgWidth, imgHeight,COMPRESSION);
         dataStruct = videoStream.getElementType();
         dataEncoding = videoStream.getEncoding();
     }
