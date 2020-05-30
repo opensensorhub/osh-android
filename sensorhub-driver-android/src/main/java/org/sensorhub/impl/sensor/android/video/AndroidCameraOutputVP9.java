@@ -75,7 +75,6 @@ public class AndroidCameraOutputVP9 extends AndroidCameraOutput
     protected void initCodec() throws SensorException {
         try {
             final String videoCodec = MediaFormat.MIMETYPE_VIDEO_VP9;
-            System.out.println("Codec:" +videoCodec);
             mCodec = MediaCodec.createEncoderByType(videoCodec);
             MediaFormat mediaFormat = MediaFormat.createVideoFormat(videoCodec, imgWidth, imgHeight);
             mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, bitrate);
