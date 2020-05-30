@@ -149,12 +149,6 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     }
 
 
-    private static final float BPP = 0.25f;
-    private int calcBitRate(int mWidth,int mHeight, int frameRate) {
-        final int bitrate = (int)(BPP * frameRate * mWidth * mHeight);
-        return bitrate;
-    }
-
     protected abstract void initCodec() throws SensorException;
 
     protected void initVideoCapture(Camera.CameraInfo info) throws SensorException {
