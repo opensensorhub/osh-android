@@ -48,7 +48,7 @@ public class AndroidCameraOutputVP8 extends AndroidCameraOutput
         // create SWE Common data structure and encoding
         VideoCamHelper fac = new VideoCamHelper();
         // use the one of H264
-        DataStream videoStream = fac.newVideoOutputH264(getName(), imgWidth, imgHeight);
+        DataStream videoStream = fac.newVideoOutputCODEC(getName(), imgWidth, imgHeight,"VP8");
         dataStruct = videoStream.getElementType();
         dataEncoding = videoStream.getEncoding();
     }

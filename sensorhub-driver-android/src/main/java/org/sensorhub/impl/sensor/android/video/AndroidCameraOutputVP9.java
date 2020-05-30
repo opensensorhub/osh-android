@@ -66,8 +66,7 @@ public class AndroidCameraOutputVP9 extends AndroidCameraOutput
     protected void initOutputStructure() {
         // create SWE Common data structure and encoding
         VideoCamHelper fac = new VideoCamHelper();
-        // use the one of H264
-        DataStream videoStream = fac.newVideoOutputH264(getName(), imgWidth, imgHeight);
+        DataStream videoStream = fac.newVideoOutputCODEC(getName(), imgWidth, imgHeight,"VP9");
         dataStruct = videoStream.getElementType();
         dataEncoding = videoStream.getEncoding();
     }
@@ -76,6 +75,7 @@ public class AndroidCameraOutputVP9 extends AndroidCameraOutput
     protected void initCodec() throws SensorException {
         try {
             final String videoCodec = MediaFormat.MIMETYPE_VIDEO_VP9;
+            System.out.println("Codec:" +videoCodec);
             mCodec = MediaCodec.createEncoderByType(videoCodec);
             MediaFormat mediaFormat = MediaFormat.createVideoFormat(videoCodec, imgWidth, imgHeight);
             mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, bitrate);
