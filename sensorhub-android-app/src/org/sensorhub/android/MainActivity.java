@@ -263,6 +263,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.connection.connectTimeout = 10000;
         sosConfig.connection.usePersistentConnection = true;
         sosConfig.connection.reconnectAttempts = 9;
+        sosConfig.connection.maxQueueSize = 30;
         sensorhubConfig.add(sosConfig);
     }
 

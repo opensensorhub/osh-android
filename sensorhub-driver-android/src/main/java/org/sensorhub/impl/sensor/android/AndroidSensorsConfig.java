@@ -32,7 +32,10 @@ public class AndroidSensorsConfig extends SensorConfig
 {     
     public final static String JPEG_CODEC = "JPEG";
     public final static String H264_CODEC = "H264";
-    
+    public final static String H265_CODEC = "H265";
+    public final static String VP9_CODEC = "VP9";
+    public final static String VP8_CODEC = "VP8";
+
     public boolean activateAccelerometer = false;
     public boolean activateGyrometer = false;
     public boolean activateMagnetometer = false;
