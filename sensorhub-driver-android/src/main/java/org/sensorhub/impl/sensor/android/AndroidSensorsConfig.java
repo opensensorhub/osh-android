@@ -45,7 +45,8 @@ public class AndroidSensorsConfig extends SensorConfig
     public boolean activateNetworkLocation = false;
     public boolean activateBackCamera = false;
     public boolean activateFrontCamera = false;
-    public String videoCodec = JPEG_CODEC; 
+    public String videoCodec = JPEG_CODEC;
+    public boolean outputVideoRoll = false;
     
     public String deviceName;
     public String runName;

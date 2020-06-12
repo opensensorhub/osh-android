@@ -143,6 +143,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if (sensorsConfig.activateBackCamera || sensorsConfig.activateFrontCamera)
             showVideo = true;
         sensorsConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
+        sensorsConfig.outputVideoRoll = prefs.getBoolean("video_roll_enabled", false);
         sensorsConfig.runName = runName;
         sensorhubConfig.add(sensorsConfig);
         addSosTConfig(sensorsConfig, sosUser, sosPwd);

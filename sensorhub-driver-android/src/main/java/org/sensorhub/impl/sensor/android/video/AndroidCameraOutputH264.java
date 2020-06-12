@@ -53,20 +53,17 @@ import android.os.SystemClock;
  * @since June 11, 2015
  */
 @SuppressWarnings("deprecation")
-public class AndroidCameraOutputH264 extends AndroidCameraOutput {
+public class AndroidCameraOutputH264 extends AndroidCameraOutput
+{
+    private static final String CODEC_NAME = "H264";
 
     public AndroidCameraOutputH264(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture) throws SensorException {
-        super(parentModule,cameraId,previewTexture,"camera" + cameraId + "_H264");
+        super(parentModule,cameraId,previewTexture,"camera" + cameraId + "_" + CODEC_NAME);
     }
 
-
     @Override
-    protected void initOutputStructure() {
-        // create SWE Common data structure and encoding
-        VideoCamHelper fac = new VideoCamHelper();
-        DataStream videoStream = fac.newVideoOutputH264(getName(), imgWidth, imgHeight);
-        dataStruct = videoStream.getElementType();
-        dataEncoding = videoStream.getEncoding();
+    protected String getCodecName() {
+        return CODEC_NAME;
     }
 
     @Override

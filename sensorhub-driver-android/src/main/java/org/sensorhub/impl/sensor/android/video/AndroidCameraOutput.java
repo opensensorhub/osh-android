@@ -18,6 +18,10 @@ import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.media.MediaCodec;
 import android.media.MediaCodec.BufferInfo;
 import android.media.MediaCodecInfo;
@@ -26,11 +30,17 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 
+import net.opengis.swe.v20.BinaryComponent;
+import net.opengis.swe.v20.BinaryEncoding;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
+import net.opengis.swe.v20.DataRecord;
 import net.opengis.swe.v20.DataStream;
+import net.opengis.swe.v20.DataType;
+import net.opengis.swe.v20.Quantity;
 
+import org.sensorhub.algo.vecmath.Vect3d;
 import org.sensorhub.api.sensor.SensorDataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
@@ -41,8 +51,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.data.AbstractDataBlock;
 import org.vast.data.DataBlockMixed;
+import org.vast.swe.SWEHelper;
+import org.vast.swe.helper.GeoPosHelper;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.List;
 
 
 /**
@@ -55,7 +69,7 @@ import java.nio.ByteBuffer;
  * @since June 11, 2015
  */
 @SuppressWarnings("deprecation")
-public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, Camera.PreviewCallback
+public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, Camera.PreviewCallback, SensorEventListener
 {
     // keep logger name short because in LogCat it's max 23 chars
     static final Logger log = LoggerFactory.getLogger(AndroidCameraOutput.class.getSimpleName());
@@ -65,19 +79,29 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     int cameraId;
     Camera camera;
     int imgHeight, imgWidth, frameRate = 25;
+    int bitrate = 5 * 1000 * 1000;
     byte[] imgBuf1, imgBuf2;
     byte[] codecInfoData;
     MediaCodec mCodec;
     BufferInfo bufferInfo = new BufferInfo();
     SurfaceTexture previewTexture;
 
-    int bitrate = 5 * 1000 * 1000;
+    boolean outputVideoRoll;
+    SensorManager sensorManager;
+    Sensor gravitySensor;
+    int cameraOrientation;
+    int videoRollAngle;
 
     String name;
     DataComponent dataStruct;
     DataEncoding dataEncoding;
     int samplingPeriod;
     long systemTimeOffset = -1L;
+
+
+    protected abstract void initCodec() throws SensorException;
+
+    protected abstract String getCodecName();
 
 
     protected AndroidCameraOutput(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture, String name) throws SensorException
@@ -87,15 +111,48 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         this.name = name;
         //this.previewSurfaceHolder = previewSurfaceHolder;
         this.previewTexture = previewTexture;
+        this.sensorManager = parentModule.getSensorManager();
 
-        // init camera hardware and H264 codec
+        // init camera hardware and H264
         initCam();
         initCodec();
         initOutputStructure();
     }
 
 
-    protected abstract void initOutputStructure();
+    protected void initOutputStructure()
+    {
+        // create SWE Common data structure and encoding
+        VideoCamHelper fac = new VideoCamHelper();
+        DataStream videoStream = fac.newVideoOutputCODEC(getName(), imgWidth, imgHeight, getCodecName());
+        dataStruct = videoStream.getElementType();
+        dataEncoding = videoStream.getEncoding();
+
+        // add video roll component if enabled and gravity sensor is available
+        if (getParentModule().getConfiguration().outputVideoRoll)
+        {
+            List<Sensor> gravitySensors = sensorManager.getSensorList(Sensor.TYPE_GRAVITY);
+            if (!gravitySensors.isEmpty()) {
+                gravitySensor = gravitySensors.get(0);
+
+                Quantity roll = fac.createQuantity()
+                    .name("videoRoll")
+                    .definition(GeoPosHelper.DEF_ROLL)
+                    .label("Video Roll Angle")
+                    .uomCode("deg")
+                    .build();
+                ((DataRecord) dataStruct).getFieldList().add(1, roll);
+
+                BinaryComponent rollEnc = fac.newBinaryComponent();
+                rollEnc.setRef("/" + roll.getName());
+                rollEnc.setCdmDataType(DataType.SHORT);
+                ((BinaryEncoding) dataEncoding).addMemberAsComponent(rollEnc);
+
+                outputVideoRoll = true;
+            }
+        }
+    }
+
 
     protected void initCam() throws SensorException
     {
@@ -149,8 +206,6 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     }
 
 
-    protected abstract void initCodec() throws SensorException;
-
     protected void initVideoCapture(Camera.CameraInfo info) throws SensorException {
         // default for Most of the CODECs
         // if camera was successfully opened, prepare for video capture
@@ -175,7 +230,11 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 camParams.setVideoStabilization(camParams.isVideoStabilizationSupported());
                 camParams.setPreviewFormat(ImageFormat.NV21);
                 camParams.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+                camParams.setPreviewFrameRate(30);
                 camera.setParameters(camParams);
+                log.info("Fps ranges: {}", Arrays.deepToString(camParams.getSupportedPreviewFpsRange().toArray(new int[0][])));
+                log.info("Frame rates: {}", camParams.getSupportedPreviewFrameRates());
+                frameRate = camParams.getPreviewFrameRate();
 
                 // setup buffers and callback
                 int bufSize = imgWidth * imgHeight * ImageFormat.getBitsPerPixel(ImageFormat.NV21) / 8;
@@ -185,6 +244,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 camera.addCallbackBuffer(imgBuf2);
                 camera.setPreviewCallbackWithBuffer(AndroidCameraOutput.this);
                 camera.setDisplayOrientation(info.orientation);
+                cameraOrientation = info.orientation;
             }
             catch (Exception e)
             {
@@ -197,9 +257,21 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         }
     }
 
+
     @Override
     public void start(Handler eventHandler) throws SensorException
-    {        
+    {
+        try
+        {
+            // if gravity sensor is available, register to receive its data
+            if (outputVideoRoll && gravitySensor != null)
+                sensorManager.registerListener(this, gravitySensor, 1000000);
+        }
+        catch (Exception e)
+        {
+            throw new SensorException("Cannot register to gravity sensor events", e);
+        }
+
         try
         {
             // start codec
@@ -223,6 +295,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             throw new SensorException("Cannot start capture on camera " + cameraId, e);
         }
     }
+
 
     @Override
     public void onPreviewFrame(byte[] data, Camera camera)
@@ -306,17 +379,39 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             newRecord = latestRecord.renew();
 
         // set time stamp
+        int idx = 0;
         double samplingTime = getJulianTimeStamp(timeStamp);
-        newRecord.setDoubleValue(0, samplingTime);
+        newRecord.setDoubleValue(idx++, samplingTime);
+
+        if (outputVideoRoll)
+            newRecord.setShortValue(idx++, (short)videoRollAngle);
 
         // set encoded data
-        AbstractDataBlock frameData = ((DataBlockMixed) newRecord).getUnderlyingObject()[1];
+        AbstractDataBlock frameData = ((DataBlockMixed) newRecord).getUnderlyingObject()[idx++];
         frameData.setUnderlyingObject(compressedData);
 
         // send event
         latestRecord = newRecord;
         latestRecordTime = System.currentTimeMillis();
         eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, AndroidCameraOutput.this, latestRecord));
+    }
+
+
+    /* callback for gravity sensor readings */
+    @Override
+    public void onSensorChanged(SensorEvent event)
+    {
+        Vect3d g = new Vect3d(event.values[0], event.values[1], 0.0);
+        g.normalize();
+        double gDir = Math.atan2(g.y, g.x) / Math.PI * 180.;
+        videoRollAngle = cameraOrientation + (int)gDir - 90;
+        log.debug("Gravity direction: {}°", gDir);
+        log.debug("Video roll: {}°", videoRollAngle);
+    }
+
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
 
@@ -329,7 +424,12 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             camera.release();
             camera = null;
         }
-        
+
+        if (sensorManager != null)
+        {
+            sensorManager.unregisterListener(this);
+        }
+
         if (mCodec != null)
         {
             mCodec.stop();

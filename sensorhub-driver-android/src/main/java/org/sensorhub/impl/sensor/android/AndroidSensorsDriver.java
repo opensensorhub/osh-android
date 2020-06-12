@@ -321,6 +321,12 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     }
 
 
+    public SensorManager getSensorManager()
+    {
+        return sensorManager;
+    }
+
+
     @Override
     public Logger getLogger()
     {

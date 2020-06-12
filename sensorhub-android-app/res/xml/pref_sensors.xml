@@ -47,7 +47,13 @@
         android:key="cam_enabled"
         android:summary="Enable streaming of video data"
         android:title="Video Data" />
-    
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="video_roll_enabled"
+        android:summary="Include video roll data in video frame header"
+        android:title="Video Roll Data" />
+
     <ListPreference
         android:defaultValue="JPEG"
         android:entries="@array/video_codec_list"

@@ -38,21 +38,15 @@ import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
 @SuppressWarnings("deprecation")
 public class AndroidCameraOutputVP8 extends AndroidCameraOutput
 {
-    private static final String COMPRESSION = "VP8";
+    private static final String CODEC_NAME = "VP8";
 
     public AndroidCameraOutputVP8(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture) throws SensorException {
-        super(parentModule,cameraId,previewTexture,"camera" + cameraId + "_" + COMPRESSION);
+        super(parentModule,cameraId,previewTexture,"camera" + cameraId + "_" + CODEC_NAME);
     }
 
-
     @Override
-    protected void initOutputStructure() {
-        // create SWE Common data structure and encoding
-        VideoCamHelper fac = new VideoCamHelper();
-        // use the one of H264
-        DataStream videoStream = fac.newVideoOutputCODEC(getName(), imgWidth, imgHeight,COMPRESSION);
-        dataStruct = videoStream.getElementType();
-        dataEncoding = videoStream.getEncoding();
+    protected String getCodecName() {
+        return CODEC_NAME;
     }
 
     @Override

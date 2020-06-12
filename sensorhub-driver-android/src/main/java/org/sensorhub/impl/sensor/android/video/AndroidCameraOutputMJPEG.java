@@ -51,23 +51,21 @@ import android.os.SystemClock;
  * @since June 11, 2015
  */
 @SuppressWarnings("deprecation")
-public class AndroidCameraOutputMJPEG extends AndroidCameraOutput {
+public class AndroidCameraOutputMJPEG extends AndroidCameraOutput
+{
+    private static final String CODEC_NAME = "MJPEG";
+
     ByteArrayOutputStream jpegBuf = new ByteArrayOutputStream();
     YuvImage yuvImg1, yuvImg2;
     Rect imgArea;
 
     public AndroidCameraOutputMJPEG(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture) throws SensorException {
-        super(parentModule, cameraId, previewTexture, "camera" + cameraId + "_MJPEG");
+        super(parentModule, cameraId, previewTexture, "camera" + cameraId + "_" + CODEC_NAME);
     }
 
-
     @Override
-    protected void initOutputStructure() {
-        // create output structure
-        VideoCamHelper fac = new VideoCamHelper();
-        DataStream videoStream = fac.newVideoOutputMJPEG(getName(), imgWidth, imgHeight);
-        dataStruct = videoStream.getElementType();
-        dataEncoding = videoStream.getEncoding();
+    protected String getCodecName() {
+        return CODEC_NAME;
     }
 
     @Override
@@ -104,7 +102,9 @@ public class AndroidCameraOutputMJPEG extends AndroidCameraOutput {
                 camera.addCallbackBuffer(imgBuf2);
                 camera.setPreviewCallbackWithBuffer(AndroidCameraOutputMJPEG.this);
                 camera.setDisplayOrientation(info.orientation);
-            } catch (Exception e) {
+                cameraOrientation = info.orientation;
+            }
+            catch (Exception e) {
                 throw new SensorException("Cannot initialize camera " + cameraId, e);
             }
         } else {
