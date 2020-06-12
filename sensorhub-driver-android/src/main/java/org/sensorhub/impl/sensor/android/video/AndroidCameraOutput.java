@@ -405,8 +405,8 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         g.normalize();
         double gDir = Math.atan2(g.y, g.x) / Math.PI * 180.;
         videoRollAngle = cameraOrientation + (int)gDir - 90;
-        log.debug("Gravity direction: {}°", gDir);
-        log.debug("Video roll: {}°", videoRollAngle);
+        //log.trace("Gravity direction: {}°", gDir);
+        //log.trace("Video roll: {}°", videoRollAngle);
     }
 
 
