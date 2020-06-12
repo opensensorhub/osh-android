@@ -73,7 +73,6 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
 {
     // keep logger name short because in LogCat it's max 23 chars
     static final Logger log = LoggerFactory.getLogger(AndroidCameraOutput.class.getSimpleName());
-    protected static final String TIME_REF = "http://www.opengis.net/def/trs/BIPM/0/UTC";
 
     Looper bgLooper;
     int cameraId;
@@ -127,6 +126,9 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         DataStream videoStream = fac.newVideoOutputCODEC(getName(), imgWidth, imgHeight, getCodecName());
         dataStruct = videoStream.getElementType();
         dataEncoding = videoStream.getEncoding();
+
+        // keep old def URI so web clients still work as-is
+        dataStruct.setDefinition("http://sensorml.com/ont/swe/property/VideoFrame");
 
         // add video roll component if enabled and gravity sensor is available
         if (getParentModule().getConfiguration().outputVideoRoll)

@@ -47,6 +47,7 @@ public class AndroidOrientationQuatOutput extends AndroidSensorOutput implements
         GeoPosHelper fac = new GeoPosHelper();
         dataStruct = fac.newDataRecord(2);
         dataStruct.setName(getName());
+        dataStruct.setDefinition("http://sensorml.com/ont/swe/property/OrientationQuaternion");
         dataStruct.addComponent("time", fac.newTimeStampIsoUTC());
 
         // attitude quaternion

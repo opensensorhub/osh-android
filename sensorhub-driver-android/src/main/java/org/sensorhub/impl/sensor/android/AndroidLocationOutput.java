@@ -59,6 +59,7 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
         GeoPosHelper fac = new GeoPosHelper();
         posDataStruct = fac.newDataRecord(2);
         posDataStruct.setName(getName());
+        posDataStruct.setDefinition("http://sensorml.com/ont/swe/property/Location");
         Time time = fac.newTimeStampIsoUTC();
         posDataStruct.addComponent("time", time);
         Vector vec = fac.newLocationVectorLLA(null);  

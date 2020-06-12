@@ -38,8 +38,6 @@ import android.hardware.SensorManager;
  */
 public class AndroidOrientationEulerOutput extends AndroidSensorOutput implements SensorEventListener
 {
-    private static final String HEADING_DEF = "http://sensorml.com/ont/swe/property/AngleToNorth";
-    
     // for euler computation
     Quat4d att = new Quat4d();
     Vect3d look = new Vect3d();
@@ -55,6 +53,7 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
         GeoPosHelper fac = new GeoPosHelper();
         dataStruct = fac.newDataRecord(2);
         dataStruct.setName(getName());
+        dataStruct.setDefinition("http://sensorml.com/ont/swe/property/OrientationEuler");
         
         // time stamp
         dataStruct.addComponent("time", fac.newTimeStampIsoUTC());
@@ -67,7 +66,7 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
         // add constraints
         AllowedValues constraint;
         Quantity c = (Quantity)vec.getComponent(0);
-        c.setDefinition(HEADING_DEF);
+        c.setDefinition(GeoPosHelper.DEF_HEADING_MAGNETIC);
         constraint = fac.newAllowedValues();
         constraint.addInterval(new double[] {-180.0, 180.0});
         c.setConstraint(constraint);
