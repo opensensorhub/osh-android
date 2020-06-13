@@ -53,14 +53,14 @@ import android.os.SystemClock;
 @SuppressWarnings("deprecation")
 public class AndroidCameraOutputMJPEG extends AndroidCameraOutput
 {
-    private static final String CODEC_NAME = "MJPEG";
+    private static final String CODEC_NAME = "JPEG";
 
     ByteArrayOutputStream jpegBuf = new ByteArrayOutputStream();
     YuvImage yuvImg1, yuvImg2;
     Rect imgArea;
 
     public AndroidCameraOutputMJPEG(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture) throws SensorException {
-        super(parentModule, cameraId, previewTexture, "camera" + cameraId + "_" + CODEC_NAME);
+        super(parentModule, cameraId, previewTexture, "camera" + cameraId + "_M" + CODEC_NAME);
     }
 
     @Override
@@ -70,46 +70,10 @@ public class AndroidCameraOutputMJPEG extends AndroidCameraOutput
 
     @Override
     protected void initVideoCapture(Camera.CameraInfo info) throws SensorException {
-        // if camera was successfully opened, prepare for video capture
-        if (camera != null) {
-            try {
-                Parameters camParams = camera.getParameters();
-
-                // get supported preview sizes
-                for (Camera.Size imgSize : camParams.getSupportedPreviewSizes()) {
-                    if (imgSize.width >= 600 && imgSize.width <= 800) {
-                        imgWidth = imgSize.width;
-                        imgHeight = imgSize.height;
-                        break;
-                    }
-                }
-                frameRate = 1;
-
-                // set parameters
-                camParams.setPreviewSize(imgWidth, imgHeight);
-                camParams.setPreviewFormat(ImageFormat.NV21);
-                camParams.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-                camera.setParameters(camParams);
-
-                // setup buffers and callback
-                imgArea = new Rect(0, 0, imgWidth, imgHeight);
-                int bufSize = imgWidth * imgHeight * ImageFormat.getBitsPerPixel(ImageFormat.NV21) / 8;
-                imgBuf1 = new byte[bufSize];
-                yuvImg1 = new YuvImage(imgBuf1, ImageFormat.NV21, imgWidth, imgHeight, null);
-                imgBuf2 = new byte[bufSize];
-                yuvImg2 = new YuvImage(imgBuf2, ImageFormat.NV21, imgWidth, imgHeight, null);
-                camera.addCallbackBuffer(imgBuf1);
-                camera.addCallbackBuffer(imgBuf2);
-                camera.setPreviewCallbackWithBuffer(AndroidCameraOutputMJPEG.this);
-                camera.setDisplayOrientation(info.orientation);
-                cameraOrientation = info.orientation;
-            }
-            catch (Exception e) {
-                throw new SensorException("Cannot initialize camera " + cameraId, e);
-            }
-        } else {
-            throw new SensorException("Cannot open camera " + cameraId);
-        }
+        super.initVideoCapture(info);
+        imgArea = new Rect(0, 0, imgWidth, imgHeight);
+        yuvImg1 = new YuvImage(imgBuf1, ImageFormat.NV21, imgWidth, imgHeight, null);
+        yuvImg2 = new YuvImage(imgBuf2, ImageFormat.NV21, imgWidth, imgHeight, null);
     }
 
     @Override
@@ -117,8 +81,9 @@ public class AndroidCameraOutputMJPEG extends AndroidCameraOutput
 
 
     @Override
-    public void onPreviewFrame(byte[] data, Camera camera) {
-        long timeStamp = SystemClock.elapsedRealtimeNanos();
+    public void onPreviewFrame(byte[] data, Camera camera)
+    {
+        long timeStamp = SystemClock.elapsedRealtimeNanos() / 1000;
 
         // select current buffer
         YuvImage yuvImg = (data == imgBuf1) ? yuvImg1 : yuvImg2;
@@ -130,34 +95,6 @@ public class AndroidCameraOutputMJPEG extends AndroidCameraOutput
         // release buffer for next frame
         camera.addCallbackBuffer(data);
 
-        // generate new data record
-        DataBlock newRecord;
-        if (latestRecord == null)
-            newRecord = dataStruct.createDataBlock();
-        else
-            newRecord = latestRecord.renew();
-
-        // set time stamp
-        double samplingTime = getJulianTimeStamp(timeStamp);
-        newRecord.setDoubleValue(0, samplingTime);
-
-        // set encoded data
-        AbstractDataBlock frameData = ((DataBlockMixed) newRecord).getUnderlyingObject()[1];
-        frameData.setUnderlyingObject(jpegBuf.toByteArray());
-
-        // send event
-        latestRecord = newRecord;
-        latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, AndroidCameraOutputMJPEG.this, latestRecord));
-    }
-
-    @Override
-    protected double getJulianTimeStamp(long sensorTimeStampNanos) {
-        long sensorTimeMillis = sensorTimeStampNanos / 1000000;
-
-        if (systemTimeOffset < 0)
-            systemTimeOffset = System.currentTimeMillis() - sensorTimeMillis;
-
-        return (systemTimeOffset + sensorTimeMillis) / 1000.;
+        sendCompressedData(timeStamp, jpegBuf.toByteArray());
     }
 }

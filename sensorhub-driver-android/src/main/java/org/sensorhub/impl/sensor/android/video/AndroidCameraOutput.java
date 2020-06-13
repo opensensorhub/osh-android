@@ -232,11 +232,12 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 camParams.setVideoStabilization(camParams.isVideoStabilizationSupported());
                 camParams.setPreviewFormat(ImageFormat.NV21);
                 camParams.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-                camParams.setPreviewFrameRate(30);
+                //camParams.setPreviewFrameRate(30);
                 camera.setParameters(camParams);
                 log.info("Fps ranges: {}", Arrays.deepToString(camParams.getSupportedPreviewFpsRange().toArray(new int[0][])));
                 log.info("Frame rates: {}", camParams.getSupportedPreviewFrameRates());
                 frameRate = camParams.getPreviewFrameRate();
+                log.info("Current frame rate: " + frameRate);
 
                 // setup buffers and callback
                 int bufSize = imgWidth * imgHeight * ImageFormat.getBitsPerPixel(ImageFormat.NV21) / 8;
@@ -371,7 +372,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     }
     
     
-    private void sendCompressedData(long timeStamp, byte[] compressedData)
+    protected void sendCompressedData(long timeStamp, byte[] compressedData)
     {
         // generate new data record
         DataBlock newRecord;
