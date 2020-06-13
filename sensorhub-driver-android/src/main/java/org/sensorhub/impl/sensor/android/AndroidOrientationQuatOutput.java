@@ -36,6 +36,23 @@ import android.hardware.SensorManager;
 public class AndroidOrientationQuatOutput extends AndroidSensorOutput implements SensorEventListener
 {
     Quat4d att = new Quat4d();
+
+
+    public static void getQuaternionFromVector(Quat4d q, float[] rv)
+    {
+        q.x = rv[0];
+        q.y = rv[1];
+        q.z = rv[2];
+
+        // quaternion scalar value
+        // check because rotation vector may have only 3 components
+        if (rv.length > 3) {
+            q.s = rv[3];
+        } else {
+            q.s = 1 - q.x*q.x - q.y*q.y - q.z*q.z;
+            q.s = (q.s > 0) ? (float) Math.sqrt(q.s) : 0;
+        }
+    }
     
     
     protected AndroidOrientationQuatOutput(AndroidSensorsDriver parentModule, SensorManager aSensorManager, Sensor aSensor)
@@ -68,11 +85,8 @@ public class AndroidOrientationQuatOutput extends AndroidSensorOutput implements
     {
         double sampleTime = getJulianTimeStamp(e.timestamp);
         
-        // normalize quaternion
-        att.x = e.values[0];
-        att.y = e.values[1];
-        att.z = e.values[2];
-        att.s =  e.values[3];
+        // convert to quaternion + normalize
+        getQuaternionFromVector(att, e.values);
         att.normalize();
         
         // this is the right formula to compute heading of back camera look direction

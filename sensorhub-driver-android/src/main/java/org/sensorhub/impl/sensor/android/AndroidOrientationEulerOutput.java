@@ -93,12 +93,9 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
     public void onSensorChanged(SensorEvent e)
     {
         double sampleTime = getJulianTimeStamp(e.timestamp);
-        
-        // convert to euler angles
-        att.x = e.values[0];
-        att.y = e.values[1];
-        att.z = e.values[2];
-        att.s =  e.values[3];
+
+        // convert to quaternion + normalize
+        AndroidOrientationQuatOutput.getQuaternionFromVector(att, e.values);
         att.normalize();
         
         // Y direction in phone ref frame
