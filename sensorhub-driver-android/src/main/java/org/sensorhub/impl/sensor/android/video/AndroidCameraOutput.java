@@ -96,6 +96,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     DataEncoding dataEncoding;
     int samplingPeriod;
     long systemTimeOffset = -1L;
+    int selectedRes = 0;
 
 
     protected abstract void initCodec() throws SensorException;
@@ -217,16 +218,12 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             {
                 Parameters camParams = camera.getParameters();
 
-                // get supported preview sizes
-                for (Camera.Size imgSize : camParams.getSupportedPreviewSizes())
-                {
-                    if (imgSize.width >= 1100 && imgSize.width <= 1300)
-                    {
-                        imgWidth = imgSize.width;
-                        imgHeight = imgSize.height;
-                        break;
-                    }
-                }
+                // set video capture and encodign options
+                frameRate = parentSensor.getConfiguration().videoConfig.frameRate;
+                imgWidth = parentSensor.getConfiguration().videoConfig.resolutions[selectedRes].width;
+                imgHeight = parentSensor.getConfiguration().videoConfig.resolutions[selectedRes].height;
+                bitrate = parentSensor.getConfiguration().videoConfig.resolutions[selectedRes].selectedBitrate*1000;
+
                 // set parameters
                 camParams.setPreviewSize(imgWidth, imgHeight);
                 camParams.setVideoStabilization(camParams.isVideoStabilizationSupported());
@@ -236,8 +233,6 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 camera.setParameters(camParams);
                 log.info("Fps ranges: {}", Arrays.deepToString(camParams.getSupportedPreviewFpsRange().toArray(new int[0][])));
                 log.info("Frame rates: {}", camParams.getSupportedPreviewFrameRates());
-                frameRate = camParams.getPreviewFrameRate();
-                log.info("Current frame rate: " + frameRate);
 
                 // setup buffers and callback
                 int bufSize = imgWidth * imgHeight * ImageFormat.getBitsPerPixel(ImageFormat.NV21) / 8;

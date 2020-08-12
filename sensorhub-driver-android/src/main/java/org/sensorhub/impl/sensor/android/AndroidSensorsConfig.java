@@ -17,6 +17,8 @@ package org.sensorhub.impl.sensor.android;
 import android.graphics.SurfaceTexture;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.sensor.SensorConfig;
+import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
+
 import android.content.Context;
 
 
@@ -30,12 +32,6 @@ import android.content.Context;
  */
 public class AndroidSensorsConfig extends SensorConfig
 {     
-    public final static String JPEG_CODEC = "JPEG";
-    public final static String H264_CODEC = "H264";
-    public final static String H265_CODEC = "H265";
-    public final static String VP9_CODEC = "VP9";
-    public final static String VP8_CODEC = "VP8";
-
     public boolean activateAccelerometer = false;
     public boolean activateGyrometer = false;
     public boolean activateMagnetometer = false;
@@ -45,7 +41,7 @@ public class AndroidSensorsConfig extends SensorConfig
     public boolean activateNetworkLocation = false;
     public boolean activateBackCamera = false;
     public boolean activateFrontCamera = false;
-    public String videoCodec = JPEG_CODEC;
+    public VideoEncoderConfig videoConfig = new VideoEncoderConfig();
     public boolean outputVideoRoll = false;
     
     public String deviceName;

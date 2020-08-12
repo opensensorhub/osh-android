@@ -37,6 +37,7 @@ import org.sensorhub.impl.sensor.android.video.AndroidCameraOutputH265;
 import org.sensorhub.impl.sensor.android.video.AndroidCameraOutputMJPEG;
 import org.sensorhub.impl.sensor.android.video.AndroidCameraOutputVP8;
 import org.sensorhub.impl.sensor.android.video.AndroidCameraOutputVP9;
+import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.ogc.gml.GenericFeatureImpl;
@@ -190,18 +191,18 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
                      (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT && config.activateFrontCamera))
                 {
                     SurfaceTexture camPreviewTexture = SensorHubService.getVideoTexture();
-                    if (AndroidSensorsConfig.JPEG_CODEC.equals(config.videoCodec))
+                    if (VideoEncoderConfig.JPEG_CODEC.equals(config.videoConfig.codec))
                         useCamera(new AndroidCameraOutputMJPEG(this, cameraId, camPreviewTexture), cameraId);
-                    else if (AndroidSensorsConfig.H264_CODEC.equals(config.videoCodec))
+                    else if (VideoEncoderConfig.H264_CODEC.equals(config.videoConfig.codec))
                         useCamera(new AndroidCameraOutputH264(this, cameraId, camPreviewTexture), cameraId);
-                    else if (AndroidSensorsConfig.H265_CODEC.equals(config.videoCodec))
+                    else if (VideoEncoderConfig.H265_CODEC.equals(config.videoConfig.codec))
                         useCamera(new AndroidCameraOutputH265(this, cameraId, camPreviewTexture), cameraId);
-                    else if (AndroidSensorsConfig.VP9_CODEC.equals(config.videoCodec))
+                    else if (VideoEncoderConfig.VP9_CODEC.equals(config.videoConfig.codec))
                         useCamera(new AndroidCameraOutputVP9(this, cameraId, camPreviewTexture), cameraId);
-                    else if (AndroidSensorsConfig.VP8_CODEC.equals(config.videoCodec))
+                    else if (VideoEncoderConfig.VP8_CODEC.equals(config.videoConfig.codec))
                         useCamera(new AndroidCameraOutputVP8(this, cameraId, camPreviewTexture), cameraId);
                     else
-                        throw new SensorException("Unsupported codec " + config.videoCodec);
+                        throw new SensorException("Unsupported codec " + config.videoConfig.codec);
                 }
             }
         }

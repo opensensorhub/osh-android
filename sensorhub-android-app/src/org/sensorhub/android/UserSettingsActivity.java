@@ -16,14 +16,21 @@ package org.sensorhub.android;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
+import android.text.InputType;
+
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -133,7 +140,62 @@ public class UserSettingsActivity extends PreferenceActivity
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_sensors);
             bindPreferenceSummaryToValue(findPreference("video_codec"));
+            bindPreferenceSummaryToValue(findPreference("video_framerate"));
             bindPreferenceSummaryToValue(findPreference("angel_address"));
+
+            // get possible video capture sizes
+            Camera camera = Camera.open(0);
+            Camera.Parameters camParams = camera.getParameters();
+            ArrayList<String> frameRateList = new ArrayList<>();
+            for (int frameRate : camParams.getSupportedPreviewFrameRates())
+                frameRateList.add(Integer.toString(frameRate));
+            ArrayList<String> resList = new ArrayList<>();
+            resList.add("Disabled");
+            for (Camera.Size imgSize : camParams.getSupportedPreviewSizes())
+                resList.add(imgSize.width + "x" + imgSize.height);
+            camera.release();
+
+            // add list of framerates and video resolutions dynamically
+            PreferenceScreen videoOptsScreen = (PreferenceScreen)findPreference("video_config");
+            ListPreference frameRatePrefList = (ListPreference)videoOptsScreen.findPreference("video_framerate");
+            frameRatePrefList.setEntries(frameRateList.toArray(new String[0]));
+            frameRatePrefList.setEntryValues(frameRateList.toArray(new String[0]));
+
+            for (int i = 1; i <= 5; i++)
+            {
+                PreferenceScreen prefScreen = getPreferenceManager().createPreferenceScreen(videoOptsScreen.getContext());
+                prefScreen.setKey("video_res" + i);
+                prefScreen.setTitle("Video Resolution #" + i);
+
+                ListPreference sizeList = new ListPreference(prefScreen.getContext());
+                sizeList.setKey("video_size" + i);
+                sizeList.setTitle("Frame Size");
+                sizeList.setEntries(resList.toArray(new String[0]));
+                sizeList.setEntryValues(resList.toArray(new String[0]));
+                sizeList.setDefaultValue("Disabled");
+                bindPreferenceSummaryToValue(sizeList);
+                prefScreen.addPreference(sizeList);
+
+                EditTextPreference minBitrate = new EditTextPreference(prefScreen.getContext());
+                minBitrate.setKey("video_min_bitrate" + i);
+                minBitrate.setTitle("Min Bitrate");
+                minBitrate.getEditText().setSingleLine();
+                minBitrate.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER);
+                minBitrate.setDefaultValue("3000");
+                bindPreferenceSummaryToValue(minBitrate);
+                prefScreen.addPreference(minBitrate);
+
+                EditTextPreference maxBitrate = new EditTextPreference(prefScreen.getContext());
+                maxBitrate.setKey("video_max_bitrate" + i);
+                maxBitrate.setTitle("Max Bitrate");
+                maxBitrate.getEditText().setSingleLine();
+                maxBitrate.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER);
+                maxBitrate.setDefaultValue("3000");
+                bindPreferenceSummaryToValue(maxBitrate);
+                prefScreen.addPreference(maxBitrate);
+
+                videoOptsScreen.addPreference(prefScreen);
+            }
         }
     }
 

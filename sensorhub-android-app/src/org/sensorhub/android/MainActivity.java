@@ -49,6 +49,8 @@ import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.sensor.android.AndroidLocationOutput;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
+import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
+import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig.VideoResolution;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
@@ -142,7 +144,30 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorsConfig.activateBackCamera = prefs.getBoolean("cam_enabled", false);
         if (sensorsConfig.activateBackCamera || sensorsConfig.activateFrontCamera)
             showVideo = true;
-        sensorsConfig.videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
+
+        // video settings
+        sensorsConfig.videoConfig.codec = prefs.getString("video_codec", VideoEncoderConfig.JPEG_CODEC);
+        sensorsConfig.videoConfig.frameRate = Integer.parseInt(prefs.getString("video_framerate", "30"));
+        int resIdx = 1;
+        ArrayList<VideoResolution> resolutionList = new ArrayList<>();
+        while (prefs.contains("video_size" + resIdx))
+        {
+            String resString = prefs.getString("video_size" + resIdx, "Disabled");
+            if (!"Disabled".equalsIgnoreCase(resString)) {
+                String[] tokens = resString.split("x");
+                VideoResolution resSettings = new VideoResolution();
+                resSettings.width = Integer.parseInt(tokens[0]);
+                resSettings.height = Integer.parseInt(tokens[1]);
+                resSettings.minBitrate = Integer.parseInt(prefs.getString("video_min_bitrate" + resIdx, "3000"));
+                resSettings.maxBitrate = Integer.parseInt(prefs.getString("video_max_bitrate" + resIdx, "3000"));
+                resSettings.selectedBitrate = resSettings.maxBitrate;
+                resolutionList.add(resSettings);
+            }
+
+            resIdx++;
+        }
+        sensorsConfig.videoConfig.resolutions = resolutionList.toArray(new VideoResolution[0]);
+
         sensorsConfig.outputVideoRoll = prefs.getBoolean("video_roll_enabled", false);
         sensorsConfig.runName = runName;
         sensorhubConfig.add(sensorsConfig);
