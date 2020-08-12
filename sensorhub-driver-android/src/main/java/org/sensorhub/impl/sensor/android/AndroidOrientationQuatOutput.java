@@ -84,6 +84,8 @@ public class AndroidOrientationQuatOutput extends AndroidSensorOutput implements
     public void onSensorChanged(SensorEvent e)
     {
         double sampleTime = getJulianTimeStamp(e.timestamp);
+        if (latestRecord != null && sampleTime - latestRecord.getDoubleValue(0) < samplingPeriod*0.99)
+            return;
         
         // convert to quaternion + normalize
         getQuaternionFromVector(att, e.values);
