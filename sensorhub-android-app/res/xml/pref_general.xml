@@ -35,4 +35,10 @@
         android:title="SOS Password"
         android:summary="Enter your password or leave blank" />
 
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="sos_disable_ssl_check"
+        android:summary="Disable SSL certificate validation"
+        android:title="Disable SSL check" />
+
 </PreferenceScreen>
