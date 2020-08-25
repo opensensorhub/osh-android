@@ -16,11 +16,20 @@
         android:layout_gravity="center"/>
 
     <TextView
-        android:id="@+id/text"
+        android:id="@+id/main_info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
         android:background="#FFFFFF"
         android:text="@string/hello_world"/>
+
+    <TextView
+        android:id="@+id/video_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="#80FFFFFF"
+        android:padding="10dp"
+        android:text="" />
 
 </RelativeLayout>

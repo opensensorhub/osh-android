@@ -15,8 +15,6 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor.android.video;
 
 
-import android.provider.MediaStore;
-
 /**
  * <p>
  * Configuration of video encoding parameters
@@ -33,7 +31,7 @@ public class VideoEncoderConfig
     public final static String VP9_CODEC = "VP9";
     public final static String VP8_CODEC = "VP8";
 
-    public static class VideoResolution
+    public static class VideoPreset
     {
         public int width = 0;
         public int height = 0;
@@ -44,12 +42,14 @@ public class VideoEncoderConfig
 
     public String codec = JPEG_CODEC;
     public int frameRate = 30;
-    public VideoResolution[] resolutions;
+    public VideoPreset[] presets;
+    public int selectedPreset = 0;
+    public boolean autoPreset = false; // automatically select preset based on available bandwidth
 
 
     public VideoEncoderConfig()
     {
-        resolutions = new VideoResolution[1];
-        resolutions[0] = new VideoResolution();
+        presets = new VideoPreset[1];
+        presets[0] = new VideoPreset();
     }
 }
