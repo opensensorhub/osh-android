@@ -48,10 +48,10 @@ import org.sensorhub.impl.client.sost.SOSTClientConfig;
 //import org.sensorhub.impl.driver.dji.DjiConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
-import org.sensorhub.impl.sensor.android.AndroidLocationOutput;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
+import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
-import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig.VideoResolution;
+import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig.VideoPreset;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
@@ -85,14 +85,17 @@ import javax.net.ssl.X509TrustManager;
 
 public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener
 {
-    TextView textArea;
+    TextView mainInfoArea;
+    TextView videoInfoArea;
     SensorHubService boundService;
     IModuleConfigRepository sensorhubConfig;
     Handler displayHandler;
     Runnable displayCallback;
-    StringBuffer displayText = new StringBuffer();
+    StringBuffer mainInfoText = new StringBuffer();
+    StringBuffer videoInfoText = new StringBuffer();
     boolean oshStarted = false;
     ArrayList<SOSTClient> sostClients = new ArrayList<SOSTClient>();
+    AndroidSensorsDriver androidSensors;
     URL sosUrl = null;
     boolean showVideo;
     
@@ -191,25 +194,35 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // video settings
         sensorsConfig.videoConfig.codec = prefs.getString("video_codec", VideoEncoderConfig.JPEG_CODEC);
         sensorsConfig.videoConfig.frameRate = Integer.parseInt(prefs.getString("video_framerate", "30"));
+
+        // selected preset or AUTO mode
+        String selectedPreset = prefs.getString("video_preset", "0");
+        if ("AUTO".equals(selectedPreset)) {
+            sensorsConfig.videoConfig.autoPreset = true;
+            sensorsConfig.videoConfig.selectedPreset = 0;
+        }
+        else {
+            sensorsConfig.videoConfig.autoPreset = false;
+            sensorsConfig.videoConfig.selectedPreset = Integer.parseInt(selectedPreset);
+        }
+
+        // video preset list
         int resIdx = 1;
-        ArrayList<VideoResolution> resolutionList = new ArrayList<>();
+        ArrayList<VideoPreset> presetList = new ArrayList<>();
         while (prefs.contains("video_size" + resIdx))
         {
             String resString = prefs.getString("video_size" + resIdx, "Disabled");
-            if (!"Disabled".equalsIgnoreCase(resString)) {
-                String[] tokens = resString.split("x");
-                VideoResolution resSettings = new VideoResolution();
-                resSettings.width = Integer.parseInt(tokens[0]);
-                resSettings.height = Integer.parseInt(tokens[1]);
-                resSettings.minBitrate = Integer.parseInt(prefs.getString("video_min_bitrate" + resIdx, "3000"));
-                resSettings.maxBitrate = Integer.parseInt(prefs.getString("video_max_bitrate" + resIdx, "3000"));
-                resSettings.selectedBitrate = resSettings.maxBitrate;
-                resolutionList.add(resSettings);
-            }
-
+            String[] tokens = resString.split("x");
+            VideoPreset preset = new VideoPreset();
+            preset.width = Integer.parseInt(tokens[0]);
+            preset.height = Integer.parseInt(tokens[1]);
+            preset.minBitrate = Integer.parseInt(prefs.getString("video_min_bitrate" + resIdx, "3000"));
+            preset.maxBitrate = Integer.parseInt(prefs.getString("video_max_bitrate" + resIdx, "3000"));
+            preset.selectedBitrate = preset.maxBitrate;
+            presetList.add(preset);
             resIdx++;
         }
-        sensorsConfig.videoConfig.resolutions = resolutionList.toArray(new VideoResolution[0]);
+        sensorsConfig.videoConfig.presets = presetList.toArray(new VideoPreset[0]);
 
         sensorsConfig.outputVideoRoll = prefs.getBoolean("video_roll_enabled", false);
         sensorsConfig.runName = runName;
@@ -332,7 +345,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.connection.connectTimeout = 10000;
         sosConfig.connection.usePersistentConnection = true;
         sosConfig.connection.reconnectAttempts = 9;
-        sosConfig.connection.maxQueueSize = 30;
+        sosConfig.connection.maxQueueSize = 100;
         sensorhubConfig.add(sosConfig);
     }
 
@@ -343,7 +356,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        textArea = (TextView) findViewById(R.id.text);
+        mainInfoArea = (TextView) findViewById(R.id.main_info);
+        videoInfoArea = (TextView) findViewById(R.id.video_info);
 
         // listen to texture view lifecycle
         TextureView textureView = (TextureView) findViewById(R.id.video);
@@ -391,7 +405,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sostClients.clear();
             if (boundService != null)
                 boundService.stopSensorHub();
-            textArea.setBackgroundColor(0xFFFFFFFF);
+            mainInfoArea.setBackgroundColor(0xFFFFFFFF);
             oshStarted = false;
             newStatusMessage("SensorHub Stopped");
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -433,7 +447,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
 
                 if (boundService.hasVideo())
-                    textArea.setBackgroundColor(0x80FFFFFF);
+                    mainInfoArea.setBackgroundColor(0x80FFFFFF);
             }
         });
 
@@ -483,6 +497,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 return;
             }
 
+            // detect when Android sensor driver is started
+            else if (e.getSource() instanceof AndroidSensorsDriver)
+            {
+                this.androidSensors = (AndroidSensorsDriver)e.getSource();
+            }
+
             // detect when SOS-T modules are connected
             else if (e.getSource() instanceof SOSTClient && ((ModuleEvent)e).getType() == ModuleEvent.Type.STATE_CHANGED)
             {
@@ -508,7 +528,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             public void run()
             {
                 displayStatus();
-                textArea.setText(Html.fromHtml(displayText.toString()));
+                mainInfoArea.setText(Html.fromHtml(mainInfoText.toString()));
+                videoInfoArea.setText(Html.fromHtml(videoInfoText.toString()));
                 displayHandler.postDelayed(this, 1000);
             }
         };
@@ -529,7 +550,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     
     protected synchronized void displayStatus()
     {
-        displayText.setLength(0);
+        mainInfoText.setLength(0);
         
         // first display error messages if any
         for (SOSTClient client: sostClients)
@@ -540,9 +561,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             
             if (showError || showMsg)
             {
-                displayText.append("<p>" + client.getName() + ":<br/>");
+                mainInfoText.append("<p>" + client.getName() + ":<br/>");
                 if (showMsg)
-                    displayText.append(client.getStatusMessage() + "<br/>");
+                    mainInfoText.append(client.getStatusMessage() + "<br/>");
                 if (showError)
                 {
                     Throwable errorObj = client.getCurrentError();
@@ -551,14 +572,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         errorMsg += ". ";
                     if (errorObj.getCause() != null && errorObj.getCause().getMessage() != null)
                         errorMsg += errorObj.getCause().getMessage();
-                    displayText.append("<font color='red'>" + errorMsg + "</font>");
+                    mainInfoText.append("<font color='red'>" + errorMsg + "</font>");
                 }
-                displayText.append("</p>");
+                mainInfoText.append("</p>");
             }
         }
         
         // then display streams status
-        displayText.append("<p>");
+        mainInfoText.append("<p>");
         for (SOSTClient client: sostClients)
         {
             Map<ISensorDataInterface, StreamInfo> dataStreams = client.getDataStreams();            
@@ -566,50 +587,64 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             
             for (Entry<ISensorDataInterface, StreamInfo> stream : dataStreams.entrySet())
             {
-                displayText.append("<b>" + stream.getKey().getName() + " : </b>");
+                mainInfoText.append("<b>" + stream.getKey().getName() + " : </b>");
 
                 long lastEventTime = stream.getValue().lastEventTime;
                 long dt = now - lastEventTime;
                 if (lastEventTime == Long.MIN_VALUE)
-                    displayText.append("<font color='red'>NO OBS</font>");
+                    mainInfoText.append("<font color='red'>NO OBS</font>");
                 else if (dt > stream.getValue().measPeriodMs)
-                    displayText.append("<font color='red'>NOK (" + dt + "ms ago)</font>");
+                    mainInfoText.append("<font color='red'>NOK (" + dt + "ms ago)</font>");
                 else
-                    displayText.append("<font color='green'>OK (" + dt + "ms ago)</font>");
+                    mainInfoText.append("<font color='green'>OK (" + dt + "ms ago)</font>");
 
                 if (stream.getValue().errorCount > 0)
                 {
-                    displayText.append("<font color='red'> (");
-                    displayText.append(stream.getValue().errorCount);
-                    displayText.append(")</font>");
+                    mainInfoText.append("<font color='red'> (");
+                    mainInfoText.append(stream.getValue().errorCount);
+                    mainInfoText.append(")</font>");
                 }
-                
-                displayText.append("<br/>");
+
+                mainInfoText.append("<br/>");
             }
         }
 
-        if (displayText.length() > 5)
-            displayText.setLength(displayText.length()-5); // remove last </br>
-        displayText.append("</p>");
+        if (mainInfoText.length() > 5)
+            mainInfoText.setLength(mainInfoText.length()-5); // remove last </br>
+        mainInfoText.append("</p>");
+
+        // show video info
+        if (androidSensors != null && boundService.hasVideo())
+        {
+            VideoEncoderConfig config = androidSensors.getConfiguration().videoConfig;
+            VideoPreset preset = config.presets[config.selectedPreset];
+            videoInfoText.setLength(0);
+            videoInfoText.append("")
+                         .append(config.codec).append(", ")
+                         .append(preset.width).append("x").append(preset.height).append(", ")
+                         .append(config.frameRate).append(" fps, ")
+                         .append(preset.selectedBitrate).append(" kbits/s")
+                         .append("");
+        }
     }
     
     
     protected synchronized void newStatusMessage(String msg)
     {
-        displayText.setLength(0);
+        mainInfoText.setLength(0);
         appendStatusMessage(msg);
     }
     
     
     protected synchronized void appendStatusMessage(String msg)
     {
-        displayText.append(msg);
+        mainInfoText.append(msg);
 
         displayHandler.post(new Runnable()
         {
             public void run()
             {
-                textArea.setText(displayText.toString());
+                mainInfoArea.setText(mainInfoText.toString());
             }
         });
     }
@@ -670,7 +705,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             startRefreshingStatus();
 
             if (boundService.hasVideo())
-                textArea.setBackgroundColor(0x80FFFFFF);
+                mainInfoArea.setBackgroundColor(0x80FFFFFF);
         }
     }
 

@@ -24,8 +24,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.MediaCodec;
 import android.media.MediaCodec.BufferInfo;
-import android.media.MediaCodecInfo;
-import android.media.MediaFormat;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -46,12 +44,12 @@ import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
 import org.sensorhub.impl.sensor.android.IAndroidOutput;
+import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig.VideoPreset;
 import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.data.AbstractDataBlock;
 import org.vast.data.DataBlockMixed;
-import org.vast.swe.SWEHelper;
 import org.vast.swe.helper.GeoPosHelper;
 
 import java.nio.ByteBuffer;
@@ -62,7 +60,6 @@ import java.util.List;
 /**
  * <p>
  * Implementation of data interface for Android cameras using legacy Camera API.
- * This will encode the video frames as a raw H264 stream (i.e. NAL units).
  * </p>
  *
  * @author Alex Robin <alex.robin@sensiasoftware.com>
@@ -96,7 +93,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     DataEncoding dataEncoding;
     int samplingPeriod;
     long systemTimeOffset = -1L;
-    int selectedRes = 0;
+    int selectedPreset = 0;
 
 
     protected abstract void initCodec() throws SensorException;
@@ -172,7 +169,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                     // we need an Android looper to process camera messages
                     Looper.prepare();
                     bgLooper = Looper.myLooper();
-                    
+
                     // open camera and get parameters
                     camera = Camera.open(cameraId);
                     
@@ -219,17 +216,20 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 Parameters camParams = camera.getParameters();
 
                 // set video capture and encodign options
-                frameRate = parentSensor.getConfiguration().videoConfig.frameRate;
-                imgWidth = parentSensor.getConfiguration().videoConfig.resolutions[selectedRes].width;
-                imgHeight = parentSensor.getConfiguration().videoConfig.resolutions[selectedRes].height;
-                bitrate = parentSensor.getConfiguration().videoConfig.resolutions[selectedRes].selectedBitrate*1000;
+                VideoEncoderConfig videoConfig = parentSensor.getConfiguration().videoConfig;
+                frameRate = videoConfig.frameRate;
+                selectedPreset = videoConfig.selectedPreset;
+                imgWidth = videoConfig.presets[selectedPreset].width;
+                imgHeight = videoConfig.presets[selectedPreset].height;
+                bitrate = videoConfig.presets[selectedPreset].selectedBitrate*1000;
+                log.info("Selecting resolution: {}x{} @ {}kbits/s", imgWidth, imgHeight, bitrate/1000);
 
                 // set parameters
                 camParams.setPreviewSize(imgWidth, imgHeight);
                 camParams.setVideoStabilization(camParams.isVideoStabilizationSupported());
                 camParams.setPreviewFormat(ImageFormat.NV21);
                 camParams.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-                //camParams.setPreviewFrameRate(30);
+                camParams.setPreviewFrameRate(frameRate);
                 camera.setParameters(camParams);
                 log.info("Fps ranges: {}", Arrays.deepToString(camParams.getSupportedPreviewFpsRange().toArray(new int[0][])));
                 log.info("Frame rates: {}", camParams.getSupportedPreviewFrameRates());

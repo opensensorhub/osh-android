@@ -16,6 +16,7 @@ package org.sensorhub.android;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,6 +29,9 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.text.InputType;
+import android.widget.BaseAdapter;
+
+import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -59,6 +63,15 @@ public class UserSettingsActivity extends PreferenceActivity
                 ListPreference listPreference = (ListPreference) preference;
                 int index = listPreference.findIndexOfValue(stringValue);
                 preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
+            }
+            else if (preference.getKey().startsWith("video_res"))
+            {
+                PreferenceScreen presetSettings = (PreferenceScreen)preference;
+                String frameSize = ((ListPreference)presetSettings.getPreference(0)).getValue();
+                String minBitrate = ((EditTextPreference)presetSettings.getPreference(1)).getText();
+                String maxBitrate = ((EditTextPreference)presetSettings.getPreference(2)).getText();
+                presetSettings.setSummary(frameSize + " @ " + minBitrate + "-" + maxBitrate + " kbits/s");
+                ((BaseAdapter)presetSettings.getRootAdapter()).notifyDataSetChanged();
             }
             else
             {
@@ -104,8 +117,23 @@ public class UserSettingsActivity extends PreferenceActivity
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
 
-        // Trigger the listener immediately with the preference's
-        // current value.
+        // for preference screens, call listener when screen is closed
+        if (preference instanceof PreferenceScreen) {
+            preference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    ((PreferenceScreen)preference).getDialog().setOnCancelListener(new DialogInterface.OnCancelListener() {
+                        @Override
+                        public void onCancel(DialogInterface dialog) {
+                            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, "");
+                        }
+                    });
+                    return true;
+                }
+            });
+        }
+
+        // Trigger the listener immediately with the preference's current value.
         sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getString(preference.getKey(), ""));
     }
     
@@ -139,46 +167,66 @@ public class UserSettingsActivity extends PreferenceActivity
         {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_sensors);
-            bindPreferenceSummaryToValue(findPreference("video_codec"));
-            bindPreferenceSummaryToValue(findPreference("video_framerate"));
             bindPreferenceSummaryToValue(findPreference("angel_address"));
+        }
+    }
 
-            // get possible video capture sizes
+
+    /*
+     * Fragment for video settings
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class VideoPreferenceFragment extends PreferenceFragment
+    {
+        @Override
+        public void onCreate(Bundle savedInstanceState)
+        {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_video);
+
+            PreferenceScreen videoOptsScreen = getPreferenceScreen();
+            bindPreferenceSummaryToValue(findPreference("video_codec"));
+
+            // get possible video capture frame rates and sizes
             Camera camera = Camera.open(0);
             Camera.Parameters camParams = camera.getParameters();
             ArrayList<String> frameRateList = new ArrayList<>();
             for (int frameRate : camParams.getSupportedPreviewFrameRates())
                 frameRateList.add(Integer.toString(frameRate));
             ArrayList<String> resList = new ArrayList<>();
-            resList.add("Disabled");
             for (Camera.Size imgSize : camParams.getSupportedPreviewSizes())
                 resList.add(imgSize.width + "x" + imgSize.height);
             camera.release();
 
-            // add list of framerates and video resolutions dynamically
-            PreferenceScreen videoOptsScreen = (PreferenceScreen)findPreference("video_config");
+            // add list of supported frame rates
             ListPreference frameRatePrefList = (ListPreference)videoOptsScreen.findPreference("video_framerate");
             frameRatePrefList.setEntries(frameRateList.toArray(new String[0]));
             frameRatePrefList.setEntryValues(frameRateList.toArray(new String[0]));
+            bindPreferenceSummaryToValue(findPreference("video_framerate"));
 
+            // add list of configurable presets
+            ArrayList<String> presetNames = new ArrayList<>();
+            ArrayList<String> presetIndexes = new ArrayList<>();
             for (int i = 1; i <= 5; i++)
             {
                 PreferenceScreen prefScreen = getPreferenceManager().createPreferenceScreen(videoOptsScreen.getContext());
                 prefScreen.setKey("video_res" + i);
-                prefScreen.setTitle("Video Resolution #" + i);
+                String presetName = "Video Preset #" + i;
+                prefScreen.setTitle(presetName);
+                presetNames.add(presetName);
+                presetIndexes.add(String.valueOf(i-1));
 
                 ListPreference sizeList = new ListPreference(prefScreen.getContext());
                 sizeList.setKey("video_size" + i);
                 sizeList.setTitle("Frame Size");
                 sizeList.setEntries(resList.toArray(new String[0]));
                 sizeList.setEntryValues(resList.toArray(new String[0]));
-                sizeList.setDefaultValue("Disabled");
                 bindPreferenceSummaryToValue(sizeList);
                 prefScreen.addPreference(sizeList);
 
                 EditTextPreference minBitrate = new EditTextPreference(prefScreen.getContext());
                 minBitrate.setKey("video_min_bitrate" + i);
-                minBitrate.setTitle("Min Bitrate");
+                minBitrate.setTitle("Min Bitrate (kbits/s)");
                 minBitrate.getEditText().setSingleLine();
                 minBitrate.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER);
                 minBitrate.setDefaultValue("3000");
@@ -187,15 +235,23 @@ public class UserSettingsActivity extends PreferenceActivity
 
                 EditTextPreference maxBitrate = new EditTextPreference(prefScreen.getContext());
                 maxBitrate.setKey("video_max_bitrate" + i);
-                maxBitrate.setTitle("Max Bitrate");
+                maxBitrate.setTitle("Max Bitrate (kbits/s)");
                 maxBitrate.getEditText().setSingleLine();
                 maxBitrate.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER);
                 maxBitrate.setDefaultValue("3000");
                 bindPreferenceSummaryToValue(maxBitrate);
                 prefScreen.addPreference(maxBitrate);
 
+                bindPreferenceSummaryToValue(prefScreen);
                 videoOptsScreen.addPreference(prefScreen);
             }
+
+            // add list of selectable presets
+            ListPreference selectedPresetList = (ListPreference)videoOptsScreen.findPreference("video_preset");
+            presetNames.add("Auto select");
+            presetIndexes.add("AUTO");
+            selectedPresetList.setEntries(presetNames.toArray(new String[0]));
+            selectedPresetList.setEntryValues(presetIndexes.toArray(new String[0]));
         }
     }
 

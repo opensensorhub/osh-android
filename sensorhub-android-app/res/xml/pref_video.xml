@@ -1,0 +1,29 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <ListPreference
+        android:defaultValue="JPEG"
+        android:entries="@array/video_codec_list"
+        android:entryValues="@array/video_codec_list"
+        android:key="video_codec"
+        android:summary="%s"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="Video Codec" />
+
+    <ListPreference
+        android:defaultValue="30"
+        android:key="video_framerate"
+        android:summary="%s"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="Frame Rate" />
+
+    <ListPreference
+        android:defaultValue="0"
+        android:key="video_preset"
+        android:summary="%s"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="Selected Preset" />
+    
+</PreferenceScreen>
