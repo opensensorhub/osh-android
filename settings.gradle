@@ -3,13 +3,32 @@ def oshMainDir = "$rootDir/.."
 
 // include builds from other repos
 def repos = [
-        'osh-core':['lib-ogc', 'sensorhub-core', 'sensorhub-service-swe', 'sensorhub-storage-perst'],
-        'osh-addons/persistence':['sensorhub-storage-h2'],
-        'osh-addons/comm':['sensorhub-comm-ble', 'sensorhub-comm-ble-dbus'],
-        'osh-addons/sensors/health':['sensorhub-driver-angelsensor'],
-        'osh-addons/sensors/video':['sensorhub-driver-videocam', 'sensorhub-service-video'],
-        'osh-addons/sensors/positioning':['sensorhub-driver-trupulse'],
-        'osh-addons/processing':['sensorhub-process-vecmath', 'sensorhub-process-geoloc']]
+    'osh-core': [
+        'lib-ogc/swe-common-core',
+        'lib-ogc/swe-common-om',
+        'lib-ogc/sensorml-core',
+        'lib-ogc/ogc-services-common',
+        'lib-ogc/ogc-services-swe',
+        'lib-ogc/ogc-services-sos',
+        'lib-ogc/ogc-services-sps',
+        'lib-ogc/sensorml-core',
+        'lib-ogc/sensorml-core',
+        'sensorhub-core',
+        'sensorhub-service-swe',
+        'sensorhub-storage-perst'
+    ],
+    'osh-addons': [
+        'persistence/sensorhub-storage-h2',
+        'comm/sensorhub-comm-ble',
+        'comm/sensorhub-comm-ble-dbus',
+        'sensors/health/sensorhub-driver-angelsensor',
+        'sensors/video/sensorhub-driver-videocam',
+        'sensors/video/sensorhub-service-video',
+        'sensors/positioning/sensorhub-driver-trupulse',
+        'processing/sensorhub-process-vecmath',
+        'processing/sensorhub-process-geoloc'
+    ]
+]
 
 repos.each { repoName, modules ->
   File repoDir = new File(oshMainDir, repoName).getCanonicalFile()
