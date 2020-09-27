@@ -38,9 +38,9 @@ import org.sensorhub.android.comm.ble.BleConfig;
 import org.sensorhub.android.comm.ble.BleNetwork;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleEvent;
-import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
@@ -335,7 +335,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.id = sensorConf.id + "_SOST";
         sosConfig.name = sensorConf.name.replaceAll("\\[.*\\]", "");// + "SOS-T Client";
         sosConfig.autoStart = true;
-        sosConfig.sensorID = sensorConf.id;
+        sosConfig.dataSourceID = sensorConf.id;
         sosConfig.sos.remoteHost = sosUrl.getHost();
         sosConfig.sos.remotePort = sosUrl.getPort() < 0 ? sosUrl.getDefaultPort() : sosUrl.getPort();
         sosConfig.sos.resourcePath = sosUrl.getPath();
@@ -555,7 +555,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // first display error messages if any
         for (SOSTClient client: sostClients)
         {
-            Map<ISensorDataInterface, StreamInfo> dataStreams = client.getDataStreams();
+            Map<IStreamingDataInterface, StreamInfo> dataStreams = client.getDataStreams();
             boolean showError = (client.getCurrentError() != null);
             boolean showMsg = (dataStreams.size() == 0) && (client.getStatusMessage() != null);
             
@@ -582,10 +582,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         mainInfoText.append("<p>");
         for (SOSTClient client: sostClients)
         {
-            Map<ISensorDataInterface, StreamInfo> dataStreams = client.getDataStreams();            
+            Map<IStreamingDataInterface, StreamInfo> dataStreams = client.getDataStreams();
             long now = System.currentTimeMillis();
             
-            for (Entry<ISensorDataInterface, StreamInfo> stream : dataStreams.entrySet())
+            for (Entry<IStreamingDataInterface, StreamInfo> stream : dataStreams.entrySet())
             {
                 mainInfoText.append("<b>" + stream.getKey().getName() + " : </b>");
 
