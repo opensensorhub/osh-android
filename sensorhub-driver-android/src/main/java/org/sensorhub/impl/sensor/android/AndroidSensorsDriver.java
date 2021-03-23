@@ -32,6 +32,8 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
+import org.sensorhub.impl.sensor.android.audio.AndroidAudioOutputAAC;
+import org.sensorhub.impl.sensor.android.audio.AudioEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.AndroidCameraOutputH264;
 import org.sensorhub.impl.sensor.android.video.AndroidCameraOutputH265;
 import org.sensorhub.impl.sensor.android.video.AndroidCameraOutputMJPEG;
@@ -138,6 +140,10 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         // create data interfaces for cameras
         if (androidContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA))
             createCameraOutputs(androidContext);
+
+        // create data interfaces for audio
+        if (androidContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_MICROPHONE))
+            createAudioOutputs(androidContext);
     }
 
 
@@ -207,6 +213,15 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
             }
         }
     }
+
+
+    protected void createAudioOutputs(Context androidContext) throws SensorException
+    {
+        if (AudioEncoderConfig.AAC_CODEC.equals(config.audioConfig.codec))
+            useAudio(new AndroidAudioOutputAAC(this), "MIC");
+        else
+            throw new SensorException("Unsupported codec " + config.audioConfig.codec);
+    }
     
     
     protected void useSensor(ISensorDataInterface output, Sensor sensor)
@@ -238,6 +253,14 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         addOutput(output, false);
         smlComponents.add(smlBuilder.getComponentDescription(cameraId));
         log.info("Getting data from camera #" + cameraId);
+    }
+
+
+    protected void useAudio(ISensorDataInterface output, String srcName)
+    {
+        addOutput(output, false);
+        smlComponents.add(smlBuilder.getAudioComponentDescription(srcName));
+        log.info("Getting data from audio source " + srcName);
     }
     
     

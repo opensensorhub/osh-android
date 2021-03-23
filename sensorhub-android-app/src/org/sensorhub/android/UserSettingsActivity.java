@@ -35,6 +35,7 @@ import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -252,6 +253,40 @@ public class UserSettingsActivity extends PreferenceActivity
             presetIndexes.add("AUTO");
             selectedPresetList.setEntries(presetNames.toArray(new String[0]));
             selectedPresetList.setEntryValues(presetIndexes.toArray(new String[0]));
+        }
+    }
+
+
+    /*
+     * Fragment for audio settings
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class AudioPreferenceFragment extends PreferenceFragment
+    {
+        @Override
+        public void onCreate(Bundle savedInstanceState)
+        {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_audio);
+
+            PreferenceScreen audioOptsScreen = getPreferenceScreen();
+            bindPreferenceSummaryToValue(findPreference("audio_codec"));
+
+            // get possible video capture frame rates and sizes
+            List<String> sampleRateList = Arrays.asList("8000", "11025", "22050", "44100", "48000");
+            List<String> bitRateList = Arrays.asList("32", "64", "96", "128", "160", "192");
+
+            // add list of supported sample rates
+            ListPreference sampleRatePrefList = (ListPreference)audioOptsScreen.findPreference("audio_samplerate");
+            sampleRatePrefList.setEntries(sampleRateList.toArray(new String[0]));
+            sampleRatePrefList.setEntryValues(sampleRateList.toArray(new String[0]));
+            bindPreferenceSummaryToValue(findPreference("audio_samplerate"));
+
+            // add list of supported bitrates
+            ListPreference bitRatePrefList = (ListPreference)audioOptsScreen.findPreference("audio_bitrate");
+            bitRatePrefList.setEntries(bitRateList.toArray(new String[0]));
+            bitRatePrefList.setEntryValues(bitRateList.toArray(new String[0]));
+            bindPreferenceSummaryToValue(findPreference("audio_samplerate"));
         }
     }
 

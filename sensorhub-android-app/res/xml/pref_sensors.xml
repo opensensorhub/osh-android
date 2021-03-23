@@ -56,6 +56,12 @@
 
     <CheckBoxPreference
         android:defaultValue="false"
+        android:key="audio_enabled"
+        android:summary="Enable streaming of audio data"
+        android:title="Audio Data" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
         android:key="trupulse_enabled"
         android:summary="Enable streaming of TruPulse range finder data (sensor must be connected via Bluetooth on startup)"
         android:title="TruPulse Range Finder Data" />

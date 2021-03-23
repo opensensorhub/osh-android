@@ -50,6 +50,7 @@ import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
+import org.sensorhub.impl.sensor.android.audio.AudioEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig.VideoPreset;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
@@ -187,6 +188,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorsConfig.activateOrientationEuler = prefs.getBoolean("orient_euler_enabled", false);
         sensorsConfig.activateGpsLocation = prefs.getBoolean("gps_enabled", false);
         sensorsConfig.activateNetworkLocation = prefs.getBoolean("netloc_enabled", false);
+
+        // video
         sensorsConfig.activateBackCamera = prefs.getBoolean("cam_enabled", false);
         if (sensorsConfig.activateBackCamera || sensorsConfig.activateFrontCamera)
             showVideo = true;
@@ -223,8 +226,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             resIdx++;
         }
         sensorsConfig.videoConfig.presets = presetList.toArray(new VideoPreset[0]);
-
         sensorsConfig.outputVideoRoll = prefs.getBoolean("video_roll_enabled", false);
+
+        // audio
+        sensorsConfig.activateMicAudio = prefs.getBoolean("audio_enabled", false);
+        sensorsConfig.audioConfig.codec = prefs.getString("audio_codec", AudioEncoderConfig.AAC_CODEC);
+        sensorsConfig.audioConfig.sampleRate = Integer.parseInt(prefs.getString("audio_samplerate", "8000"));
+        sensorsConfig.audioConfig.bitRate = Integer.parseInt(prefs.getString("audio_bitrate", "64"));
+
         sensorsConfig.runName = runName;
         sensorhubConfig.add(sensorsConfig);
         addSosTConfig(sensorsConfig, sosUser, sosPwd);
