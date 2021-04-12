@@ -33,6 +33,7 @@ import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.sensorhub.impl.sensor.android.audio.AndroidAudioOutputAAC;
+import org.sensorhub.impl.sensor.android.audio.AndroidAudioOutputOPUS;
 import org.sensorhub.impl.sensor.android.audio.AudioEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.AndroidCameraOutputH264;
 import org.sensorhub.impl.sensor.android.video.AndroidCameraOutputH265;
@@ -219,6 +220,8 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     {
         if (AudioEncoderConfig.AAC_CODEC.equals(config.audioConfig.codec))
             useAudio(new AndroidAudioOutputAAC(this), "MIC");
+        else if (AudioEncoderConfig.OPUS_CODEC.equals(config.audioConfig.codec))
+            useAudio(new AndroidAudioOutputOPUS(this), "MIC");
         else
             throw new SensorException("Unsupported codec " + config.audioConfig.codec);
     }
