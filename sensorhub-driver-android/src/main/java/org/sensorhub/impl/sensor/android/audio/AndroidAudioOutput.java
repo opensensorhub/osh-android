@@ -85,7 +85,6 @@ public abstract class AndroidAudioOutput extends AbstractSensorOutput<AndroidSen
     DataEncoding dataEncoding;
     int sampleRateHz = 11025;
     int pcmEncoding = AudioFormat.ENCODING_PCM_16BIT;
-    double samplingPeriod = 0.5; // seconds
     int numSamplesPerRecord;
     int bytesPerSample;
     int bytesPerRecord;
@@ -94,6 +93,7 @@ public abstract class AndroidAudioOutput extends AbstractSensorOutput<AndroidSen
     Looper bgLooper;
     AudioRecord audioRecord;
     long systemTimeOffset = -1L;
+    long lastRecordTime = 0;
     byte[] codecInfoData;
     MediaCodec mCodec;
     BufferInfo bufferInfo = new BufferInfo();
@@ -195,7 +195,8 @@ public abstract class AndroidAudioOutput extends AbstractSensorOutput<AndroidSen
         sampleRateHz = audioConfig.sampleRate;
         bitrate = audioConfig.bitRate * 1000;
 
-        numSamplesPerRecord = (int)(samplingPeriod  * sampleRateHz);
+        if (numSamplesPerRecord <= 0)
+            numSamplesPerRecord = (int)(sampleRateHz/10);
         bytesPerSample = (pcmEncoding == AudioFormat.ENCODING_PCM_8BIT) ? 1 : 2;
         bytesPerRecord = numSamplesPerRecord*bytesPerSample;
 
@@ -219,6 +220,10 @@ public abstract class AndroidAudioOutput extends AbstractSensorOutput<AndroidSen
             // start codec
             if (mCodec != null)
                 mCodec.start();
+
+            // reset time
+            lastRecordTime = 0;
+            systemTimeOffset = -1;
 
             // read audio samples in background thread
             Thread bgThread = new Thread() {
@@ -257,10 +262,10 @@ public abstract class AndroidAudioOutput extends AbstractSensorOutput<AndroidSen
             ByteBuffer inputBuffer = mCodec.getInputBuffer(inputBufferIndex);
             inputBuffer.clear();
 
-            long timeStamp = SystemClock.elapsedRealtimeNanos() / 1000;
             int readBytes = audioRecord.read(inputBuffer, bytesPerRecord);
-            log.debug(timeStamp + ": " + readBytes + " audio bytes read");
-            mCodec.queueInputBuffer(inputBufferIndex, 0, readBytes, timeStamp, 0);
+            log.debug(lastRecordTime + ": " + readBytes + " audio bytes read");
+            mCodec.queueInputBuffer(inputBufferIndex, 0, readBytes, lastRecordTime, 0);
+            lastRecordTime += (numSamplesPerRecord * 1000000) / sampleRateHz; // in µs
 
             encode();
         }
@@ -351,7 +356,7 @@ public abstract class AndroidAudioOutput extends AbstractSensorOutput<AndroidSen
     @Override
     public double getAverageSamplingPeriod()
     {
-        return samplingPeriod;
+        return numSamplesPerRecord/(double)sampleRateHz;
     }
 
 

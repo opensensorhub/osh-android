@@ -56,9 +56,9 @@ public class AndroidAudioOutputAAC extends AndroidAudioOutput
     protected void initCodec(int inputBufferSize) throws SensorException
     {
         try {
-            final String videoCodec = MediaFormat.MIMETYPE_AUDIO_AAC;
-            mCodec = MediaCodec.createEncoderByType(videoCodec);
-            MediaFormat mediaFormat = MediaFormat.createAudioFormat(videoCodec, sampleRateHz, 1);
+            final String audioCodec = MediaFormat.MIMETYPE_AUDIO_AAC;
+            mCodec = MediaCodec.createEncoderByType(audioCodec);
+            MediaFormat mediaFormat = MediaFormat.createAudioFormat(audioCodec, sampleRateHz, 1);
             mediaFormat.setInteger("pcm-encoding", pcmEncoding);
             mediaFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, inputBufferSize);
             mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, bitrate);
@@ -77,6 +77,8 @@ public class AndroidAudioOutputAAC extends AndroidAudioOutput
     @Override
     protected void initAudio() throws SensorException
     {
+        // ADTS always includes 1024 samples per packet so align record size to that
+        this.numSamplesPerRecord = 1024;
         super.initAudio();
 
         // set ADTS packet header size
