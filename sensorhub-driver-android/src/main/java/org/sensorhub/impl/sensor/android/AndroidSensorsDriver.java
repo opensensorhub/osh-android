@@ -37,13 +37,9 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Build;
-import android.os.Looper;
 import android.provider.Settings.Secure;
 import android.util.Log;
 
@@ -62,6 +58,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     LocationManager locationManager;
     SensorMLBuilder smlBuilder;
     List<PhysicalComponent> smlComponents;
+    boolean cameraInUse = false;
     
     
     public AndroidSensorsDriver()
@@ -199,8 +196,10 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         }
         else*/
         {
+            // TODO: when a camera is picked we should try stopping the loop and going from there.
             for (int cameraId = 0; cameraId < android.hardware.Camera.getNumberOfCameras(); cameraId++)
             {
+                if(cameraInUse) break;
                 android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();                    
                 android.hardware.Camera.getCameraInfo(cameraId, info);
 
@@ -212,7 +211,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
                     else if (AndroidSensorsConfig.H264_CODEC.equals(config.videoCodec))
                         useCamera(new AndroidCameraOutputH264(this, cameraId, config.camPreviewTexture), cameraId);
                     else
-                        throw new SensorException("Unsupported codec " + config.videoCodec);
+                        throw new SensorException("Camera in use or Unsupported codec " + config.videoCodec);
                 }
             }
         }
@@ -240,6 +239,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         addOutput(output, false);
         smlComponents.add(smlBuilder.getComponentDescription(cameraId));
         log.info("Getting data from camera #" + cameraId);
+        cameraInUse = true;
     }
     
     
@@ -267,6 +267,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         
         this.removeAllOutputs();
         this.removeAllControlInputs();
+        this.cameraInUse = false;
     }
 
 

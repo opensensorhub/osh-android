@@ -39,7 +39,6 @@ import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.view.SurfaceHolder;
 
 
 /**
