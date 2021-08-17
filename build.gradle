@@ -2,7 +2,8 @@ ext.oshCoreVersion = '1.4.0'
 ext.compileSdkVersion = 21
 ext.minSdkVersion = 21
 ext.targetSdkVersion = 21
-ext.buildToolsVersion = "28.0.3"
+//ext.buildToolsVersion = "28.0.3"
+ext.buildToolsVersion = "30.0.2"
 version = oshCoreVersion
 
 buildscript {
@@ -12,7 +13,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.2.1'
+    classpath 'com.android.tools.build:gradle:7.0.0'
   }
 }
 
@@ -25,8 +26,8 @@ subprojects {
   }
 
   if (!project.projectDir.parent.endsWith('osh-android')) {
-    apply plugin: 'java'
-    apply plugin: 'osgi'
+    apply plugin: 'java-library'
+//    apply plugin: 'osgi'
     apply plugin: 'maven-publish'
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -57,4 +58,12 @@ subprojects {
   }
 
   version = oshCoreVersion
+}
+
+allprojects {
+  configurations.all{
+    resolutionStrategy{
+//      force 'xml-apis:xml-apis:1.4.01'
+    }
+  }
 }
