@@ -15,7 +15,9 @@ dependencies {
   api project(':sensorhub-driver-android')
   api project(':sensorhub-android-flirone')
   //api project(':sensorhub-android-dji')
-  implementation 'org.slf4j:slf4j-android:1.6.1-RC1'
+
+//  implementation 'org.slf4j:slf4j-android:1.6.1-RC1'
+  implementation 'org.slf4j:slf4j-android:1.7.32'
 }
 
 configurations {
@@ -31,7 +33,8 @@ configurations {
 
     resolutionStrategy.dependencySubstitution {
       // use Android version of slf4j
-      substitute module('org.slf4j:slf4j-api') with module('org.slf4j:slf4j-android:1.6.1-RC1')
+//      substitute module('org.slf4j:slf4j-api') with module('org.slf4j:slf4j-android:1.6.1-RC1')
+//      substitute module('org.slf4j:slf4j-api') using module('org.slf4j:slf4j-android:1.6.1-RC1')
     }
   }
 }
