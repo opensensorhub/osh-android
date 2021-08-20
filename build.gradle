@@ -9,7 +9,6 @@ version = oshCoreVersion
 buildscript {
   repositories {
     google()
-    jcenter()
   }
 
   dependencies {
@@ -21,16 +20,12 @@ subprojects {
   group = 'org.sensorhub'
 
   repositories {
-//    jcenter()
-    // jcenter is deprecated, swap to mavenCentral to prevent future issues due to the jcenter() command being removed early next year
     mavenCentral()
     google()
   }
 
   if (!project.projectDir.parent.endsWith('osh-android')) {
     apply plugin: 'java-library'
-//    apply plugin: 'java'
-//    apply plugin: 'osgi'
     apply plugin: 'maven-publish'
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -57,18 +52,9 @@ subprojects {
 
       // override objenesis version to get new android instantiators
       substitute module('uk.com.robust-it:cloning:1.9.1') with module('uk.com.robust-it:cloning:1.9.10')
-
-//      force
     }
   }
 
   version = oshCoreVersion
 }
 
-//allprojects {
-//  configurations.all{
-//    resolutionStrategy{
-////      force 'xml-apis:xml-apis:1.4.01'
-//    }
-//  }
-//}

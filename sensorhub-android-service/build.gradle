@@ -10,11 +10,7 @@ dependencies {
   api project(':sensorhub-core')
   api project(':sensorhub-comm-ble')
   api project(':sensorhub-service-swe')
-
-  // TODO: Fix a conflicting dependency
-//  api 'javax.xml.stream:stax-api:1.0-2'
-  // https://mvnrepository.com/artifact/stax/stax-api
-  implementation group: 'stax', name: 'stax-api', version: '1.0.1'
+  api 'javax.xml.stream:stax-api:1.0-2'
 }
 
 android {
