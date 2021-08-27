@@ -217,16 +217,27 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
                      (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT && config.activateFrontCamera))
                 {
                     SurfaceTexture camPreviewTexture = SensorHubService.getVideoTexture();
-                    if (VideoEncoderConfig.JPEG_CODEC.equals(config.videoConfig.codec))
+                    if (VideoEncoderConfig.JPEG_CODEC.equals(config.videoConfig.codec)) {
                         useCamera(new AndroidCameraOutputMJPEG(this, cameraId, camPreviewTexture), cameraId);
-                    else if (VideoEncoderConfig.H264_CODEC.equals(config.videoConfig.codec))
+                        break;
+                    }
+                    else if (VideoEncoderConfig.H264_CODEC.equals(config.videoConfig.codec)) {
                         useCamera(new AndroidCameraOutputH264(this, cameraId, camPreviewTexture), cameraId);
-                    else if (VideoEncoderConfig.H265_CODEC.equals(config.videoConfig.codec))
+                        // try a break to test
+                        break;
+                    }
+                    else if (VideoEncoderConfig.H265_CODEC.equals(config.videoConfig.codec)) {
                         useCamera(new AndroidCameraOutputH265(this, cameraId, camPreviewTexture), cameraId);
-                    else if (VideoEncoderConfig.VP9_CODEC.equals(config.videoConfig.codec))
+                        break;
+                    }
+                    else if (VideoEncoderConfig.VP9_CODEC.equals(config.videoConfig.codec)) {
                         useCamera(new AndroidCameraOutputVP9(this, cameraId, camPreviewTexture), cameraId);
-                    else if (VideoEncoderConfig.VP8_CODEC.equals(config.videoConfig.codec))
+                        break;
+                    }
+                    else if (VideoEncoderConfig.VP8_CODEC.equals(config.videoConfig.codec)) {
                         useCamera(new AndroidCameraOutputVP8(this, cameraId, camPreviewTexture), cameraId);
+                        break;
+                    }
                     else
                         throw new SensorException("Unsupported codec " + config.videoConfig.codec);
                 }
