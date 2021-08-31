@@ -191,23 +191,6 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         }
         else*/
         {
-//            for(int cameraId = 0; cameraId < android.hardware.CameraX.getNumberOfCameras(); cameraId++)
-            CameraManager cameraManager = (CameraManager) androidContext.getSystemService(CAMERA_SERVICE);
-            String[] cameraIds;
-            try{
-                cameraIds = cameraManager.getCameraIdList();
-                log.debug("Got Camera IDs");
-
-                for(String camId : cameraIds){
-                    log.debug(camId);
-                    // TODO: match camera id with the one chosen by the user
-                }
-
-            }catch(CameraAccessException e){
-                e.printStackTrace();
-            }
-
-
             for (int cameraId = 0; cameraId < android.hardware.Camera.getNumberOfCameras(); cameraId++)
             {
                 android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
