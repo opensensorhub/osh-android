@@ -14,18 +14,18 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.android;
 
-import static android.content.Context.CAMERA_SERVICE;
-
-import java.util.ArrayList;
-import java.util.List;
-import javax.xml.namespace.QName;
-
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraManager;
-import android.os.Debug;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+import android.location.LocationManager;
+import android.location.LocationProvider;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.provider.Settings.Secure;
+
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.PhysicalComponent;
 import net.opengis.sensorml.v20.PhysicalSystem;
@@ -47,17 +47,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.ogc.gml.GenericFeatureImpl;
 import org.vast.sensorML.SMLStaxBindings;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
-import android.location.LocationManager;
-import android.location.LocationProvider;
-import android.os.Build;
-import android.provider.Settings.Secure;
 
-//import androidx.camera
-import android.hardware.camera2.CameraManager;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.namespace.QName;
 
 
 public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsConfig>
