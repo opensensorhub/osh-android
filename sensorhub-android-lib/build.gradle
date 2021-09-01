@@ -4,11 +4,6 @@ description = 'OSH Android Lib'
 ext.details = 'OSH library for Android'
 
 dependencies {
-  //api 'org.sensorhub:sensorhub-core:' + oshCoreVersion
-  //api 'org.sensorhub:sensorhub-service-swe:' + oshCoreVersion
-  //api 'org.sensorhub:sensorhub-comm-ble:' + oshCoreVersion
-  //api 'org.sensorhub:sensorhub-driver-trupulse:[0.1,2.0)'
-  //api 'org.sensorhub:sensorhub-driver-angelsensor:[0.1,2.0)'
   api project(':sensorhub-android-service')
   api project(':sensorhub-driver-trupulse')
   api project(':sensorhub-driver-angelsensor')
@@ -22,7 +17,6 @@ dependencies {
 configurations {
   api {
     // exclude stuff from APK
-    //exclude group: "javax.xml.stream"
     exclude group: "javax.servlet"
     exclude group: "xml-apis"
     exclude group: "org.eclipse.jetty"
