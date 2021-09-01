@@ -201,6 +201,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 // set video capture and encodign options
                 VideoEncoderConfig videoConfig = parentSensor.getConfiguration().videoConfig;
                 frameRate = videoConfig.frameRate;
+                selectedPreset = videoConfig.selectedPreset;
                 imgWidth = videoConfig.presets[selectedPreset].width;
                 imgHeight = videoConfig.presets[selectedPreset].height;
                 bitrate = videoConfig.presets[selectedPreset].selectedBitrate*1000;
