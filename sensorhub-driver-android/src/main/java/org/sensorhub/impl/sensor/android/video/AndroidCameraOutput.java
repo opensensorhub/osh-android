@@ -1,15 +1,16 @@
 /***************************** BEGIN LICENSE BLOCK ***************************
 
- The contents of this file are subject to the Mozilla Public License, v. 2.0.
- If a copy of the MPL was not distributed with this file, You can obtain one
- at http://mozilla.org/MPL/2.0/.
+The contents of this file are subject to the Mozilla Public License, v. 2.0.
+If a copy of the MPL was not distributed with this file, You can obtain one
+at http://mozilla.org/MPL/2.0/.
 
- Software distributed under the License is distributed on an "AS IS" basis,
- WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- for the specific language governing rights and limitations under the License.
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+for the specific language governing rights and limitations under the License.
 
- Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
- ******************************* END LICENSE BLOCK ***************************/
+Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
+
+******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.sensor.android.video;
 
@@ -65,7 +66,8 @@ import java.util.List;
  * @since June 11, 2015
  */
 @SuppressWarnings("deprecation")
-public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, Camera.PreviewCallback, SensorEventListener {
+public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, Camera.PreviewCallback, SensorEventListener
+{
     // keep logger name short because in LogCat it's max 23 chars
     static final Logger log = LoggerFactory.getLogger(AndroidCameraOutput.class.getSimpleName());
 
@@ -99,7 +101,8 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     protected abstract String getCodecName();
 
 
-    protected AndroidCameraOutput(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture, String name) throws SensorException {
+    protected AndroidCameraOutput(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture, String name) throws SensorException
+    {
         super(parentModule);
         this.cameraId = cameraId;
         this.name = name;
@@ -114,7 +117,8 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     }
 
 
-    protected void initOutputStructure() {
+    protected void initOutputStructure()
+    {
         // create SWE Common data structure and encoding
         VideoCamHelper fac = new VideoCamHelper();
         DataStream videoStream = fac.newVideoOutputCODEC(getName(), imgWidth, imgHeight, getCodecName());
@@ -125,17 +129,18 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         dataStruct.setDefinition("http://sensorml.com/ont/swe/property/VideoFrame");
 
         // add video roll component if enabled and gravity sensor is available
-        if (getParentModule().getConfiguration().outputVideoRoll) {
+        if (getParentModule().getConfiguration().outputVideoRoll)
+        {
             List<Sensor> gravitySensors = sensorManager.getSensorList(Sensor.TYPE_GRAVITY);
             if (!gravitySensors.isEmpty()) {
                 gravitySensor = gravitySensors.get(0);
 
                 Quantity roll = fac.createQuantity()
-                        .name("videoRoll")
-                        .definition(GeoPosHelper.DEF_ROLL)
-                        .label("Video Roll Angle")
-                        .uomCode("deg")
-                        .build();
+                    .name("videoRoll")
+                    .definition(GeoPosHelper.DEF_ROLL)
+                    .label("Video Roll Angle")
+                    .uomCode("deg")
+                    .build();
                 ((DataRecord) dataStruct).getFieldList().add(1, roll);
 
                 BinaryComponent rollEnc = fac.newBinaryComponent();
@@ -149,15 +154,18 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     }
 
 
-    protected void initCam() throws SensorException {
+    protected void initCam() throws SensorException
+    {
         Camera.CameraInfo info = new Camera.CameraInfo();
         Camera.getCameraInfo(cameraId, info);
 
         // handle camera in its own thread
         // this is to avoid running in the same thread as other sensors
         Thread bgThread = new Thread() {
-            public void run() {
-                try {
+            public void run()
+            {
+                try
+                {
                     // we need an Android looper to process camera messages
                     Looper.prepare();
                     bgLooper = Looper.myLooper();
@@ -167,11 +175,14 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
 
                     // start processing messages
                     Looper.loop();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     e.printStackTrace();
                 }
 
-                synchronized (this) {
+                synchronized (this)
+                {
                     notify();
                 }
             }
@@ -179,14 +190,18 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         bgThread.start();
 
         // wait until camera is opened
-        synchronized (bgThread) {
-            try {
+        synchronized (bgThread)
+        {
+            try
+            {
                 bgThread.wait(1000);
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e)
+            {
 
             }
         }
-        
+
         initVideoCapture(info);
     }
 
@@ -194,8 +209,10 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     protected void initVideoCapture(Camera.CameraInfo info) throws SensorException {
         // default for Most of the CODECs
         // if camera was successfully opened, prepare for video capture
-        if (camera != null) {
-            try {
+        if (camera != null)
+        {
+            try
+            {
                 Parameters camParams = camera.getParameters();
 
                 // set video capture and encodign options
@@ -231,51 +248,65 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             {
                 throw new SensorException("Cannot initialize camera " + cameraId, e);
             }
-        } else {
+        }
+        else
+        {
             throw new SensorException("Cannot open camera " + cameraId);
         }
     }
 
 
     @Override
-    public void start(Handler eventHandler) throws SensorException {
-        try {
+    public void start(Handler eventHandler) throws SensorException
+    {
+        try
+        {
             // if gravity sensor is available, register to receive its data
             if (outputVideoRoll && gravitySensor != null)
                 sensorManager.registerListener(this, gravitySensor, 1000000);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new SensorException("Cannot register to gravity sensor events", e);
         }
 
-        try {
+        try
+        {
             // start codec
             if (mCodec != null)
                 mCodec.start();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new SensorException("Cannot start codec " + mCodec.getName(), e);
         }
 
-        try {
-            // start streaming video        
+        try
+        {
+            // start streaming video
             if (previewTexture != null)
                 camera.setPreviewTexture(previewTexture);
             camera.startPreview();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new SensorException("Cannot start capture on camera " + cameraId, e);
         }
     }
 
 
     @Override
-    public void onPreviewFrame(byte[] data, Camera camera) {
+    public void onPreviewFrame(byte[] data, Camera camera)
+    {
         long timeStamp = SystemClock.elapsedRealtimeNanos() / 1000;
 
         // convert to NV12
         int uvPos = imgWidth * imgHeight;
-        for (int i = uvPos; i < data.length; i += 2) {
+        for (int i = uvPos; i < data.length; i+=2)
+        {
             byte b = data[i];
-            data[i] = data[i + 1];
-            data[i + 1] = b;
+            data[i] = data[i+1];
+            data[i+1] = b;
         }
 
         // compress using selected codec
@@ -286,32 +317,39 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     }
 
 
-    private void encode(long timeStamp, byte[] data) {
+    private void encode(long timeStamp, byte[] data)
+    {
         // copy frame data to buffer
         int inputBufferIndex = mCodec.dequeueInputBuffer(0);
-        if (inputBufferIndex >= 0) {
+        if (inputBufferIndex >= 0)
+        {
             ByteBuffer inputBuffer = mCodec.getInputBuffer(inputBufferIndex);
             inputBuffer.clear();
             inputBuffer.put(data);
             mCodec.queueInputBuffer(inputBufferIndex, 0, data.length, timeStamp, 0);
-        } else {
+        }
+        else
+        {
             // skip frame if no buffer is available
             return;
         }
 
         int outputBufferIndex = mCodec.dequeueOutputBuffer(bufferInfo, 0);
-        if (outputBufferIndex >= 0) {
+        if (outputBufferIndex >= 0)
+        {
             ByteBuffer outBuffer = mCodec.getOutputBuffer(outputBufferIndex);
             int outDataSize = bufferInfo.size - bufferInfo.offset;
             int outDataOffset = 0;
             byte[] outData;
 
             // insert SPS/PPS before each key frame
-            if (codecInfoData != null && bufferInfo.flags == MediaCodec.BUFFER_FLAG_KEY_FRAME) {
+            if (codecInfoData != null && bufferInfo.flags == MediaCodec.BUFFER_FLAG_KEY_FRAME)
+            {
                 outDataOffset = codecInfoData.length;
                 outData = new byte[outDataSize + outDataOffset];
                 System.arraycopy(codecInfoData, 0, outData, 0, codecInfoData.length);
-            } else
+            }
+            else
                 outData = new byte[outDataSize];
 
             // copy encoded data
@@ -329,7 +367,8 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     }
 
 
-    protected void sendCompressedData(long timeStamp, byte[] compressedData) {
+    protected void sendCompressedData(long timeStamp, byte[] compressedData)
+    {
         // generate new data record
         DataBlock newRecord;
         if (latestRecord == null)
@@ -343,7 +382,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         newRecord.setDoubleValue(idx++, samplingTime);
 
         if (outputVideoRoll)
-            newRecord.setShortValue(idx++, (short) videoRollAngle);
+            newRecord.setShortValue(idx++, (short)videoRollAngle);
 
         // set encoded data
         AbstractDataBlock frameData = ((DataBlockMixed) newRecord).getUnderlyingObject()[idx++];
@@ -358,11 +397,12 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
 
     /* callback for gravity sensor readings */
     @Override
-    public void onSensorChanged(SensorEvent event) {
+    public void onSensorChanged(SensorEvent event)
+    {
         Vect3d g = new Vect3d(event.values[0], event.values[1], 0.0);
         g.normalize();
         double gDir = Math.atan2(g.y, g.x) / Math.PI * 180.;
-        videoRollAngle = cameraOrientation + (int) gDir - 90;
+        videoRollAngle = cameraOrientation + (int)gDir - 90;
         //log.trace("Gravity direction: {}°", gDir);
         //log.trace("Video roll: {}°", videoRollAngle);
     }
@@ -374,23 +414,28 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
 
 
     @Override
-    public void stop() {
-        if (camera != null) {
+    public void stop()
+    {
+        if (camera != null)
+        {
             camera.stopPreview();
             camera.release();
             camera = null;
         }
 
-        if (sensorManager != null) {
+        if (sensorManager != null)
+        {
             sensorManager.unregisterListener(this);
         }
 
-        if (mCodec != null) {
+        if (mCodec != null)
+        {
             mCodec.stop();
             mCodec.release();
         }
 
-        if (bgLooper != null) {
+        if (bgLooper != null)
+        {
             bgLooper.quit();
             bgLooper = null;
         }
@@ -398,42 +443,49 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
 
 
     @Override
-    public String getName() {
+    public String getName()
+    {
         return name;
     }
 
 
     @Override
-    public double getAverageSamplingPeriod() {
+    public double getAverageSamplingPeriod()
+    {
         return 1. / (double) frameRate;
     }
 
 
     @Override
-    public DataComponent getRecordDescription() {
+    public DataComponent getRecordDescription()
+    {
         return dataStruct;
     }
 
 
     @Override
-    public DataEncoding getRecommendedEncoding() {
+    public DataEncoding getRecommendedEncoding()
+    {
         return dataEncoding;
     }
 
 
     @Override
-    public DataBlock getLatestRecord() {
+    public DataBlock getLatestRecord()
+    {
         return latestRecord;
     }
 
 
     @Override
-    public long getLatestRecordTime() {
+    public long getLatestRecordTime()
+    {
         return latestRecordTime;
     }
 
 
-    protected double getJulianTimeStamp(long sensorTimeStampUs) {
+    protected double getJulianTimeStamp(long sensorTimeStampUs)
+    {
         long sensorTimeMillis = sensorTimeStampUs / 1000;
 
         if (systemTimeOffset < 0)
