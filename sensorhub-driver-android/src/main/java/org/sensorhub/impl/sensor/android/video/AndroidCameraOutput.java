@@ -7,9 +7,9 @@ at http://mozilla.org/MPL/2.0/.
 Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 for the specific language governing rights and limitations under the License.
-
+ 
 Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
-
+ 
 ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.sensor.android.video;
@@ -172,7 +172,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
 
                     // open camera and get parameters
                     camera = Camera.open(cameraId);
-
+                    
                     // start processing messages
                     Looper.loop();
                 }
@@ -180,15 +180,15 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 {
                     e.printStackTrace();
                 }
-
+                
                 synchronized (this)
                 {
                     notify();
                 }
             }
-        };
+        };      
         bgThread.start();
-
+        
         // wait until camera is opened
         synchronized (bgThread)
         {
@@ -201,7 +201,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
 
             }
         }
-
+        
         initVideoCapture(info);
     }
 
@@ -280,10 +280,10 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         {
             throw new SensorException("Cannot start codec " + mCodec.getName(), e);
         }
-
+        
         try
         {
-            // start streaming video
+            // start streaming video        
             if (previewTexture != null)
                 camera.setPreviewTexture(previewTexture);
             camera.startPreview();
@@ -308,10 +308,10 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             data[i] = data[i+1];
             data[i+1] = b;
         }
-
+        
         // compress using selected codec
         encode(timeStamp, data);
-
+        
         // release buffer for next frame
         camera.addCallbackBuffer(data);
     }
@@ -333,15 +333,15 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             // skip frame if no buffer is available
             return;
         }
-
+        
         int outputBufferIndex = mCodec.dequeueOutputBuffer(bufferInfo, 0);
         if (outputBufferIndex >= 0)
         {
-            ByteBuffer outBuffer = mCodec.getOutputBuffer(outputBufferIndex);
+            ByteBuffer outBuffer = mCodec.getOutputBuffer(outputBufferIndex);                                       
             int outDataSize = bufferInfo.size - bufferInfo.offset;
             int outDataOffset = 0;
             byte[] outData;
-
+            
             // insert SPS/PPS before each key frame
             if (codecInfoData != null && bufferInfo.flags == MediaCodec.BUFFER_FLAG_KEY_FRAME)
             {
@@ -351,22 +351,22 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             }
             else
                 outData = new byte[outDataSize];
-
+            
             // copy encoded data
             outBuffer.position(bufferInfo.offset);
             outBuffer.get(outData, outDataOffset, bufferInfo.size);
-
+            
             // release output buffer
             mCodec.releaseOutputBuffer(outputBufferIndex, false);
-
+            
             if (bufferInfo.flags == MediaCodec.BUFFER_FLAG_CODEC_CONFIG)
                 codecInfoData = outData;
             else
                 sendCompressedData(bufferInfo.presentationTimeUs, outData);
         }
     }
-
-
+    
+    
     protected void sendCompressedData(long timeStamp, byte[] compressedData)
     {
         // generate new data record
@@ -433,11 +433,11 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             mCodec.stop();
             mCodec.release();
         }
-
+        
         if (bgLooper != null)
         {
             bgLooper.quit();
-            bgLooper = null;
+            bgLooper = null;            
         }
     }
 
