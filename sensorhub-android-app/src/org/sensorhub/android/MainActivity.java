@@ -31,6 +31,8 @@ import java.util.Map.Entry;
 
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.preference.DialogPreference;
+import android.util.Log;
 import android.view.*;
 import org.sensorhub.android.comm.BluetoothCommProvider;
 import org.sensorhub.android.comm.BluetoothCommProviderConfig;
@@ -40,6 +42,7 @@ import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.module.IModuleConfigRepository;
+import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
@@ -443,11 +446,24 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 newStatusMessage("Starting SensorHub...");
 
                 updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
-                sostClients.clear();
-                boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
 
-                if (boundService.hasVideo())
-                    mainInfoArea.setBackgroundColor(0x80FFFFFF);
+                AndroidSensorsConfig androidSensorConfig = (AndroidSensorsConfig) sensorhubConfig.get("ANDROID_SENSORS");
+                Log.d("OSH-DEBUG", androidSensorConfig.toString());
+                VideoEncoderConfig videoConfig = androidSensorConfig.videoConfig;
+
+                if(videoConfig.selectedPreset >= 0 && videoConfig.selectedPreset < videoConfig.presets.length){
+                    Log.d("OSH-DEBUG", "TEST MESSAGE...");
+
+                    sostClients.clear();
+                    boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
+
+                    if (boundService.hasVideo())
+                        mainInfoArea.setBackgroundColor(0x80FFFFFF);
+                }else{
+                    showVideoConfigErrorPopup();
+                    newStatusMessage("Video Config Error: Check Settings");
+                }
+
             }
         });
 
@@ -480,6 +496,21 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         alert.setTitle("OpenSensorHub");
         alert.setMessage(message);
         alert.setIcon(R.drawable.ic_launcher);
+        alert.show();
+    }
+
+    protected void showVideoConfigErrorPopup()
+    {
+        String message = "Check Video Settings and ensure the resolution for the selected preset has been set.";
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("OpenSensorHub");
+        alert.setMessage(message);
+        alert.setPositiveButton("OK", new DialogInterface.OnClickListener(){
+            public void onClick(DialogInterface dialog, int id){
+                // user accepted
+            }
+        });
         alert.show();
     }
 
@@ -616,15 +647,20 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // show video info
         if (androidSensors != null && boundService.hasVideo())
         {
-            VideoEncoderConfig config = androidSensors.getConfiguration().videoConfig;
-            VideoPreset preset = config.presets[config.selectedPreset];
-            videoInfoText.setLength(0);
-            videoInfoText.append("")
-                         .append(config.codec).append(", ")
-                         .append(preset.width).append("x").append(preset.height).append(", ")
-                         .append(config.frameRate).append(" fps, ")
-                         .append(preset.selectedBitrate).append(" kbits/s")
-                         .append("");
+            // TODO: Fix crash resulting from this (620)
+            try {
+                VideoEncoderConfig config = androidSensors.getConfiguration().videoConfig;
+                VideoPreset preset = config.presets[config.selectedPreset];
+                videoInfoText.setLength(0);
+                videoInfoText.append("")
+                        .append(config.codec).append(", ")
+                        .append(preset.width).append("x").append(preset.height).append(", ")
+                        .append(config.frameRate).append(" fps, ")
+                        .append(preset.selectedBitrate).append(" kbits/s")
+                        .append("");
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
     
