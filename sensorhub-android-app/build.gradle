@@ -3,8 +3,17 @@ apply plugin: 'com.android.application'
 description = 'OSH Demo Android App'
 ext.details = 'OSH demo app for Android'
 
+repositories {
+  maven {
+    url "https://repo.eclipse.org/content/repositories/paho-releases/"
+  }
+}
+
 dependencies {
   api project(':sensorhub-android-lib')
+
+  implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
+  implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.0'
 }
 
 android {

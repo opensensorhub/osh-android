@@ -1,4 +1,4 @@
-package org.sensorhub.impl.sensor.swe.ProxySensor;
+package org.sensorhub.impl.swe.proxysensor;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -7,17 +7,11 @@ import android.content.IntentFilter;
 import android.util.Log;
 
 import org.sensorhub.android.SOSServiceWithIPCConfig;
-import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.impl.sensor.swe.SWEVirtualSensor;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
 
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractPhysicalProcess;
