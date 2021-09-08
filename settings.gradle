@@ -58,4 +58,5 @@ subprojects.files.each { File f ->
   }
 }
 
-include ':ProxySensor'
+include ':sensorhub-android-proxysensor'
+include ':sensorhub-android-sos-ipc'

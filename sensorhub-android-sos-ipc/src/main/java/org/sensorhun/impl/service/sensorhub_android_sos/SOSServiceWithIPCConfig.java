@@ -1,4 +1,4 @@
-package org.sensorhub.android;
+package org.sensorhun.impl.service.sensorhub_android_sos;
 
 import android.content.Context;
 

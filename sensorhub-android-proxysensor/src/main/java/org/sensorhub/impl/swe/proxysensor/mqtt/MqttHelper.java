@@ -11,7 +11,7 @@
  Copyright (C) 2020 Botts Innovative Research, Inc. All Rights Reserved.
 
  ******************************* END LICENSE BLOCK ***************************/
-package org.sensorhub.android.mqtt;
+package org.sensorhub.impl.swe.proxysensor.mqtt;
 
 import android.content.Context;
 import android.util.Log;

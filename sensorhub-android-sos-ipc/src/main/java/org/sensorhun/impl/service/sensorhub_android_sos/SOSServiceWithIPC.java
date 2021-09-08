@@ -1,4 +1,4 @@
-package org.sensorhub.android;
+package org.sensorhun.impl.service.sensorhub_android_sos;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -17,8 +17,6 @@ import org.w3c.dom.Element;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
-import static android.content.ContentValues.TAG;
 
 public class SOSServiceWithIPC extends SOSService
 {
