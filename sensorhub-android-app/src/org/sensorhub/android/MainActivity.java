@@ -58,6 +58,7 @@ import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig.VideoPreset;
 import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
+import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -171,6 +172,13 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             } catch (Exception e) {
             }
         }
+
+        // Setup HTTPServerConfig for enabling more complete node functionality
+        HttpServerConfig serverConfig = new HttpServerConfig();
+        serverConfig.proxyBaseUrl = "";
+        serverConfig.httpPort = 8585;
+        serverConfig.autoStart = true;
+        sensorhubConfig.add(serverConfig);
 
         // get device name
         String deviceID = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
