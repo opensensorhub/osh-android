@@ -448,20 +448,17 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
 
                 AndroidSensorsConfig androidSensorConfig = (AndroidSensorsConfig) sensorhubConfig.get("ANDROID_SENSORS");
-                Log.d("OSH-DEBUG", androidSensorConfig.toString());
                 VideoEncoderConfig videoConfig = androidSensorConfig.videoConfig;
 
-                if(videoConfig.selectedPreset >= 0 && videoConfig.selectedPreset < videoConfig.presets.length){
-                    Log.d("OSH-DEBUG", "TEST MESSAGE...");
-
+                if ((androidSensorConfig.activateBackCamera || androidSensorConfig.activateFrontCamera) && videoConfig.selectedPreset < 0 || videoConfig.selectedPreset >= videoConfig.presets.length) {
+                    showVideoConfigErrorPopup();
+                    newStatusMessage("Video Config Error: Check Settings");
+                } else {
                     sostClients.clear();
                     boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
 
                     if (boundService.hasVideo())
                         mainInfoArea.setBackgroundColor(0x80FFFFFF);
-                }else{
-                    showVideoConfigErrorPopup();
-                    newStatusMessage("Video Config Error: Check Settings");
                 }
 
             }
