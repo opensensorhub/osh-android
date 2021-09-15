@@ -14,21 +14,28 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.android;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.preference.DialogPreference;
@@ -51,6 +58,11 @@ import org.sensorhub.impl.client.sost.SOSTClientConfig;
 //import org.sensorhub.impl.driver.dji.DjiConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
+import org.sensorhub.impl.persistence.GenericStreamStorage;
+import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
+import org.sensorhub.impl.persistence.StreamStorageConfig;
+import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
+import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
@@ -59,6 +71,8 @@ import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
 import org.sensorhub.impl.service.HttpServerConfig;
+import org.sensorhub.impl.service.sos.SOSServiceConfig;
+import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
 import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -102,6 +116,18 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     AndroidSensorsDriver androidSensors;
     URL sosUrl = null;
     boolean showVideo;
+    String deviceID;
+
+    enum Sensors {
+        Android,
+        TruPulse,
+        TruPulseSim,
+        Angel,
+        FlirOne,
+        DJIDrone,
+        ProxySensor,
+        BLELocation
+    }
     
     
     private ServiceConnection sConn = new ServiceConnection()
@@ -120,6 +146,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
     protected void updateConfig(SharedPreferences prefs, String runName)
     {
+        deviceID = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
         sensorhubConfig = new InMemoryConfigDb();
 
         // get SOS URL from config
@@ -172,13 +199,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             } catch (Exception e) {
             }
         }
-
-        // Setup HTTPServerConfig for enabling more complete node functionality
-        HttpServerConfig serverConfig = new HttpServerConfig();
-        serverConfig.proxyBaseUrl = "";
-        serverConfig.httpPort = 8585;
-        serverConfig.autoStart = true;
-        sensorhubConfig.add(serverConfig);
 
         // get device name
         String deviceID = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
@@ -237,8 +257,48 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         sensorsConfig.outputVideoRoll = prefs.getBoolean("video_roll_enabled", false);
         sensorsConfig.runName = runName;
-        sensorhubConfig.add(sensorsConfig);
-        addSosTConfig(sensorsConfig, sosUser, sosPwd);
+//        sensorhubConfig.add(sensorsConfig);
+//        addSosTConfig(sensorsConfig, sosUser, sosPwd);
+
+        // START SOS Config ************************************************************************
+        // Setup HTTPServerConfig for enabling more complete node functionality
+        HttpServerConfig serverConfig = new HttpServerConfig();
+        serverConfig.proxyBaseUrl = "";
+        serverConfig.httpPort = 8585;
+        serverConfig.autoStart = true;
+        sensorhubConfig.add(serverConfig);
+
+        // SOS Config
+        SOSServiceConfig sosConfig = new SOSServiceConfig();
+        sosConfig.moduleClass = SOSServiceConfig.class.getCanonicalName();
+        // SensorHubService already references the app context
+        //((SOSServiceConfig) sosConfig).androidContext = this.getApplicationContext();
+        sosConfig.id = "SOS_SERVICE";
+        sosConfig.name = "SOS Service";
+        sosConfig.autoStart = true;
+        sosConfig.enableTransactional = true;
+
+        // Push Sensors Config
+        AndroidSensorsConfig androidSensorsConfig = sensorsConfig;
+        sensorhubConfig.add(androidSensorsConfig);
+        if (isPushingSensor(Sensors.Android)) {
+            addSosTConfig(androidSensorsConfig, sosUser, sosPwd);
+        }
+
+        File dbFile = new File(getApplicationContext().getFilesDir() + "/db/");
+        dbFile.mkdirs();
+        MVStorageConfig basicStorageConfig = new MVStorageConfig();
+        basicStorageConfig.moduleClass = "org.sensorhub.impl.persistence.h2.MVObsStorageImpl";
+        basicStorageConfig.storagePath = dbFile.getAbsolutePath() + "/${STORAGE_ID}.dat";
+        basicStorageConfig.autoStart = true;
+        sosConfig.newStorageConfig = basicStorageConfig;
+
+        StreamStorageConfig androidStreamStorageConfig = createStreamStorageConfig(androidSensorsConfig);
+        addStorageConfig(androidSensorsConfig, androidStreamStorageConfig);
+
+        SensorDataProviderConfig androidDataProviderConfig = createDataProviderConfig(androidSensorsConfig);
+        addSosServerConfig(sosConfig, androidDataProviderConfig);
+        // END SOS CONFIG **************************************************************************
 
         // TruPulse sensor
         boolean enabled = prefs.getBoolean("trupulse_enabled", false);
@@ -458,7 +518,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 AndroidSensorsConfig androidSensorConfig = (AndroidSensorsConfig) sensorhubConfig.get("ANDROID_SENSORS");
                 VideoEncoderConfig videoConfig = androidSensorConfig.videoConfig;
 
-                if ((androidSensorConfig.activateBackCamera || androidSensorConfig.activateFrontCamera) && videoConfig.selectedPreset < 0 || videoConfig.selectedPreset >= videoConfig.presets.length) {
+                boolean cameraInUse = (androidSensorConfig.activateBackCamera || androidSensorConfig.activateFrontCamera);
+                boolean improperVideoSettings = (videoConfig.selectedPreset < 0 || videoConfig.selectedPreset >= videoConfig.presets.length);
+
+                if (cameraInUse && improperVideoSettings) {
                     showVideoConfigErrorPopup();
                     newStatusMessage("Video Config Error: Check Settings");
                 } else {
@@ -723,6 +786,381 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     protected void hideVideo()
     {
     }
+
+    private boolean isPushingSensor(Sensors sensor) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+
+        if (Sensors.Android.equals(sensor)) {
+            if (prefs.getBoolean("accelerometer_enable", false)
+                    && prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            if (prefs.getBoolean("gyroscope_enable", false)
+                    && prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            if (prefs.getBoolean("magnetometer_enable", false)
+                    && prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            if (prefs.getBoolean("orientation_enable", false)
+                    && prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            if (prefs.getBoolean("location_enable", false)
+                    && prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            return prefs.getBoolean("video_enable", false)
+                    && prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH_REMOTE");
+        } else if (Sensors.TruPulse.equals(sensor) || Sensors.TruPulseSim.equals(sensor)) {
+            return prefs.getBoolean("trupulse_enable", false)
+                    && prefs.getStringSet("trupulse_options", Collections.emptySet()).contains("PUSH_REMOTE");
+        } else if(Sensors.BLELocation.equals(sensor)){
+            return prefs.getBoolean("ble_enable", false) && prefs.getStringSet("ble_options", Collections.emptySet()).contains("PUSH_REMOTE");
+        }
+
+        return false;
+    }
+
+    private SensorDataProviderConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig) {
+        SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
+        dataProviderConfig.sensorID = sensorConfig.id;
+        dataProviderConfig.offeringID = sensorConfig.id + ":offering";
+        dataProviderConfig.storageID = sensorConfig.id + "#storage";
+        dataProviderConfig.enabled = true;
+        dataProviderConfig.liveDataTimeout = 600.0;
+        dataProviderConfig.maxFois = 10;
+
+        return dataProviderConfig;
+    }
+
+    private StreamStorageConfig createStreamStorageConfig(AndroidSensorsConfig sensorConfig) {
+        // H2 Storage Config
+        File dbFile = new File(getApplicationContext().getFilesDir() + "/db/", deviceID + "_h2.dat");
+        dbFile.getParentFile().mkdirs();
+        if (!dbFile.exists()) {
+            try {
+                dbFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        MVStorageConfig storageConfig = new MVStorageConfig();
+        storageConfig.moduleClass = MVMultiStorageImpl.class.getCanonicalName();
+        storageConfig.storagePath = dbFile.getPath();
+        storageConfig.autoStart = true;
+        storageConfig.memoryCacheSize = 102400;
+        storageConfig.autoCommitBufferSize = 1024;
+
+        // TODO: Base this on size instead of time. This might error when earliest record is purged and then requested. Test if the capabilities updates...
+        // Auto Purge Config
+        MaxAgeAutoPurgeConfig autoPurgeConfig = new MaxAgeAutoPurgeConfig();
+        autoPurgeConfig.enabled = true;
+        autoPurgeConfig.purgePeriod = 24.0 * 60.0 * 60.0;
+        autoPurgeConfig.maxRecordAge = 24.0 * 60.0 * 60.0;
+
+        // Stream Storage Config
+        StreamStorageConfig streamStorageConfig = new StreamStorageConfig();
+        streamStorageConfig.moduleClass = GenericStreamStorage.class.getCanonicalName();
+        streamStorageConfig.id = sensorConfig.id + "#storage";
+        streamStorageConfig.name = sensorConfig.name + " Storage";
+        streamStorageConfig.dataSourceID = sensorConfig.id;
+        streamStorageConfig.autoStart = true;
+        streamStorageConfig.processEvents = true;
+        streamStorageConfig.minCommitPeriod = 10000;
+        streamStorageConfig.autoPurgeConfig = autoPurgeConfig;
+        streamStorageConfig.storageConfig = storageConfig;
+        return streamStorageConfig;
+    }
+
+    protected void addStorageConfig(SensorConfig sensorConf, StreamStorageConfig storageConf) {
+        if (sensorConf instanceof AndroidSensorsConfig) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+            SensorManager sensorManager = (SensorManager) getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
+            List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
+
+            String sensorName;
+            for (Sensor sensor : deviceSensors) {
+                if (sensor.isWakeUpSensor()) {
+                    continue;
+                }
+
+                Log.d(TAG, "addStorageConfig: sensor: " + sensor.getName());
+
+                switch (sensor.getType()) {
+                    case Sensor.TYPE_ACCELEROMETER:
+                        if (!prefs.getBoolean("accelerometer_enable", false)
+                                || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+                            Log.d(TAG, "addStorageConfig: excluding accelerometer");
+
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            storageConf.excludedOutputs.add(sensorName);
+                        } else {
+                            Log.d(TAG, "addStorageConfig: NOT excluding accelerometer");
+                        }
+                        break;
+                    case Sensor.TYPE_GYROSCOPE:
+                        if (!prefs.getBoolean("gyroscope_enable", false)
+                                || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+                            Log.d(TAG, "addStorageConfig: excluding gyroscope");
+
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            storageConf.excludedOutputs.add(sensorName);
+                        } else {
+                            Log.d(TAG, "addStorageConfig: NOT excluding gyroscope");
+                        }
+                        break;
+                    case Sensor.TYPE_MAGNETIC_FIELD:
+                        if (!prefs.getBoolean("magnetometer_enable", false)
+                                || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+                            Log.d(TAG, "addStorageConfig: excluding magnetometer");
+
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            storageConf.excludedOutputs.add(sensorName);
+                        } else {
+                            Log.d(TAG, "addStorageConfig: NOT excluding magnetometer");
+                        }
+                        break;
+                    case Sensor.TYPE_ROTATION_VECTOR:
+                        if (!prefs.getBoolean("orientation_enable", false)
+                                || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+                            Log.d(TAG, "addStorageConfig: excluding orientation");
+
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            storageConf.excludedOutputs.add(sensorName);
+                            sensorName = "quat_orientation_data";
+                            storageConf.excludedOutputs.add(sensorName);
+                            sensorName = "euler_orientation_data";
+                            storageConf.excludedOutputs.add(sensorName);
+                        } else {
+                            Log.d(TAG, "addStorageConfig: NOT excluding orientation");
+                        }
+                        break;
+                }
+            }
+            if (!prefs.getBoolean("location_enable", false)
+                    || !prefs.getStringSet("location_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+                Log.d(TAG, "addStorageConfig: excluding location");
+
+                sensorName = "gps_data";
+                storageConf.excludedOutputs.add(sensorName);
+                sensorName = "network_data";
+                storageConf.excludedOutputs.add(sensorName);
+            } else {
+                Log.d(TAG, "addStorageConfig: NOT excluding location");
+            }
+            if (!prefs.getBoolean("video_enable", false)
+                    || !prefs.getStringSet("video_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+                Log.d(TAG, "addStorageConfig: excluding video");
+
+                sensorName = "camera0_MJPEG";
+                storageConf.excludedOutputs.add(sensorName);
+                sensorName = "camera0_H264";
+                storageConf.excludedOutputs.add(sensorName);
+            } else {
+                Log.d(TAG, "addStorageConfig: NOT excluding video");
+            }
+        }
+
+        sensorhubConfig.add(storageConf);
+    }
+
+    protected void addSosServerConfig(SOSServiceConfig sosConf, SensorDataProviderConfig dataProviderConf) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        SensorManager sensorManager = (SensorManager) getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
+        List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
+
+        String sensorName;
+        for (Sensor sensor : deviceSensors) {
+            if (sensor.isWakeUpSensor()) {
+                continue;
+            }
+
+            Log.d(TAG, "addSosServerConfig: sensor: " + sensor.getName());
+
+            switch (sensor.getType()) {
+                case Sensor.TYPE_ACCELEROMETER:
+                    if (!prefs.getBoolean("accelerometer_enable", false)
+                            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+                        Log.d(TAG, "addSosServerConfig: excluding accelerometer");
+
+                        sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
+                    } else {
+                        Log.d(TAG, "addSosServerConfig: NOT excluding accelerometer");
+                    }
+                    break;
+                case Sensor.TYPE_GYROSCOPE:
+                    if (!prefs.getBoolean("gyroscope_enable", false)
+                            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+                        Log.d(TAG, "addSosServerConfig: excluding gyroscope");
+
+                        sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
+                    } else {
+                        Log.d(TAG, "addSosServerConfig: NOT excluding gyroscope");
+                    }
+                    break;
+                case Sensor.TYPE_MAGNETIC_FIELD:
+                    if (!prefs.getBoolean("magnetometer_enable", false)
+                            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+                        Log.d(TAG, "addSosServerConfig: excluding magnetometer");
+
+                        sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
+                    } else {
+                        Log.d(TAG, "addSosServerConfig: NOT excluding magnetometer");
+                    }
+                    break;
+                case Sensor.TYPE_ROTATION_VECTOR:
+                    if (!prefs.getBoolean("orientation_enable", false)
+                            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+                        Log.d(TAG, "addSosServerConfig: excluding orientation");
+
+                        sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
+                        sensorName = "quat_orientation_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
+                        sensorName = "euler_orientation_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
+                    } else {
+                        Log.d(TAG, "addSosServerConfig: NOT excluding orientation");
+                    }
+                    break;
+            }
+        }
+        if (!prefs.getBoolean("location_enable", false)
+                || !prefs.getStringSet("location_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+            Log.d(TAG, "addSosServerConfig: excluding location");
+
+            sensorName = "gps_data";
+            dataProviderConf.excludedOutputs.add(sensorName);
+            sensorName = "network_data";
+            dataProviderConf.excludedOutputs.add(sensorName);
+        } else {
+            Log.d(TAG, "addSosServerConfig: NOT excluding location");
+        }
+        if (!prefs.getBoolean("video_enable", false)
+                || !prefs.getStringSet("video_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+            Log.d(TAG, "addSosServerConfig: excluding video");
+
+            sensorName = "camera0_MJPEG";
+            dataProviderConf.excludedOutputs.add(sensorName);
+            sensorName = "camera0_H264";
+            dataProviderConf.excludedOutputs.add(sensorName);
+        } else {
+            Log.d(TAG, "addSosServerConfig: NOT excluding video");
+        }
+        if (!prefs.getBoolean("ble_enable", false)
+                || !prefs.getStringSet("ble_location_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+            sensorName = "BLEBeacon";
+            dataProviderConf.excludedOutputs.add(sensorName);
+            sensorName = "BLEBeaconLocation";
+            dataProviderConf.excludedOutputs.add(sensorName);
+            sensorName = "NearestBeacon";
+            dataProviderConf.excludedOutputs.add(sensorName);
+        }
+
+        sosConf.dataProviders.add(dataProviderConf);
+    }
+
+    /*private SensorConfig createSensorConfig(Sensors sensor) {
+        SensorConfig sensorConfig;
+
+        if (Sensors.Android.equals(sensor)) {
+            sensorConfig = new AndroidSensorsConfig();
+            sensorConfig.id = ANDROID_SENSORS_MODULE_ID;
+            sensorConfig.name = "Android Sensors [" + deviceName + "]";
+            sensorConfig.autoStart = true;
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+
+            ((AndroidSensorsConfig) sensorConfig).activateAccelerometer = prefs.getBoolean("accelerometer_enable", false);
+            ((AndroidSensorsConfig) sensorConfig).activateGyrometer = prefs.getBoolean("gyroscope_enable", false);
+            ((AndroidSensorsConfig) sensorConfig).activateMagnetometer = prefs.getBoolean("magnetometer_enable", false);
+            if (prefs.getBoolean("orientation_enable", false)) {
+                ((AndroidSensorsConfig) sensorConfig).activateOrientationQuat = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("QUATERNION");
+                ((AndroidSensorsConfig) sensorConfig).activateOrientationEuler = prefs.getStringSet("orientation_angles", Collections.emptySet()).contains("EULER");
+            }
+            if (prefs.getBoolean("location_enable", false)) {
+                ((AndroidSensorsConfig) sensorConfig).activateGpsLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("GPS");
+                ((AndroidSensorsConfig) sensorConfig).activateNetworkLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("NETWORK");
+            }
+            if (prefs.getBoolean("video_enable", false)) {
+                showVideo = true;
+
+                ((AndroidSensorsConfig) sensorConfig).activateBackCamera = true;
+                ((AndroidSensorsConfig) sensorConfig).videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
+            }
+
+            ((AndroidSensorsConfig) sensorConfig).androidContext = this.getApplicationContext();
+            ((AndroidSensorsConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
+            ((AndroidSensorsConfig) sensorConfig).runName = runName;
+        } else if (Sensors.TruPulse.equals(sensor)) {
+            sensorConfig = createTruPulseConfig();
+            sensorConfig.id = "TRUPULSE_SENSOR";
+            sensorConfig.name = "TruPulse Range Finder [" + deviceName + "]";
+            sensorConfig.autoStart = true;
+
+            BluetoothCommProviderConfig btConf = new BluetoothCommProviderConfig();
+            btConf.protocol.deviceName = "TP360RB.*";
+            btConf.moduleClass = BluetoothCommProvider.class.getCanonicalName();
+            ((TruPulseConfig) sensorConfig).commSettings = btConf;
+            ((TruPulseConfig) sensorConfig).serialNumber = deviceID;
+        } else if (Sensors.TruPulseSim.equals(sensor)) {
+            sensorConfig = createTruPulseConfig();
+            sensorConfig.id = "TRUPULSE_SENSOR_SIMULATED";
+            sensorConfig.name = "Simulated TruPulse Range Finder [" + deviceName + "]";
+            sensorConfig.autoStart = true;
+
+            BluetoothCommProviderConfig btConf = new BluetoothCommProviderConfig();
+            btConf.protocol.deviceName = "TP360RB.*";
+            btConf.moduleClass = SimulatedDataStream.class.getCanonicalName();
+            ((TruPulseConfig) sensorConfig).commSettings = btConf;
+            ((TruPulseConfig) sensorConfig).serialNumber = deviceID;
+        } else if (Sensors.Angel.equals(sensor)) {
+            sensorConfig = new AngelSensorConfig();
+            sensorConfig.id = "ANGEL_SENSOR";
+            sensorConfig.name = "Angel Sensor [" + deviceName + "]";
+            sensorConfig.autoStart = true;
+
+            BleConfig bleConf = new BleConfig();
+            bleConf.id = "BLE";
+            bleConf.moduleClass = BleNetwork.class.getCanonicalName();
+            bleConf.androidContext = this.getApplicationContext();
+            bleConf.autoStart = true;
+            sensorhubConfig.add(bleConf);
+
+            ((AngelSensorConfig) sensorConfig).networkID = bleConf.id;
+        } else if (Sensors.FlirOne.equals(sensor)) {
+            sensorConfig = new FlirOneCameraConfig();
+            sensorConfig.id = "FLIRONE_SENSOR";
+            sensorConfig.name = "FLIR One Camera [" + deviceName + "]";
+            sensorConfig.autoStart = true;
+
+            ((FlirOneCameraConfig) sensorConfig).androidContext = this.getApplicationContext();
+            ((FlirOneCameraConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
+        } else if (Sensors.ProxySensor.equals(sensor)) {
+            sensorConfig = new ProxySensorConfig();
+        } else if(Sensors.BLELocation.equals(sensor)){
+            sensorConfig = new BLEBeaconConfig();
+            sensorConfig.id = "BLE_BEACON_SCANNER";
+            sensorConfig.name = "BLE Scanner [" + deviceName + "]";
+            sensorConfig.autoStart = true;
+        }else {
+            sensorConfig = new SensorConfig();
+        }
+
+        return sensorConfig;
+    }*/
 
 
     @Override
