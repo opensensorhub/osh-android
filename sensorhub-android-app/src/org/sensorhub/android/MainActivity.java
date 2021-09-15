@@ -450,7 +450,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 AndroidSensorsConfig androidSensorConfig = (AndroidSensorsConfig) sensorhubConfig.get("ANDROID_SENSORS");
                 VideoEncoderConfig videoConfig = androidSensorConfig.videoConfig;
 
-                if ((androidSensorConfig.activateBackCamera || androidSensorConfig.activateFrontCamera) && videoConfig.selectedPreset < 0 || videoConfig.selectedPreset >= videoConfig.presets.length) {
+                boolean cameraInUse = (androidSensorConfig.activateBackCamera || androidSensorConfig.activateFrontCamera);
+                boolean improperVideoSettings = (videoConfig.selectedPreset < 0 || videoConfig.selectedPreset >= videoConfig.presets.length);
+
+                if (cameraInUse && improperVideoSettings) {
                     showVideoConfigErrorPopup();
                     newStatusMessage("Video Config Error: Check Settings");
                 } else {
