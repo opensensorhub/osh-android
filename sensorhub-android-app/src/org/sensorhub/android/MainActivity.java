@@ -103,6 +103,9 @@ import javax.net.ssl.X509TrustManager;
 
 public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener
 {
+    public static final String ACTION_BROADCAST_RECEIVER = "org.sensorhub.android.BROADCAST_RECEIVER";
+    public static final String ANDROID_SENSORS_MODULE_ID = "ANDROID_SENSORS";
+
     TextView mainInfoArea;
     TextView videoInfoArea;
     SensorHubService boundService;
@@ -116,7 +119,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     AndroidSensorsDriver androidSensors;
     URL sosUrl = null;
     boolean showVideo;
+
     String deviceID;
+    String deviceName;
+    String runName;
 
     enum Sensors {
         Android,
@@ -284,6 +290,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if (isPushingSensor(Sensors.Android)) {
             addSosTConfig(androidSensorsConfig, sosUser, sosPwd);
         }
+        addSosTConfig(sensorsConfig,sosUser,sosPwd);
 
         File dbFile = new File(getApplicationContext().getFilesDir() + "/db/");
         dbFile.mkdirs();
@@ -511,7 +518,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             {
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 String runName = input.getText().toString();
-                newStatusMessage("Starting SensorHub...");
+
 
                 updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
 
@@ -525,6 +532,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     showVideoConfigErrorPopup();
                     newStatusMessage("Video Config Error: Check Settings");
                 } else {
+                    newStatusMessage("Starting SensorHub...");
                     sostClients.clear();
                     boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
 
@@ -1072,7 +1080,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConf.dataProviders.add(dataProviderConf);
     }
 
-    /*private SensorConfig createSensorConfig(Sensors sensor) {
+    private SensorConfig createSensorConfig(Sensors sensor) {
         SensorConfig sensorConfig;
 
         if (Sensors.Android.equals(sensor)) {
@@ -1094,17 +1102,17 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 ((AndroidSensorsConfig) sensorConfig).activateGpsLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("GPS");
                 ((AndroidSensorsConfig) sensorConfig).activateNetworkLocation = prefs.getStringSet("location_type", Collections.emptySet()).contains("NETWORK");
             }
-            if (prefs.getBoolean("video_enable", false)) {
-                showVideo = true;
-
-                ((AndroidSensorsConfig) sensorConfig).activateBackCamera = true;
-                ((AndroidSensorsConfig) sensorConfig).videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
-            }
-
-            ((AndroidSensorsConfig) sensorConfig).androidContext = this.getApplicationContext();
-            ((AndroidSensorsConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
-            ((AndroidSensorsConfig) sensorConfig).runName = runName;
-        } else if (Sensors.TruPulse.equals(sensor)) {
+//            if (prefs.getBoolean("video_enable", false)) {
+//                showVideo = true;
+//
+//                ((AndroidSensorsConfig) sensorConfig).activateBackCamera = true;
+//                ((AndroidSensorsConfig) sensorConfig).videoCodec = prefs.getString("video_codec", AndroidSensorsConfig.JPEG_CODEC);
+//            }
+//
+//            ((AndroidSensorsConfig) sensorConfig).androidContext = this.getApplicationContext();
+//            ((AndroidSensorsConfig) sensorConfig).camPreviewTexture = boundService.getVideoTexture();
+//            ((AndroidSensorsConfig) sensorConfig).runName = runName;
+        }/* else if (Sensors.TruPulse.equals(sensor)) {
             sensorConfig = createTruPulseConfig();
             sensorConfig.id = "TRUPULSE_SENSOR";
             sensorConfig.name = "TruPulse Range Finder [" + deviceName + "]";
@@ -1155,12 +1163,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sensorConfig.id = "BLE_BEACON_SCANNER";
             sensorConfig.name = "BLE Scanner [" + deviceName + "]";
             sensorConfig.autoStart = true;
-        }else {
+        }*/else {
             sensorConfig = new SensorConfig();
         }
 
         return sensorConfig;
-    }*/
+    }
 
 
     @Override
