@@ -16,31 +16,37 @@ package org.sensorhub.android;
 
 import static android.content.ContentValues.TAG;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.security.cert.X509Certificate;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.location.LocationProvider;
-import android.preference.DialogPreference;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Looper;
+import android.preference.PreferenceManager;
+import android.provider.Settings.Secure;
+import android.text.Html;
 import android.util.Log;
-import android.view.*;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.TextureView;
+import android.view.WindowManager;
+import android.widget.EditText;
+import android.widget.TextView;
+
 import org.sensorhub.android.comm.BluetoothCommProvider;
 import org.sensorhub.android.comm.BluetoothCommProviderConfig;
 import org.sensorhub.android.comm.ble.BleConfig;
@@ -49,13 +55,11 @@ import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
 import org.sensorhub.api.data.IStreamingDataInterface;
 import org.sensorhub.api.module.IModuleConfigRepository;
-import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
-//import org.sensorhub.impl.driver.dji.DjiConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.persistence.GenericStreamStorage;
@@ -71,27 +75,24 @@ import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
 import org.sensorhub.impl.service.HttpServerConfig;
+import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
 import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Looper;
-import android.preference.PreferenceManager;
-import android.provider.Settings.Secure;
-import android.text.Html;
-import android.widget.EditText;
-import android.widget.TextView;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.cert.X509Certificate;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -217,6 +218,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorsConfig.name = "Android Sensors [" + deviceName + "]";
         sensorsConfig.id = "ANDROID_SENSORS";
         sensorsConfig.autoStart = true;
+        //TODO: try adding a few options
+//        sensorsConfig.
+
         sensorsConfig.activateAccelerometer = prefs.getBoolean("accel_enabled", false);
         sensorsConfig.activateGyrometer = prefs.getBoolean("gyro_enabled", false);
         sensorsConfig.activateMagnetometer = prefs.getBoolean("mag_enabled", false);
@@ -276,7 +280,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // SOS Config
         SOSServiceConfig sosConfig = new SOSServiceConfig();
-        sosConfig.moduleClass = SOSServiceConfig.class.getCanonicalName();
+        sosConfig.moduleClass = SOSService.class.getCanonicalName();
         // SensorHubService already references the app context
         //((SOSServiceConfig) sosConfig).androidContext = this.getApplicationContext();
         sosConfig.id = "SOS_SERVICE";
@@ -538,6 +542,19 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
                     if (boundService.hasVideo())
                         mainInfoArea.setBackgroundColor(0x80FFFFFF);
+
+                    /*SOSServiceCapabilities caps = null;
+                    try {
+                        GetCapabilitiesRequest getCap = new GetCapabilitiesRequest();
+                        getCap.setService(SOSUtils.SOS);
+                        getCap.setVersion("V2.0");
+                        getCap.setGetServer(PreferenceManager.getDefaultSharedPreferences(MainActivity.this).getString("sos_uri", ""));
+                        OWSUtils owsUtils = new OWSUtils();
+                        caps = owsUtils.<SOSServiceCapabilities>sendRequest(getCap, false);
+                    } catch (OWSException e) {
+//                        throw new SensorHubException("Cannot retrieve SOS capabilities", e);
+                        Log.e(TAG, "ERR: Cannot retrieve SOS Capabilities", e);
+                    }*/
                 }
 
             }
