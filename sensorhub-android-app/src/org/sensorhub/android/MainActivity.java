@@ -19,10 +19,12 @@ import static android.content.ContentValues.TAG;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -75,7 +77,6 @@ import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
 import org.sensorhub.impl.service.HttpServerConfig;
-import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
 import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
@@ -157,7 +158,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig = new InMemoryConfigDb();
 
         // get SOS URL from config
-        String sosUriConfig = prefs.getString("sos_uri", "");
+        String sosUriConfig = prefs.getString("sos_uri", "http://127.0.0.1:8585");
         String sosUser = prefs.getString("sos_username", null);
         String sosPwd = prefs.getString("sos_password", null);
         if (sosUriConfig != null && sosUriConfig.trim().length() > 0)
@@ -279,10 +280,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig.add(serverConfig);
 
         // SOS Config
-        SOSServiceConfig sosConfig = new SOSServiceConfig();
-        sosConfig.moduleClass = SOSService.class.getCanonicalName();
-        // SensorHubService already references the app context
-        //((SOSServiceConfig) sosConfig).androidContext = this.getApplicationContext();
+        SOSServiceConfig sosConfig = new SOSServiceWithIPCConfig();
+        sosConfig.moduleClass = SOSServiceWithIPC.class.getCanonicalName();
+        ((SOSServiceWithIPCConfig) sosConfig).androidContext = this.getApplicationContext();
         sosConfig.id = "SOS_SERVICE";
         sosConfig.name = "SOS Service";
         sosConfig.autoStart = true;
@@ -405,6 +405,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             sensorhubConfig.add(djiConfig);
             addSosTConfig(djiConfig, sosUser, sosPwd);
         }*/
+
+        // TODO add missing SOS SERVICE config to sensorhub
+        sensorhubConfig.add(sosConfig);
     }
 
 
@@ -451,6 +454,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // handler to refresh sensor status in UI
         displayHandler = new Handler(Looper.getMainLooper());
+
+        setupBroadcastReceivers();
     }
 
 
@@ -1185,6 +1190,57 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
 
         return sensorConfig;
+    }
+
+
+    private void setupBroadcastReceivers() {
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String origin = intent.getStringExtra("src");
+                if (!context.getPackageName().equalsIgnoreCase(origin)) {
+                    String sosEndpointUrl = intent.getStringExtra("sosEndpointUrl");
+                    String name = intent.getStringExtra("name");
+                    String sensorId = intent.getStringExtra("sensorId");
+                    ArrayList<String> properties = intent.getStringArrayListExtra("properties");
+
+                    if (sosEndpointUrl == null || name == null || sensorId == null || properties.size() == 0) {
+                        return;
+                    }
+
+                   /* ProxySensorConfig proxySensorConfig = (ProxySensorConfig) createSensorConfig(Sensors.ProxySensor);
+                    proxySensorConfig.androidContext = getApplicationContext();
+                    proxySensorConfig.sosEndpointUrl = sosEndpointUrl;
+                    proxySensorConfig.name = name;
+                    proxySensorConfig.id = sensorId;
+                    proxySensorConfig.sensorUID = sensorId;
+                    proxySensorConfig.observedProperties.addAll(properties);
+                    proxySensorConfig.sosUseWebsockets = true;
+                    proxySensorConfig.autoStart = true;
+                    proxySensorConfigs.add(proxySensorConfig);*/
+
+                    // register and "start" new sensor, data stream doesn't begin until someone requests data;
+                    try {
+                        boundService.stopSensorHub();
+                        Thread.sleep(2000);
+                        Log.d("OSHApp", "Starting Sensorhub Again");
+                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                        updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
+                        sostClients.clear();
+                        boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
+                        if (boundService.hasVideo())
+                            mainInfoArea.setBackgroundColor(0x80FFFFFF);
+                    } catch (InterruptedException e) {
+                        Log.e("OSHApp", "Error Loading Proxy Sensor", e);
+                    }
+
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_BROADCAST_RECEIVER);
+
+        registerReceiver(receiver, filter);
     }
 
 
