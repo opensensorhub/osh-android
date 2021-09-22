@@ -68,7 +68,7 @@
             android:summary="Enter SOS-T password or leave blank" />
     </PreferenceCategory>
 
-    <CheckBoxPreference
+    <SwitchPreference
         android:defaultValue="false"
         android:key="sos_disable_ssl_check"
         android:summary="Disable SSL certificate validation"

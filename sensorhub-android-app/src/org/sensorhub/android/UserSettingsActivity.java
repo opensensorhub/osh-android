@@ -17,6 +17,7 @@ package org.sensorhub.android;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
@@ -168,6 +169,107 @@ public class UserSettingsActivity extends PreferenceActivity
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_sensors);
             bindPreferenceSummaryToValue(findPreference("angel_address"));
+
+            SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
+
+            Preference accelerometerEnable = getPreferenceScreen().findPreference("accel_enabled");
+            Preference accelerometerOptions = getPreferenceScreen().findPreference("accel_options");
+            accelerometerOptions.setEnabled(prefs.getBoolean(accelerometerEnable.getKey(), false));
+            accelerometerEnable.setOnPreferenceChangeListener((preference, newValue) -> {
+                accelerometerOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference gyroEnabled = getPreferenceScreen().findPreference("gyro_enabled");
+            Preference gyroOptions = getPreferenceScreen().findPreference("gyro_options");
+            gyroOptions.setEnabled(prefs.getBoolean(gyroEnabled.getKey(), false));
+            gyroEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                gyroOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference magEnabled = getPreferenceScreen().findPreference("mag_enabled");
+            Preference magOptions = getPreferenceScreen().findPreference("mag_options");
+            magOptions.setEnabled(prefs.getBoolean(magEnabled.getKey(), false));
+            magEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                magOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference orientQuatEnabled = getPreferenceScreen().findPreference("orient_quat_enabled");
+            Preference orientQuatOptions = getPreferenceScreen().findPreference("orient_quat_options");
+            orientQuatOptions.setEnabled(prefs.getBoolean(orientQuatEnabled.getKey(), false));
+            orientQuatEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                orientQuatOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference orientEulerEnabled = getPreferenceScreen().findPreference("orient_euler_enabled");
+            Preference orientEulerOptions = getPreferenceScreen().findPreference("orient_euler_options");
+            orientEulerOptions.setEnabled(prefs.getBoolean(orientEulerEnabled.getKey(), false));
+            orientEulerEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                orientEulerOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference gpsEnabled = getPreferenceScreen().findPreference("gps_enabled");
+            Preference gpsOptions = getPreferenceScreen().findPreference("gps_options");
+            gpsOptions.setEnabled(prefs.getBoolean(gpsEnabled.getKey(), false));
+            gpsEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                gpsOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference netlocEnabled = getPreferenceScreen().findPreference("netloc_enabled");
+            Preference netlocOptions = getPreferenceScreen().findPreference("netloc_options");
+            netlocOptions.setEnabled(prefs.getBoolean(netlocEnabled.getKey(), false));
+            netlocEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                netlocOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference camEnabled = getPreferenceScreen().findPreference("cam_enabled");
+            Preference camOptions = getPreferenceScreen().findPreference("cam_options");
+            camOptions.setEnabled(prefs.getBoolean(camEnabled.getKey(), false));
+            camEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                camOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference videoRollEnabled = getPreferenceScreen().findPreference("video_roll_enabled");
+            Preference videoRollOptions = getPreferenceScreen().findPreference("video_roll_options");
+            videoRollOptions.setEnabled(prefs.getBoolean(videoRollEnabled.getKey(), false));
+            videoRollEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                videoRollOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference trupulseEnabled = getPreferenceScreen().findPreference("trupulse_enabled");
+            Preference trupulseOptions = getPreferenceScreen().findPreference("trupulse_options");
+            Preference trupulseDatasource = getPreferenceScreen().findPreference("trupulse_datasource");
+            trupulseOptions.setEnabled(prefs.getBoolean(trupulseEnabled.getKey(), false));
+            trupulseDatasource.setEnabled(prefs.getBoolean(trupulseEnabled.getKey(), false));
+            trupulseEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                trupulseOptions.setEnabled((boolean) newValue);
+                trupulseDatasource.setEnabled((boolean) newValue);
+                return true;
+            });
+
+//            Preference bleEnable = getPreferenceScreen().findPreference("ble_enabled");
+//            Preference bleLocationMethod = getPreferenceScreen().findPreference("ble_loc_method");
+//            Preference bleOptions = getPreferenceScreen().findPreference("ble_options");
+//            Preference bleConfigURL = getPreferenceScreen().findPreference("ble_config_url");
+//            bleLocationMethod.setEnabled(prefs.getBoolean(bleEnable.getKey(), false));
+//            bleOptions.setEnabled((prefs.getBoolean(bleEnable.getKey(), false)));
+//            bleConfigURL.setEnabled((prefs.getBoolean(bleEnable.getKey(), false)));
+//            bleEnable.setOnPreferenceChangeListener(((preference, newValue) -> {
+//                bleLocationMethod.setEnabled((boolean) newValue);
+//                bleOptions.setEnabled((boolean) newValue);
+//                bleConfigURL.setEnabled((boolean) newValue);
+//                return true;
+//            }));
+
+            // TODO: introduce FLIR and ANGEL sensors
         }
     }
 
