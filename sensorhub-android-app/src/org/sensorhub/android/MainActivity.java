@@ -294,7 +294,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if (isPushingSensor(Sensors.Android)) {
             addSosTConfig(androidSensorsConfig, sosUser, sosPwd);
         }
-        addSosTConfig(sensorsConfig,sosUser,sosPwd);
+//        addSosTConfig(sensorsConfig,sosUser,sosPwd);
 
         File dbFile = new File(getApplicationContext().getFilesDir() + "/db/");
         dbFile.mkdirs();
@@ -821,25 +821,31 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
 
         if (Sensors.Android.equals(sensor)) {
-            if (prefs.getBoolean("accelerometer_enable", false)
-                    && prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+            if (prefs.getBoolean("accel_enabled", false)
+                    && prefs.getStringSet("accel_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                 return true;
-            if (prefs.getBoolean("gyroscope_enable", false)
-                    && prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+            if (prefs.getBoolean("gyro_enabled", false)
+                    && prefs.getStringSet("gyro_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                 return true;
-            if (prefs.getBoolean("magnetometer_enable", false)
-                    && prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+            if (prefs.getBoolean("mag_enabled", false)
+                    && prefs.getStringSet("mag_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                 return true;
-            if (prefs.getBoolean("orientation_enable", false)
-                    && prefs.getStringSet("orientation_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+            if (prefs.getBoolean("orient_quat_enabled", false)
+                    && prefs.getStringSet("orient_quat_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                 return true;
-            if (prefs.getBoolean("location_enable", false)
-                    && prefs.getStringSet("location_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+            if (prefs.getBoolean("orient_euler_enabled", false)
+                    && prefs.getStringSet("orient_euler_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                 return true;
-            return prefs.getBoolean("video_enable", false)
-                    && prefs.getStringSet("video_options", Collections.emptySet()).contains("PUSH_REMOTE");
+            if (prefs.getBoolean("gps_enabled", false)
+                    && prefs.getStringSet("gps_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            if (prefs.getBoolean("netloc_enabled", false)
+                    && prefs.getStringSet("netloc_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            return prefs.getBoolean("cam_enabled", false)
+                    && prefs.getStringSet("cam_options", Collections.emptySet()).contains("PUSH_REMOTE");
         } else if (Sensors.TruPulse.equals(sensor) || Sensors.TruPulseSim.equals(sensor)) {
-            return prefs.getBoolean("trupulse_enable", false)
+            return prefs.getBoolean("trupulse_enabled", false)
                     && prefs.getStringSet("trupulse_options", Collections.emptySet()).contains("PUSH_REMOTE");
         } else if(Sensors.BLELocation.equals(sensor)){
             return prefs.getBoolean("ble_enable", false) && prefs.getStringSet("ble_options", Collections.emptySet()).contains("PUSH_REMOTE");
@@ -915,8 +921,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
                 switch (sensor.getType()) {
                     case Sensor.TYPE_ACCELEROMETER:
-                        if (!prefs.getBoolean("accelerometer_enable", false)
-                                || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+                        if (!prefs.getBoolean("accel_enable", false)
+                                || !prefs.getStringSet("accel_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                             Log.d(TAG, "addStorageConfig: excluding accelerometer");
 
@@ -927,8 +933,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         }
                         break;
                     case Sensor.TYPE_GYROSCOPE:
-                        if (!prefs.getBoolean("gyroscope_enable", false)
-                                || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+                        if (!prefs.getBoolean("gyro_enable", false)
+                                || !prefs.getStringSet("gyro_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                             Log.d(TAG, "addStorageConfig: excluding gyroscope");
 
@@ -939,8 +945,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         }
                         break;
                     case Sensor.TYPE_MAGNETIC_FIELD:
-                        if (!prefs.getBoolean("magnetometer_enable", false)
-                                || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+                        if (!prefs.getBoolean("mag_enable", false)
+                                || !prefs.getStringSet("mag_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                             Log.d(TAG, "addStorageConfig: excluding magnetometer");
 
@@ -951,40 +957,58 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         }
                         break;
                     case Sensor.TYPE_ROTATION_VECTOR:
-                        if (!prefs.getBoolean("orientation_enable", false)
-                                || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+                        // TODO: double check, this probably will have an issue when both are checked
+                        if (!prefs.getBoolean("orient_quat_enabled", false)
+                                || !prefs.getStringSet("orient_quat_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                             Log.d(TAG, "addStorageConfig: excluding orientation");
-
                             sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
                             storageConf.excludedOutputs.add(sensorName);
                             sensorName = "quat_orientation_data";
                             storageConf.excludedOutputs.add(sensorName);
+
+                        } else if(!prefs.getBoolean("orient_euler_enabled", false)
+                                || !prefs.getStringSet("orient_euler_options", Collections.emptySet()).contains("STORE_LOCAL")){
+
+                            Log.d(TAG, "addStorageConfig: excluding orientation");
+                            sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                            storageConf.excludedOutputs.add(sensorName);
                             sensorName = "euler_orientation_data";
                             storageConf.excludedOutputs.add(sensorName);
+
                         } else {
                             Log.d(TAG, "addStorageConfig: NOT excluding orientation");
                         }
                         break;
                 }
             }
-            if (!prefs.getBoolean("location_enable", false)
-                    || !prefs.getStringSet("location_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+            if (!prefs.getBoolean("gps_enabled", false)
+                    || !prefs.getStringSet("gps_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
-                Log.d(TAG, "addStorageConfig: excluding location");
+                Log.d(TAG, "addStorageConfig: excluding gps location");
 
                 sensorName = "gps_data";
                 storageConf.excludedOutputs.add(sensorName);
+
+            } else {
+                Log.d(TAG, "addStorageConfig: NOT excluding gps location");
+            }
+            if (!prefs.getBoolean("netloc_enabled", false)
+                    || !prefs.getStringSet("netloc_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+                Log.d(TAG, "addStorageConfig: excluding network location");
+
                 sensorName = "network_data";
                 storageConf.excludedOutputs.add(sensorName);
             } else {
-                Log.d(TAG, "addStorageConfig: NOT excluding location");
+                Log.d(TAG, "addStorageConfig: NOT excluding network location");
             }
-            if (!prefs.getBoolean("video_enable", false)
-                    || !prefs.getStringSet("video_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+            if (!prefs.getBoolean("cam_enabled", false)
+                    || !prefs.getStringSet("cam_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                 Log.d(TAG, "addStorageConfig: excluding video");
 
+                // TODO: double check that sensor name here is correct, or makes sense
                 sensorName = "camera0_MJPEG";
                 storageConf.excludedOutputs.add(sensorName);
                 sensorName = "camera0_H264";
@@ -1012,8 +1036,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
             switch (sensor.getType()) {
                 case Sensor.TYPE_ACCELEROMETER:
-                    if (!prefs.getBoolean("accelerometer_enable", false)
-                            || !prefs.getStringSet("accelerometer_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+                    if (!prefs.getBoolean("accel_enable", false)
+                            || !prefs.getStringSet("accel_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                         Log.d(TAG, "addSosServerConfig: excluding accelerometer");
 
@@ -1024,8 +1048,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     }
                     break;
                 case Sensor.TYPE_GYROSCOPE:
-                    if (!prefs.getBoolean("gyroscope_enable", false)
-                            || !prefs.getStringSet("gyroscope_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+                    if (!prefs.getBoolean("gyro_enable", false)
+                            || !prefs.getStringSet("gyro_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                         Log.d(TAG, "addSosServerConfig: excluding gyroscope");
 
@@ -1036,8 +1060,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     }
                     break;
                 case Sensor.TYPE_MAGNETIC_FIELD:
-                    if (!prefs.getBoolean("magnetometer_enable", false)
-                            || !prefs.getStringSet("magnetometer_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+                    if (!prefs.getBoolean("mag_enable", false)
+                            || !prefs.getStringSet("mag_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                         Log.d(TAG, "addSosServerConfig: excluding magnetometer");
 
@@ -1048,37 +1072,53 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                     }
                     break;
                 case Sensor.TYPE_ROTATION_VECTOR:
-                    if (!prefs.getBoolean("orientation_enable", false)
-                            || !prefs.getStringSet("orientation_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+                    if (!prefs.getBoolean("orient_quat_enabled", false)
+                            || !prefs.getStringSet("orient_quat_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
                         Log.d(TAG, "addSosServerConfig: excluding orientation");
-
                         sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
                         dataProviderConf.excludedOutputs.add(sensorName);
                         sensorName = "quat_orientation_data";
                         dataProviderConf.excludedOutputs.add(sensorName);
+
+                    } else if(!prefs.getBoolean("orient_euler_enabled", false)
+                            || !prefs.getStringSet("orient_euler_options", Collections.emptySet()).contains("STORE_LOCAL")){
+
+                        Log.d(TAG, "addSosServerConfig: excluding orientation");
+                        sensorName = sensor.getName().replaceAll(" ", "_") + "_data";
+                        dataProviderConf.excludedOutputs.add(sensorName);
                         sensorName = "euler_orientation_data";
                         dataProviderConf.excludedOutputs.add(sensorName);
+
                     } else {
                         Log.d(TAG, "addSosServerConfig: NOT excluding orientation");
                     }
                     break;
             }
         }
-        if (!prefs.getBoolean("location_enable", false)
-                || !prefs.getStringSet("location_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+        if (!prefs.getBoolean("gps_enabled", false)
+                || !prefs.getStringSet("gps_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
-            Log.d(TAG, "addSosServerConfig: excluding location");
+            Log.d(TAG, "addSosServerConfig: excluding gps location");
 
             sensorName = "gps_data";
             dataProviderConf.excludedOutputs.add(sensorName);
+
+        } else {
+            Log.d(TAG, "addSosServerConfig: NOT excluding gps location");
+        }
+        if (!prefs.getBoolean("netloc_enabled", false)
+                || !prefs.getStringSet("netloc_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+
+            Log.d(TAG, "addSosServerConfig: excluding network location");
+
             sensorName = "network_data";
             dataProviderConf.excludedOutputs.add(sensorName);
         } else {
-            Log.d(TAG, "addSosServerConfig: NOT excluding location");
+            Log.d(TAG, "addSosServerConfig: NOT excluding network location");
         }
-        if (!prefs.getBoolean("video_enable", false)
-                || !prefs.getStringSet("video_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+        if (!prefs.getBoolean("cam_enabled", false)
+                || !prefs.getStringSet("cam_options", Collections.emptySet()).contains("STORE_LOCAL")) {
 
             Log.d(TAG, "addSosServerConfig: excluding video");
 
@@ -1089,15 +1129,16 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         } else {
             Log.d(TAG, "addSosServerConfig: NOT excluding video");
         }
-        if (!prefs.getBoolean("ble_enable", false)
-                || !prefs.getStringSet("ble_location_options", Collections.emptySet()).contains("STORE_LOCAL")) {
-            sensorName = "BLEBeacon";
-            dataProviderConf.excludedOutputs.add(sensorName);
-            sensorName = "BLEBeaconLocation";
-            dataProviderConf.excludedOutputs.add(sensorName);
-            sensorName = "NearestBeacon";
-            dataProviderConf.excludedOutputs.add(sensorName);
-        }
+        // Add BLE back in
+//        if (!prefs.getBoolean("ble_enable", false)
+//                || !prefs.getStringSet("ble_location_options", Collections.emptySet()).contains("STORE_LOCAL")) {
+//            sensorName = "BLEBeacon";
+//            dataProviderConf.excludedOutputs.add(sensorName);
+//            sensorName = "BLEBeaconLocation";
+//            dataProviderConf.excludedOutputs.add(sensorName);
+//            sensorName = "NearestBeacon";
+//            dataProviderConf.excludedOutputs.add(sensorName);
+//        }
 
         sosConf.dataProviders.add(dataProviderConf);
     }
