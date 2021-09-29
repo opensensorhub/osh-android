@@ -6,8 +6,12 @@
     <uses-feature android:name="android.hardware.location" />
     <uses-feature android:name="android.hardware.sensor.compass" />
     <uses-feature android:name="android.hardware.camera" />
-    <uses-feature android:name="android.hardware.usb.accessory" android:required="true" />
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+    <uses-feature
+        android:name="android.hardware.usb.accessory"
+        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -28,9 +32,6 @@
         android:label="@string/app_name"
         android:largeHeap="true"
         android:theme="@style/AppTheme">
-<!--        <activity android:name=".spotreport.SpotReportActivity"-->
-<!--            android:configChanges="orientation|screenSize">-->
-<!--        </activity>-->
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
@@ -38,14 +39,21 @@
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".UserSettingsActivity"
             android:label="@string/title_activity_user_settings" />
+        <activity
+            android:name=".AppStatusActivity"
+            android:label="App Status"
+            android:theme="@style/Theme.AppCompat.DayNight"/>
+        <!-- <activity android:name=".spotreport.SpotReportActivity" -->
+        <!-- android:configChanges="orientation|screenSize"> -->
 
-        <service
+    <service
             android:name=".SensorHubService"
             android:enabled="true" />
     </application>

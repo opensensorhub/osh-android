@@ -29,14 +29,19 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.support.v7.view.menu.ListMenuPresenter;
 import android.text.InputType;
+import android.text.PrecomputedText;
+import android.util.Log;
 import android.widget.BaseAdapter;
 
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 
 public class UserSettingsActivity extends PreferenceActivity
@@ -280,6 +285,9 @@ public class UserSettingsActivity extends PreferenceActivity
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class VideoPreferenceFragment extends PreferenceFragment
     {
+        ArrayList<String> frameRateList = new ArrayList<>();
+        ArrayList<String> resList = new ArrayList<>();
+
         @Override
         public void onCreate(Bundle savedInstanceState)
         {
@@ -287,15 +295,34 @@ public class UserSettingsActivity extends PreferenceActivity
             addPreferencesFromResource(R.xml.pref_video);
 
             PreferenceScreen videoOptsScreen = getPreferenceScreen();
+
+            // Create camera selection preference
+            ArrayList<String> cameras = new ArrayList<>();
+            for(int i = 0; i < Camera.getNumberOfCameras(); i++)
+            {
+                Camera.CameraInfo info = new Camera.CameraInfo();
+                Camera.getCameraInfo(i, info);
+                cameras.add(Integer.toString(i));
+            }
+            ListPreference cameraSelectList = new ListPreference(videoOptsScreen.getContext());
+            cameraSelectList.setKey("camera_select");
+            cameraSelectList.setTitle("Selected Camera");
+            cameraSelectList.setEntries(cameras.toArray(new String[0]));
+            cameraSelectList.setEntryValues(cameras.toArray(new String[0]));
+//            cameraSelectList.setDefaultValue(0);
+            bindPreferenceSummaryToValue(cameraSelectList);
+            videoOptsScreen.addPreference(cameraSelectList);
+
             bindPreferenceSummaryToValue(findPreference("video_codec"));
 
+            // TODO: verify that this works in cases where a camera might not be available, and also works on the default value
             // get possible video capture frame rates and sizes
             Camera camera = Camera.open(0);
             Camera.Parameters camParams = camera.getParameters();
-            ArrayList<String> frameRateList = new ArrayList<>();
+//            ArrayList<String> frameRateList = new ArrayList<>();
             for (int frameRate : camParams.getSupportedPreviewFrameRates())
                 frameRateList.add(Integer.toString(frameRate));
-            ArrayList<String> resList = new ArrayList<>();
+//            ArrayList<String> resList = new ArrayList<>();
             for (Camera.Size imgSize : camParams.getSupportedPreviewSizes())
                 resList.add(imgSize.width + "x" + imgSize.height);
             camera.release();
@@ -354,6 +381,23 @@ public class UserSettingsActivity extends PreferenceActivity
             presetIndexes.add("AUTO");
             selectedPresetList.setEntries(presetNames.toArray(new String[0]));
             selectedPresetList.setEntryValues(presetIndexes.toArray(new String[0]));
+
+            // Setup Camera Listener
+            cameraSelectList.setOnPreferenceChangeListener((preference, newValue) -> {
+                Log.d("CAMERA_SELECT", "New Camera Selected: " + newValue);
+                updateCameraSettings(Integer.parseInt((String) newValue));
+                return true;
+            });
+        }
+
+        protected void updateCameraSettings(Integer cameraId){
+            Camera camera = Camera.open(cameraId);
+            Camera.Parameters camParams = camera.getParameters();
+            for (int frameRate : camParams.getSupportedPreviewFrameRates())
+                frameRateList.add(Integer.toString(frameRate));
+            for (Camera.Size imgSize : camParams.getSupportedPreviewSizes())
+                resList.add(imgSize.width + "x" + imgSize.height);
+            camera.release();
         }
     }
 

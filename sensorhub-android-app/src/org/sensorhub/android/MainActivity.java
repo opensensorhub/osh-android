@@ -501,6 +501,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         else if (id == R.id.action_about)
         {
             showAboutPopup();
+        }else if(id == R.id.action_status){
+            startActivity(new Intent(this, AppStatusActivity.class));
+            return true;
         }
 
         return super.onOptionsItemSelected(item);

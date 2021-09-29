@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Status -->
+    <!--    <string name="title_fragment_app_status">AppStatus</string>-->
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="app_status_main_fragment">App Status</string>
+
+    <string-array name="status_options">
+        <item>Initializing</item>
+        <item>Initialized</item>
+        <item>Starting</item>
+        <item>Started</item>
+        <item>Stopping</item>
+        <item>Stopped</item>
+        <item>Unknown</item>
+    </string-array>
+
+    <string name="sosServiceStatusLabel">SOS Service Status</string>
+    <string name="httpServerStatusLabel">HTTP Server Status</string>
+    <string name="sensorServiceStatusLabel">Android Sensor Status</string>
+    <string name="storageServiceStatusLabel">Android Sensor Storage Status</string>
+</resources>
