@@ -247,7 +247,9 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 camera.addCallbackBuffer(imgBuf1);
                 camera.addCallbackBuffer(imgBuf2);
                 camera.setPreviewCallbackWithBuffer(AndroidCameraOutput.this);
-                camera.setDisplayOrientation(info.orientation);
+//                camera.setDisplayOrientation(info.orientation);
+                // TODO: need to test with more devices, Pixel 3a and Samsung Galaxy S20+ both accept this for all known cameras
+                camera.setDisplayOrientation(90);
                 cameraOrientation = info.orientation;
             }
             catch (Exception e)
