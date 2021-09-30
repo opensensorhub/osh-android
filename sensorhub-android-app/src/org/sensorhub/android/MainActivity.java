@@ -229,8 +229,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorsConfig.activateOrientationEuler = prefs.getBoolean("orient_euler_enabled", false);
         sensorsConfig.activateGpsLocation = prefs.getBoolean("gps_enabled", false);
         sensorsConfig.activateNetworkLocation = prefs.getBoolean("netloc_enabled", false);
-        sensorsConfig.activateBackCamera = prefs.getBoolean("cam_enabled", false);
-        if (sensorsConfig.activateBackCamera || sensorsConfig.activateFrontCamera)
+        sensorsConfig.enableCamera = prefs.getBoolean("cam_enabled", false);
+        sensorsConfig.selectedCameraId = Integer.parseInt(prefs.getString("camera_select", "0"));
+        /*if (sensorsConfig.activateBackCamera || sensorsConfig.activateFrontCamera)
+            showVideo = true;*/
+        if (sensorsConfig.enableCamera)
             showVideo = true;
 
         // video settings

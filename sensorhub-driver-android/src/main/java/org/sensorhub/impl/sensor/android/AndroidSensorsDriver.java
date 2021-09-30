@@ -160,6 +160,8 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     @SuppressWarnings("deprecation")
     protected void createCameraOutputs(Context androidContext) throws SensorException
     {
+        int selectedCameraId = config.selectedCameraId;
+
         /*if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.LOLLIPOP)
         {
             CameraManager cameraManager = (CameraManager)androidContext.getSystemService(Context.CAMERA_SERVICE);
@@ -188,31 +190,33 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
             for (int cameraId = 0; cameraId < android.hardware.Camera.getNumberOfCameras(); cameraId++)
             {
                 android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
-                android.hardware.Camera.getCameraInfo(cameraId, info);
+//                android.hardware.Camera.getCameraInfo(cameraId, info);
+                android.hardware.Camera.getCameraInfo(selectedCameraId, info);
 
-                if ( (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_BACK && config.activateBackCamera) ||
-                     (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT && config.activateFrontCamera))
+                /*if ( (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_BACK && config.activateBackCamera) ||
+                     (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT && config.activateFrontCamera))*/
+                if(config.enableCamera)
                 {
                     SurfaceTexture camPreviewTexture = SensorHubService.getVideoTexture();
                     if (VideoEncoderConfig.JPEG_CODEC.equals(config.videoConfig.codec)) {
-                        useCamera(new AndroidCameraOutputMJPEG(this, cameraId, camPreviewTexture), cameraId);
+                        useCamera(new AndroidCameraOutputMJPEG(this, selectedCameraId, camPreviewTexture), selectedCameraId);
                         break;
                     }
                     else if (VideoEncoderConfig.H264_CODEC.equals(config.videoConfig.codec)) {
-                        useCamera(new AndroidCameraOutputH264(this, cameraId, camPreviewTexture), cameraId);
+                        useCamera(new AndroidCameraOutputH264(this, selectedCameraId, camPreviewTexture), selectedCameraId);
                         // try a break to test
                         break;
                     }
                     else if (VideoEncoderConfig.H265_CODEC.equals(config.videoConfig.codec)) {
-                        useCamera(new AndroidCameraOutputH265(this, cameraId, camPreviewTexture), cameraId);
+                        useCamera(new AndroidCameraOutputH265(this, selectedCameraId, camPreviewTexture), selectedCameraId);
                         break;
                     }
                     else if (VideoEncoderConfig.VP9_CODEC.equals(config.videoConfig.codec)) {
-                        useCamera(new AndroidCameraOutputVP9(this, cameraId, camPreviewTexture), cameraId);
+                        useCamera(new AndroidCameraOutputVP9(this, selectedCameraId, camPreviewTexture), selectedCameraId);
                         break;
                     }
                     else if (VideoEncoderConfig.VP8_CODEC.equals(config.videoConfig.codec)) {
-                        useCamera(new AndroidCameraOutputVP8(this, cameraId, camPreviewTexture), cameraId);
+                        useCamera(new AndroidCameraOutputVP8(this, selectedCameraId, camPreviewTexture), selectedCameraId);
                         break;
                     }
                     else

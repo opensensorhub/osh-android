@@ -228,7 +228,13 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 camParams.setPreviewSize(imgWidth, imgHeight);
                 camParams.setVideoStabilization(camParams.isVideoStabilizationSupported());
                 camParams.setPreviewFormat(ImageFormat.NV21);
-                camParams.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+
+                // TODO: Do we need to add focus mode selection to UI? Do some cameras not support fixed? Is this a problem we wouldn't have with Camera2?
+                if(camParams.getSupportedFocusModes().contains(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+                    camParams.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+                }else{
+                    camParams.setFocusMode(Parameters.FOCUS_MODE_FIXED);
+                }
                 camParams.setPreviewFrameRate(frameRate);
                 camera.setParameters(camParams);
                 log.info("Fps ranges: {}", Arrays.deepToString(camParams.getSupportedPreviewFpsRange().toArray(new int[0][])));

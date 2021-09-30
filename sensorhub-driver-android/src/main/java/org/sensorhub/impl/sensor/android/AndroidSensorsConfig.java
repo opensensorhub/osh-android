@@ -39,16 +39,18 @@ public class AndroidSensorsConfig extends SensorConfig
     public boolean activateOrientationEuler = true;
     public boolean activateGpsLocation = true;
     public boolean activateNetworkLocation = false;
+    public int selectedCameraId = 0;
     public boolean activateBackCamera = false;
     public boolean activateFrontCamera = false;
+    public boolean enableCamera = false;
     public VideoEncoderConfig videoConfig = new VideoEncoderConfig();
     public boolean outputVideoRoll = false;
-    
+
     public String deviceName;
     public String runName;
     public String runDescription;
-    
-    
+
+
     public AndroidSensorsConfig()
     {
         this.moduleClass = AndroidSensorsDriver.class.getCanonicalName();
