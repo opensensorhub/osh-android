@@ -554,10 +554,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
                 }
             }else{
-                statusIntent.putExtra("sosService", "Stopped");
-                statusIntent.putExtra("httpStatus", "Stopped");
-                statusIntent.putExtra("androidSensorStatus", "Stopped");
-                statusIntent.putExtra("sensorStorageStatus", "Stopped");
+                statusIntent.putExtra("sosService", "N/A");
+                statusIntent.putExtra("httpStatus", "N/A");
+                statusIntent.putExtra("androidSensorStatus", "N/A");
+                statusIntent.putExtra("sensorStorageStatus", "N/A");
             }
 
 //            statusIntent.putExtra("boundService", boundService);
