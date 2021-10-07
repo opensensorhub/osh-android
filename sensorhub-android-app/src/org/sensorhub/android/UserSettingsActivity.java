@@ -19,6 +19,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.hardware.Camera;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
@@ -37,7 +38,11 @@ import android.widget.BaseAdapter;
 
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 
+import java.math.BigInteger;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -158,6 +163,26 @@ public class UserSettingsActivity extends PreferenceActivity
             bindPreferenceSummaryToValue(findPreference("device_name"));
             bindPreferenceSummaryToValue(findPreference("sos_uri"));
             bindPreferenceSummaryToValue(findPreference("sos_username"));
+
+            WifiManager wifiManager = (WifiManager) getActivity().getApplicationContext().getSystemService(WIFI_SERVICE);
+            int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
+
+            // Convert little-endian to big-endianif needed
+            if (ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
+                ipAddress = Integer.reverseBytes(ipAddress);
+            }
+
+            byte[] ipByteArray = BigInteger.valueOf(ipAddress).toByteArray();
+
+            String ipAddressString;
+            try {
+                ipAddressString = InetAddress.getByAddress(ipByteArray).getHostAddress();
+            } catch (UnknownHostException ex) {
+                ipAddressString = "Unable to get IP Address";
+            }
+
+            Preference ipAddressLabel = getPreferenceScreen().findPreference("nop_ipAddress");
+            ipAddressLabel.setSummary(ipAddressString);
         }
     }
     
