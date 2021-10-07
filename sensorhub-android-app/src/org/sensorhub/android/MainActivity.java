@@ -56,8 +56,11 @@ import org.sensorhub.android.comm.ble.BleConfig;
 import org.sensorhub.android.comm.ble.BleNetwork;
 import org.sensorhub.api.common.Event;
 import org.sensorhub.api.common.IEventListener;
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.IStreamingDataInterface;
+import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleConfigRepository;
+import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
@@ -65,6 +68,7 @@ import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
 import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
 import org.sensorhub.impl.module.InMemoryConfigDb;
+import org.sensorhub.impl.module.ModuleRegistry;
 import org.sensorhub.impl.persistence.GenericStreamStorage;
 import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
 import org.sensorhub.impl.persistence.StreamStorageConfig;
@@ -89,6 +93,7 @@ import java.net.URL;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -514,8 +519,51 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         else if (id == R.id.action_about)
         {
             showAboutPopup();
-        }else if(id == R.id.action_status){
-            startActivity(new Intent(this, AppStatusActivity.class));
+        }
+        else if(id == R.id.action_status)
+        {
+            Intent statusIntent = new Intent(this, AppStatusActivity.class);
+            if(boundService.sensorhub != null) {
+                ModuleRegistry moduleRegistry = boundService.sensorhub.getModuleRegistry();
+                Collection<ModuleConfig> modules = moduleRegistry.getAvailableModules();
+
+                for (ModuleConfig moduleConf: modules) {
+                    IModule module = null;
+                    try {
+                        module = moduleRegistry.getModuleById(moduleConf.id);
+                        String status = module.getCurrentState().name();
+
+                        switch (moduleConf.id){
+                            case "HTTP_SERVER_0":
+                                statusIntent.putExtra("httpStatus", status);
+                                break;
+                            case "SOS_SERVICE":
+                                statusIntent.putExtra("sosService", status);
+                                break;
+                            case "ANDROID_SENSORS":
+                                statusIntent.putExtra("androidSensorStatus", status);
+                                break;
+                            case "ANDROID_SENSORS#storage":
+                                statusIntent.putExtra("sensorStorageStatus", status);
+                                break;
+                        }
+
+                    } catch (SensorHubException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }else{
+                statusIntent.putExtra("sosService", "Stopped");
+                statusIntent.putExtra("httpStatus", "Stopped");
+                statusIntent.putExtra("androidSensorStatus", "Stopped");
+                statusIntent.putExtra("sensorStorageStatus", "Stopped");
+            }
+
+//            statusIntent.putExtra("boundService", boundService);
+
+
+            startActivity(statusIntent);
             return true;
         }
 
