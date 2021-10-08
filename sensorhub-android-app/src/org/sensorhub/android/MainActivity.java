@@ -289,9 +289,13 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorhubConfig.add(serverConfig);
 
         // SOS Config
-        SOSServiceConfig sosConfig = new SOSServiceWithIPCConfig();
+//        SOSServiceConfig sosConfig = new SOSServiceWithIPCConfig();
+//        sosConfig.moduleClass = SOSServiceWithIPC.class.getCanonicalName();
+//        ((SOSServiceWithIPCConfig) sosConfig).androidContext = this.getApplicationContext();
+
+        // We don't need android context unless we're doing IPC things
+        SOSServiceConfig sosConfig = new SOSServiceConfig();
         sosConfig.moduleClass = SOSServiceWithIPC.class.getCanonicalName();
-        ((SOSServiceWithIPCConfig) sosConfig).androidContext = this.getApplicationContext();
         sosConfig.id = "SOS_SERVICE";
         sosConfig.name = "SOS Service";
         sosConfig.autoStart = true;
