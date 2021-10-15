@@ -88,7 +88,6 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     int cameraOrientation;
     int videoRollAngle;
 
-    String name;
     DataComponent dataStruct;
     DataEncoding dataEncoding;
     int samplingPeriod;
@@ -103,9 +102,9 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
 
     protected AndroidCameraOutput(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture, String name) throws SensorException
     {
-        super(parentModule);
+        super(name, parentModule);
         this.cameraId = cameraId;
-        this.name = name;
+
         //this.previewSurfaceHolder = previewSurfaceHolder;
         this.previewTexture = previewTexture;
         this.sensorManager = parentModule.getSensorManager();
@@ -447,13 +446,6 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             bgLooper.quit();
             bgLooper = null;            
         }
-    }
-
-
-    @Override
-    public String getName()
-    {
-        return name;
     }
 
 

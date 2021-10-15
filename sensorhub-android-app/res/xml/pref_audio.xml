@@ -1,0 +1,29 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <ListPreference
+        android:defaultValue="AAC"
+        android:entries="@array/audio_codec_list"
+        android:entryValues="@array/audio_codec_list"
+        android:key="audio_codec"
+        android:summary="%s"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="Audio Codec" />
+
+    <ListPreference
+        android:defaultValue="8000"
+        android:key="audio_samplerate"
+        android:summary="%s"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="Sample Rate" />
+
+    <ListPreference
+        android:defaultValue="64"
+        android:key="audio_bitrate"
+        android:summary="%s"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="Bitrate (kbits/s)" />
+    
+</PreferenceScreen>

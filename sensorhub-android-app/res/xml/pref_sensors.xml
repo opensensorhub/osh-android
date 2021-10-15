@@ -139,6 +139,21 @@
 
         <SwitchPreference
             android:defaultValue="false"
+            android:key="audio_enabled"
+            android:summary="Enable streaming of audio data"
+            android:title="Audio Data" />
+
+        <MultiSelectListPreference
+            android:key="audio_options"
+            android:enabled="false"
+            android:title="Audio Output Options"
+            android:summary="Options for pushing data"
+            android:entries="@array/sos_option_list"
+            android:entryValues="@array/sos_option_values"
+            android:defaultValue="@array/sos_option_defaults" />
+
+        <SwitchPreference
+            android:defaultValue="false"
             android:key="trupulse_enabled"
             android:summary="Enable streaming of TruPulse range finder data (sensor must be connected via Bluetooth on startup)"
             android:title="TruPulse Range Finder Data" />

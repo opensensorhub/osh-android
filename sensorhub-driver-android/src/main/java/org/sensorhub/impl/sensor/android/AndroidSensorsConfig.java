@@ -17,6 +17,7 @@ package org.sensorhub.impl.sensor.android;
 import android.graphics.SurfaceTexture;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.sensor.SensorConfig;
+import org.sensorhub.impl.sensor.android.audio.AudioEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 
 import android.content.Context;
@@ -45,6 +46,9 @@ public class AndroidSensorsConfig extends SensorConfig
     public boolean enableCamera = false;
     public VideoEncoderConfig videoConfig = new VideoEncoderConfig();
     public boolean outputVideoRoll = false;
+    public boolean activateMicAudio = false;
+    public AudioEncoderConfig audioConfig = new AudioEncoderConfig();
+
 
     public String deviceName;
     public String runName;
