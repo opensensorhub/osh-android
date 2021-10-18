@@ -275,6 +275,14 @@ public class UserSettingsActivity extends PreferenceActivity
                 return true;
             });
 
+            Preference audioEnabled = getPreferenceScreen().findPreference("audio_enabled");
+            Preference audioOptions = getPreferenceScreen().findPreference("audio_options");
+            camOptions.setEnabled(prefs.getBoolean(camEnabled.getKey(), false));
+            audioEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                audioOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
             Preference trupulseEnabled = getPreferenceScreen().findPreference("trupulse_enabled");
             Preference trupulseOptions = getPreferenceScreen().findPreference("trupulse_options");
             Preference trupulseDatasource = getPreferenceScreen().findPreference("trupulse_datasource");
