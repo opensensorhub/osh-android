@@ -485,6 +485,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if(checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED){
             requestPermissions(new String[] {Manifest.permission.CAMERA}, 1);
         }
+        if(checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_DENIED){
+            requestPermissions(new String[] {Manifest.permission.RECORD_AUDIO}, 1);
+        }
         // Does app actually need storage permissions now?
     }
 
