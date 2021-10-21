@@ -48,7 +48,7 @@
             android:defaultValue="@array/sos_option_defaults" />
 
         <SwitchPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="orient_quat_enabled"
             android:summary="Enable streaming of orientation data"
             android:title="Orientation Data (Quaternions)" />
@@ -78,7 +78,7 @@
             android:defaultValue="@array/sos_option_defaults" />
 
         <SwitchPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="gps_enabled"
             android:summary="Enable streaming of GPS location data"
             android:title="GPS Location Data" />

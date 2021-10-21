@@ -48,7 +48,7 @@
     </string-array>
 
     <string-array name="sos_option_list">
-        <item>Store Local</item>
+        <item>Local</item>
         <item>Push Remote</item>
     </string-array>
     <string-array name="sos_option_values">

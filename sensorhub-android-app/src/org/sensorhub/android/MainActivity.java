@@ -83,6 +83,7 @@ import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
 import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
 import org.sensorhub.impl.service.HttpServerConfig;
+import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
 import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
@@ -289,12 +290,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 //        addSosTConfig(sensorsConfig, sosUser, sosPwd);
 
         // START SOS Config ************************************************************************
-        // Setup HTTPServerConfig for enabling more complete node functionality
-        HttpServerConfig serverConfig = new HttpServerConfig();
-        serverConfig.proxyBaseUrl = "";
-        serverConfig.httpPort = 8585;
-        serverConfig.autoStart = true;
-        sensorhubConfig.add(serverConfig);
+        if(prefs.getBoolean("hub_enable", true)) {
+            // Setup HTTPServerConfig for enabling more complete node functionality
+            HttpServerConfig serverConfig = new HttpServerConfig();
+            serverConfig.proxyBaseUrl = "";
+            serverConfig.httpPort = 8585;
+            serverConfig.autoStart = true;
+            sensorhubConfig.add(serverConfig);
+        }
 
         // SOS Config
 //        SOSServiceConfig sosConfig = new SOSServiceWithIPCConfig();
@@ -303,7 +306,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // We don't need android context unless we're doing IPC things
         SOSServiceConfig sosConfig = new SOSServiceConfig();
-        sosConfig.moduleClass = SOSServiceWithIPC.class.getCanonicalName();
+        sosConfig.moduleClass = SOSService.class.getCanonicalName();
         sosConfig.id = "SOS_SERVICE";
         sosConfig.name = "SOS Service";
         sosConfig.autoStart = true;
@@ -317,16 +320,19 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
 //        addSosTConfig(sensorsConfig,sosUser,sosPwd);
 
-        File dbFile = new File(getApplicationContext().getFilesDir() + "/db/");
-        dbFile.mkdirs();
-        MVStorageConfig basicStorageConfig = new MVStorageConfig();
-        basicStorageConfig.moduleClass = "org.sensorhub.impl.persistence.h2.MVObsStorageImpl";
-        basicStorageConfig.storagePath = dbFile.getAbsolutePath() + "/${STORAGE_ID}.dat";
-        basicStorageConfig.autoStart = true;
-        sosConfig.newStorageConfig = basicStorageConfig;
+        //Storage Configuration
+        if(prefs.getBoolean("hub_enable", true) && prefs.getBoolean("hub_enable_local_storage", true)) {
+            File dbFile = new File(getApplicationContext().getFilesDir() + "/db/");
+            dbFile.mkdirs();
+            MVStorageConfig basicStorageConfig = new MVStorageConfig();
+            basicStorageConfig.moduleClass = "org.sensorhub.impl.persistence.h2.MVObsStorageImpl";
+            basicStorageConfig.storagePath = dbFile.getAbsolutePath() + "/${STORAGE_ID}.dat";
+            basicStorageConfig.autoStart = true;
+            sosConfig.newStorageConfig = basicStorageConfig;
 
-        StreamStorageConfig androidStreamStorageConfig = createStreamStorageConfig(androidSensorsConfig);
-        addStorageConfig(androidSensorsConfig, androidStreamStorageConfig);
+            StreamStorageConfig androidStreamStorageConfig = createStreamStorageConfig(androidSensorsConfig);
+            addStorageConfig(androidSensorsConfig, androidStreamStorageConfig);
+        }
 
         SensorDataProviderConfig androidDataProviderConfig = createDataProviderConfig(androidSensorsConfig);
         addSosServerConfig(sosConfig, androidDataProviderConfig);
