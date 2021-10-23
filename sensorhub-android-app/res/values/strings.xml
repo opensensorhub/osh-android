@@ -48,10 +48,12 @@
     </string-array>
 
     <string-array name="sos_option_list">
-        <item>Local</item>
+        <item>Fetchable</item>
+        <item>Store Locally</item>
         <item>Push Remote</item>
     </string-array>
     <string-array name="sos_option_values">
+        <item>FETCH_LOCAL</item>
         <item>STORE_LOCAL</item>
         <item>PUSH_REMOTE</item>
     </string-array>

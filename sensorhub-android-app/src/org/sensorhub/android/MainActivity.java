@@ -98,6 +98,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -290,7 +291,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 //        addSosTConfig(sensorsConfig, sosUser, sosPwd);
 
         // START SOS Config ************************************************************************
-        if(prefs.getBoolean("hub_enable", true)) {
+//        if(prefs.getBoolean("hub_enable", true)) {
+        if(shouldServe(prefs)) {
             // Setup HTTPServerConfig for enabling more complete node functionality
             HttpServerConfig serverConfig = new HttpServerConfig();
             serverConfig.proxyBaseUrl = "";
@@ -321,7 +323,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 //        addSosTConfig(sensorsConfig,sosUser,sosPwd);
 
         //Storage Configuration
-        if(prefs.getBoolean("hub_enable", true) && prefs.getBoolean("hub_enable_local_storage", true)) {
+//        if(prefs.getBoolean("hub_enable", true) && prefs.getBoolean("hub_enable_local_storage", true)) {
+        if(shouldStore(prefs)) {
             File dbFile = new File(getApplicationContext().getFilesDir() + "/db/");
             dbFile.mkdirs();
             MVStorageConfig basicStorageConfig = new MVStorageConfig();
@@ -1446,5 +1449,30 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture)
     {
+    }
+
+    private boolean shouldServe(SharedPreferences prefs){
+        Map<String, ?> prefMap = prefs.getAll();
+        for(Map.Entry<String,?> pref : prefMap.entrySet()){
+            if(pref.getValue() instanceof HashSet) {
+                if(((HashSet) pref.getValue()).contains("FETCH_LOCAL")) {
+                    Log.d(TAG, "shouldServe: TRUE");
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean shouldStore(SharedPreferences prefs){
+        Map<String, ?> prefMap = prefs.getAll();
+        for(Map.Entry<String,?> pref : prefMap.entrySet()){
+            if(pref.getValue() instanceof HashSet) {
+                if(((HashSet) pref.getValue()).contains("STORE_LOCAL")) {
+                Log.d(TAG, "shouldStore: TRUE");
+                return true;}
+            }
+        }
+        return false;
     }
 }

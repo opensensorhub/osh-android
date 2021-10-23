@@ -338,9 +338,9 @@ public class UserSettingsActivity extends PreferenceActivity
                 Camera.getCameraInfo(i, info);
                 cameras.add(Integer.toString(i));
             }
-            ListPreference cameraSelectList = new ListPreference(videoOptsScreen.getContext());
-            cameraSelectList.setKey("camera_select");
-            cameraSelectList.setTitle("Selected Camera");
+            ListPreference cameraSelectList = (ListPreference)videoOptsScreen.findPreference("camera_select");
+//            cameraSelectList.setKey("camera_select");
+//            cameraSelectList.setTitle("Selected Camera");
             cameraSelectList.setEntries(cameras.toArray(new String[0]));
             cameraSelectList.setEntryValues(cameras.toArray(new String[0]));
 //            cameraSelectList.setDefaultValue(0);
@@ -420,6 +420,7 @@ public class UserSettingsActivity extends PreferenceActivity
             cameraSelectList.setOnPreferenceChangeListener((preference, newValue) -> {
                 Log.d("CAMERA_SELECT", "New Camera Selected: " + newValue);
                 updateCameraSettings(Integer.parseInt((String) newValue));
+                cameraSelectList.setSummary(newValue.toString());
                 return true;
             });
         }
