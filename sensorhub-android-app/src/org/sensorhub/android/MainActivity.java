@@ -830,6 +830,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             mainInfoText.setLength(mainInfoText.length()-5); // remove last </br>
         mainInfoText.append("</p>");
 
+        // Notify we are running when no data is being pushed
+        boolean serveOrStore = shouldServe(PreferenceManager.getDefaultSharedPreferences(MainActivity.this)) || shouldStore(PreferenceManager.getDefaultSharedPreferences(MainActivity.this));
+        if(sostClients.size() == 0 && serveOrStore){
+            mainInfoText.append("No Sensors Set to Push Remotely");
+        }
+
         // show video info
         if (androidSensors != null && boundService.hasVideo())
         {
