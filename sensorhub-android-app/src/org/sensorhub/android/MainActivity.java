@@ -949,10 +949,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     }
 
     private SensorDataProviderConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig) {
+        Context androidContext = SensorHubService.getContext();
         SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
         dataProviderConfig.sensorID = sensorConfig.id;
-        // TODO: Change to use sensor UID
-        dataProviderConfig.offeringID = sensorConfig.id + ":offering";
+        dataProviderConfig.offeringID = "urn:android:device:" + Secure.getString(androidContext.getContentResolver(), Secure.ANDROID_ID);
         dataProviderConfig.storageID = sensorConfig.id + "#storage";
         dataProviderConfig.enabled = true;
         dataProviderConfig.liveDataTimeout = 600.0;
