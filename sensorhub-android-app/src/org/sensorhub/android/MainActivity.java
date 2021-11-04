@@ -135,6 +135,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     String deviceName;
     String runName;
 
+    // Request codes for permissions
+    final int FINE_LOC_RC = 101;
+    final int CAMERA_RC = 102;
+    final int AUDIO_RC = 103;
+
     enum Sensors {
         Android,
         TruPulse,
@@ -487,17 +492,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         setupBroadcastReceivers();
 
-        //Check for necessary permissions
-        if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED){
-            requestPermissions(new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-        }
-        if(checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED){
-            requestPermissions(new String[] {Manifest.permission.CAMERA}, 1);
-        }
-        if(checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_DENIED){
-            requestPermissions(new String[] {Manifest.permission.RECORD_AUDIO}, 1);
-        }
-        // Does app actually need storage permissions now?
+        checkForPermissions();
     }
 
 
@@ -1481,5 +1476,24 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             }
         }
         return false;
+    }
+
+    private void checkForPermissions(){
+        List<String> permissions = new ArrayList<>();
+
+        //Check for necessary permissions
+        if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED){
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if(checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED){
+            permissions.add(Manifest.permission.CAMERA);
+        }
+        if(checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_DENIED){
+            permissions.add(Manifest.permission.RECORD_AUDIO);
+        }
+        // Does app actually need storage permissions now?
+        String[] permARR = new String[permissions.size()];
+        permARR = permissions.toArray(permARR);
+        requestPermissions(permARR, 100);
     }
 }
