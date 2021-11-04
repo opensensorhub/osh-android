@@ -951,6 +951,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     private SensorDataProviderConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig) {
         SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
         dataProviderConfig.sensorID = sensorConfig.id;
+        // TODO: Change to use sensor UID
         dataProviderConfig.offeringID = sensorConfig.id + ":offering";
         dataProviderConfig.storageID = sensorConfig.id + "#storage";
         dataProviderConfig.enabled = true;
