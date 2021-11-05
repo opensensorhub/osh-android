@@ -931,8 +931,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             if (prefs.getBoolean("netloc_enabled", false)
                     && prefs.getStringSet("netloc_options", Collections.emptySet()).contains("PUSH_REMOTE"))
                 return true;
-            return prefs.getBoolean("cam_enabled", false)
-                    && prefs.getStringSet("cam_options", Collections.emptySet()).contains("PUSH_REMOTE");
+            if (prefs.getBoolean("cam_enabled", false)
+                    && prefs.getStringSet("cam_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
+            if(prefs.getBoolean("audio_enabled", false)
+                    && prefs.getStringSet("audio_options", Collections.emptySet()).contains("PUSH_REMOTE"))
+                return true;
         } else if (Sensors.TruPulse.equals(sensor) || Sensors.TruPulseSim.equals(sensor)) {
             return prefs.getBoolean("trupulse_enabled", false)
                     && prefs.getStringSet("trupulse_options", Collections.emptySet()).contains("PUSH_REMOTE");
@@ -1098,13 +1102,20 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
                 Log.d(TAG, "addStorageConfig: excluding video");
 
-                // TODO: double check that sensor name here is correct, or makes sense
+                // TODO: we need a better way of adding these to storage
                 sensorName = "camera0_MJPEG";
                 storageConf.excludedOutputs.add(sensorName);
                 sensorName = "camera0_H264";
                 storageConf.excludedOutputs.add(sensorName);
             } else {
                 Log.d(TAG, "addStorageConfig: NOT excluding video");
+            }
+            if(!prefs.getBoolean("audio_enabled", false)
+                    || !prefs.getStringSet("audio_options", Collections.emptySet()).contains("STORE_LOCAL")){
+                sensorName = "audio_aac";
+                storageConf.excludedOutputs.add(sensorName);
+            }else{
+                Log.d(TAG, "addStorageConfig: NOT excluding audio");
             }
         }
 
@@ -1218,6 +1229,13 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             dataProviderConf.excludedOutputs.add(sensorName);
         } else {
             Log.d(TAG, "addSosServerConfig: NOT excluding video");
+        }
+        if(!prefs.getBoolean("audio_enabled", false)
+                || !prefs.getStringSet("audio_options", Collections.emptySet()).contains("STORE_LOCAL")){
+            sensorName = "audio_aac";
+            dataProviderConf.excludedOutputs.add(sensorName);
+        }else{
+            Log.d(TAG, "addSosServerConfig: NOT excluding audio");
         }
         // Add BLE back in
 //        if (!prefs.getBoolean("ble_enable", false)
@@ -1494,6 +1512,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // Does app actually need storage permissions now?
         String[] permARR = new String[permissions.size()];
         permARR = permissions.toArray(permARR);
-        requestPermissions(permARR, 100);
+        if(permARR.length >0) {
+            requestPermissions(permARR, 100);
+        }
     }
 }

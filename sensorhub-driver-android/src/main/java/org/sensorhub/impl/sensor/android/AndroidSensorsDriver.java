@@ -193,6 +193,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         }
         else*/
         {
+            // TODO: check if the rotation issue may actually stem from here
             for (int cameraId = 0; cameraId < android.hardware.Camera.getNumberOfCameras(); cameraId++)
             {
                 android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
@@ -235,12 +236,14 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
 
     protected void createAudioOutputs(Context androidContext) throws SensorException
     {
-        if (AudioEncoderConfig.AAC_CODEC.equals(config.audioConfig.codec))
-            useAudio(new AndroidAudioOutputAAC(this), "MIC");
-        else if (AudioEncoderConfig.OPUS_CODEC.equals(config.audioConfig.codec))
-            useAudio(new AndroidAudioOutputOPUS(this), "MIC");
-        else
-            throw new SensorException("Unsupported codec " + config.audioConfig.codec);
+        if(config.activateMicAudio) {
+            if (AudioEncoderConfig.AAC_CODEC.equals(config.audioConfig.codec))
+                useAudio(new AndroidAudioOutputAAC(this), "MIC");
+            else if (AudioEncoderConfig.OPUS_CODEC.equals(config.audioConfig.codec))
+                useAudio(new AndroidAudioOutputOPUS(this), "MIC");
+            else
+                throw new SensorException("Unsupported codec " + config.audioConfig.codec);
+        }
     }
 
     
