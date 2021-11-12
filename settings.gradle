@@ -15,15 +15,19 @@ def repos = [
         'lib-ogc/sensorml-core',
         'sensorhub-core',
         'sensorhub-service-swe',
-        'sensorhub-storage-perst'
+        'sensorhub-storage-perst',
+
+        'sensorhub-utils-kryo',
+        'sensorhub-datastore-h2'
     ],
     'osh-addons': [
+        'persistence/sensorhub-storage-compat',
         'persistence/sensorhub-storage-h2',
         'comm/sensorhub-comm-ble',
         'comm/sensorhub-comm-ble-dbus',
         'sensors/health/sensorhub-driver-angelsensor',
         'sensors/video/sensorhub-driver-videocam',
-        'sensors/video/sensorhub-service-video',
+        'services/sensorhub-service-video',
         'sensors/positioning/sensorhub-driver-trupulse',
         'processing/sensorhub-process-vecmath',
         'processing/sensorhub-process-geoloc'
