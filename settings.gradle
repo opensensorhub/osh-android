@@ -25,10 +25,10 @@ def repos = [
         'persistence/sensorhub-storage-h2',
         'comm/sensorhub-comm-ble',
         'comm/sensorhub-comm-ble-dbus',
-        'sensors/health/sensorhub-driver-angelsensor',
+//        'sensors/health/sensorhub-driver-angelsensor',
         'sensors/video/sensorhub-driver-videocam',
         'services/sensorhub-service-video',
-        'sensors/positioning/sensorhub-driver-trupulse',
+//        'sensors/positioning/sensorhub-driver-trupulse',
         'processing/sensorhub-process-vecmath',
         'processing/sensorhub-process-geoloc'
     ]
