@@ -33,6 +33,6 @@ dependencies {
     implementation project(path: ':sensorhub-core')
     implementation 'org.altbeacon:android-beacon-library:2.16.2'
     implementation project(path: ':sensorhub-process-vecmath')
-    implementation project(path: ':sensorhub-process-geoloc')
+//    implementation project(path: ':sensorhub-process-geoloc')
     implementation 'com.android.volley:volley:1.1.1'
 }

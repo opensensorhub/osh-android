@@ -41,8 +41,7 @@ subprojects {
   if (!project.projectDir.parent.endsWith('osh-android')) {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
-//    sourceCompatibility = 1.8
-//    targetCompatibility = 1.8
+
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
     ext.details = null
@@ -68,7 +67,7 @@ subprojects {
           manifest {
             from jar.manifest
 
-            // default osgi settings if not overriden by project
+            // default osgi settings if not overridden by project
             if (!attributes['Bundle-Activator'])
               attributes('Bundle-Activator': 'org.sensorhub.impl.Activator')
             if (!attributes['Import-Package'])

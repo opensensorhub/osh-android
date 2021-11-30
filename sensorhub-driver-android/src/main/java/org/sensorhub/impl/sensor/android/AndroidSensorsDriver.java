@@ -27,14 +27,17 @@ import android.os.HandlerThread;
 import android.provider.Settings.Secure;
 
 import net.opengis.gml.v32.AbstractFeature;
+import net.opengis.sensorml.v20.FeatureList;
 import net.opengis.sensorml.v20.PhysicalComponent;
 import net.opengis.sensorml.v20.PhysicalSystem;
 import net.opengis.sensorml.v20.SpatialFrame;
+import net.opengis.sensorml.v20.impl.FeatureListImpl;
 import net.opengis.sensorml.v20.impl.SpatialFrameImpl;
 
 import org.sensorhub.android.SensorHubService;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.sensor.ISensorDataInterface;
+import org.sensorhub.api.data.IStreamingDataInterface;
+//import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.sensorhub.impl.sensor.android.audio.AndroidAudioOutputAAC;
@@ -49,10 +52,13 @@ import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.ogc.gml.GenericFeatureImpl;
+import org.vast.ogc.gml.IFeature;
 import org.vast.sensorML.SMLStaxBindings;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.namespace.QName;
 
@@ -158,7 +164,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         eventThread.start();
         Handler eventHandler = new Handler(eventThread.getLooper());
 
-        for (ISensorDataInterface o: getAllOutputs().values())
+        for (IStreamingDataInterface o: getObservationOutputs().values())
             ((IAndroidOutput)o).start(eventHandler);
     }
 
@@ -247,7 +253,8 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     }
 
     
-    protected void useSensor(ISensorDataInterface output, Sensor sensor)
+//    protected void useSensor(ISensorDataInterface output, Sensor sensor)
+    protected void useSensor(IStreamingDataInterface output, Sensor sensor)
     {
         addOutput(output, false);
         smlComponents.add(smlBuilder.getComponentDescription(sensorManager, sensor));
@@ -255,7 +262,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     }
 
 
-    protected void useLocationProvider(ISensorDataInterface output, LocationProvider locProvider)
+    protected void useLocationProvider(IStreamingDataInterface output, LocationProvider locProvider)
     {
         addOutput(output, false);
         smlComponents.add(smlBuilder.getComponentDescription(locationManager, locProvider));
@@ -263,7 +270,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     }
 
 
-    protected void useCamera(ISensorDataInterface output, int cameraId)
+    protected void useCamera(IStreamingDataInterface output, int cameraId)
     {
         addOutput(output, false);
         smlComponents.add(smlBuilder.getComponentDescription(cameraId));
@@ -271,7 +278,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     }
 
 
-    protected void useCamera2(ISensorDataInterface output, String cameraId)
+    protected void useCamera2(IStreamingDataInterface output, String cameraId)
     {
         addOutput(output, false);
         smlComponents.add(smlBuilder.getComponentDescription(cameraId));
@@ -279,7 +286,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     }
 
 
-    protected void useAudio(ISensorDataInterface output, String srcName)
+    protected void useAudio(IStreamingDataInterface output, String srcName)
     {
         addOutput(output, false);
         smlComponents.add(smlBuilder.getAudioComponentDescription(srcName));
@@ -291,7 +298,8 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     public void stop() throws SensorException
     {
         // stop all outputs
-        for (ISensorDataInterface o: this.getAllOutputs().values())
+//        for (IStreamingDataInterface o: this.getAllOutputs().values())
+        for (IStreamingDataInterface o: this.getObservationOutputs().values())
             ((IAndroidOutput)o).stop();
 
         // stop event handling thread
@@ -323,9 +331,16 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
             ((PhysicalSystem)sensorDescription).addLocalReferenceFrame(localRefFrame);
 
             // add FOI
-            AbstractFeature foi = getCurrentFeatureOfInterest();
-            if (foi != null)
-                sensorDescription.getFeaturesOfInterest().addFeature(foi);
+            // TODO: make sure that casting is correct here
+            Map<String, ? extends IFeature> fois = getCurrentFeaturesOfInterest();
+            FeatureListImpl foiList = new FeatureListImpl();
+            if (fois.size()  != 0) {
+                for (Map.Entry<String,? extends IFeature> foi: fois.entrySet()) {
+                    foiList.addFeature((AbstractFeature) foi);
+                }
+            }
+
+            sensorDescription.setFeaturesOfInterest(foiList);
 
             // add components
             int index = 0;
@@ -339,7 +354,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
 
 
     @Override
-    public AbstractFeature getCurrentFeatureOfInterest()
+    public Map<String, ? extends IFeature> getCurrentFeaturesOfInterest()
     {
         if (config.runName != null && config.runName.length() > 0)
         {
@@ -348,10 +363,10 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
             foi.setUniqueIdentifier(uid);
             foi.setName(config.runName);
             foi.setDescription(config.runDescription);
-            return foi;
+            this.addFoi(foi);
         }
 
-        return null;
+        return Collections.unmodifiableMap(foiMap);
     }
 
 
