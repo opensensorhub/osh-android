@@ -1,33 +1,35 @@
 /***************************** BEGIN LICENSE BLOCK ***************************
 
-The contents of this file are subject to the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one
-at http://mozilla.org/MPL/2.0/.
+ The contents of this file are subject to the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one
+ at http://mozilla.org/MPL/2.0/.
 
-Software distributed under the License is distributed on an "AS IS" basis,
-WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-for the specific language governing rights and limitations under the License.
- 
-Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
- 
-******************************* END LICENSE BLOCK ***************************/
+ Software distributed under the License is distributed on an "AS IS" basis,
+ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ for the specific language governing rights and limitations under the License.
+
+ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
+ ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.sensor.android;
 
-import android.os.Handler;
-import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.DataComponent;
-import net.opengis.swe.v20.DataEncoding;
-import net.opengis.swe.v20.Time;
-import net.opengis.swe.v20.Vector;
-import org.sensorhub.api.sensor.SensorDataEvent;
-import org.sensorhub.impl.sensor.AbstractSensorOutput;
-import org.vast.swe.helper.GeoPosHelper;
+import android.annotation.SuppressLint;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Bundle;
+import android.os.Handler;
+
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataEncoding;
+import net.opengis.swe.v20.Time;
+import net.opengis.swe.v20.Vector;
+
+import org.sensorhub.api.data.DataEvent;
+import org.sensorhub.impl.sensor.AbstractSensorOutput;
+import org.vast.swe.helper.GeoPosHelper;
 
 
 /**
@@ -38,23 +40,21 @@ import android.os.Bundle;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Jan 18, 2015
  */
-public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, LocationListener
-{
+public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput, LocationListener {
     LocationManager locManager;
     LocationProvider locProvider;
     String name;
     boolean enabled;
     DataComponent posDataStruct;
     DataEncoding posEncoding;
-    
-    
-    protected AndroidLocationOutput(AndroidSensorsDriver parentModule, LocationManager locManager, LocationProvider locProvider)
-    {
-        super(parentModule);
+
+
+    protected AndroidLocationOutput(AndroidSensorsDriver parentModule, LocationManager locManager, LocationProvider locProvider) {
+        super(locProvider.getName().replaceAll(" ", "_") + "_data", parentModule);
         this.locManager = locManager;
-        this.locProvider = locProvider;        
+        this.locProvider = locProvider;
         this.name = locProvider.getName().replaceAll(" ", "_") + "_data";
-        
+
         // output structure (time + location)
         GeoPosHelper fac = new GeoPosHelper();
         posDataStruct = fac.newDataRecord(2);
@@ -62,25 +62,24 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
         posDataStruct.setDefinition("http://sensorml.com/ont/swe/property/Location");
         Time time = fac.newTimeStampIsoUTC();
         posDataStruct.addComponent("time", time);
-        Vector vec = fac.newLocationVectorLLA(null);  
-        ((Vector)vec).setLocalFrame(parentSensor.localFrameURI);
+        Vector vec = fac.newLocationVectorLLA(null);
+        ((Vector) vec).setLocalFrame(parentSensor.localFrameURI);
         posDataStruct.addComponent("location", vec);
-        
+
         // output encoding
         posEncoding = fac.newTextEncoding(",", "\n");
     }
-    
-    
+
+
     @Override
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
-    
-    
+
+
+    @SuppressLint("MissingPermission")
     @Override
-    public void start(Handler eventHandler)
-    {
+    public void start(Handler eventHandler) {
         // request location data
         locManager.requestLocationUpdates(locProvider.getName(), 100, 0.0f, this, eventHandler.getLooper());
     }
@@ -155,7 +154,7 @@ public class AndroidLocationOutput extends AbstractSensorOutput<AndroidSensorsDr
         // update latest record and send event
         latestRecord = dataBlock;
         latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, dataBlock));
+        eventHandler.publish(new DataEvent(latestRecordTime, this, dataBlock));
     }
 
 
