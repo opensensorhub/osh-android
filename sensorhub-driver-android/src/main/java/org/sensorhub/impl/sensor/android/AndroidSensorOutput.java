@@ -48,7 +48,7 @@ public abstract class AndroidSensorOutput extends AbstractSensorOutput<AndroidSe
     
     protected AndroidSensorOutput(AndroidSensorsDriver parentModule, SensorManager aSensorManager, Sensor aSensor)
     {
-        super(parentModule);
+        super(aSensor.getName().replaceAll(" ", "_") + "_data", parentModule);
         this.sensorManager = aSensorManager;
         this.sensor = aSensor;
         this.name = sensor.getName().replaceAll(" ", "_") + "_data";

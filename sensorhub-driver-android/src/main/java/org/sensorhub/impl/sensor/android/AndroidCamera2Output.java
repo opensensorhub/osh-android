@@ -14,24 +14,13 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.android;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.DataComponent;
-import net.opengis.swe.v20.DataEncoding;
-import net.opengis.swe.v20.DataStream;
-import org.sensorhub.api.sensor.SensorDataEvent;
-import org.sensorhub.api.sensor.SensorException;
-import org.sensorhub.impl.sensor.AbstractSensorOutput;
-import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
-import org.vast.data.AbstractDataBlock;
-import org.vast.data.DataBlockMixed;
+import android.annotation.SuppressLint;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureFailure;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureRequest.Builder;
@@ -43,6 +32,21 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.view.Surface;
 import android.view.SurfaceHolder;
+
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
+import net.opengis.swe.v20.DataEncoding;
+import net.opengis.swe.v20.DataStream;
+
+import org.sensorhub.api.data.DataEvent;
+import org.sensorhub.api.sensor.SensorException;
+import org.sensorhub.impl.sensor.AbstractSensorOutput;
+import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
+import org.vast.data.AbstractDataBlock;
+import org.vast.data.DataBlockMixed;
+
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 
 /**
@@ -82,7 +86,7 @@ public class AndroidCamera2Output extends AbstractSensorOutput<AndroidSensorsDri
     
     protected AndroidCamera2Output(AndroidSensorsDriver parentModule, CameraManager camManager, String cameraId, SurfaceHolder previewSurfaceHolder)
     {
-        super(parentModule);
+        super("camera" + cameraId + "_data", parentModule);
         this.camManager = camManager;
         this.cameraId = cameraId;
         this.name = "camera" + cameraId + "_data";
@@ -97,6 +101,7 @@ public class AndroidCamera2Output extends AbstractSensorOutput<AndroidSensorsDri
     }
     
     
+    @SuppressLint("MissingPermission")
     @Override
     public void start(Handler eventHandler) throws SensorException
     {
@@ -366,7 +371,7 @@ public class AndroidCamera2Output extends AbstractSensorOutput<AndroidSensorsDri
                 // send event
                 latestRecord = newRecord;
                 latestRecordTime = System.currentTimeMillis();
-                eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, AndroidCamera2Output.this, latestRecord));                
+                eventHandler.publish(new DataEvent(latestRecordTime, AndroidCamera2Output.this, latestRecord));
             }
         };
         

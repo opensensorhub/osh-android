@@ -1,27 +1,21 @@
 /***************************** BEGIN LICENSE BLOCK ***************************
 
-The contents of this file are subject to the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one
-at http://mozilla.org/MPL/2.0/.
+ The contents of this file are subject to the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one
+ at http://mozilla.org/MPL/2.0/.
 
-Software distributed under the License is distributed on an "AS IS" basis,
-WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-for the specific language governing rights and limitations under the License.
- 
-Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
- 
-******************************* END LICENSE BLOCK ***************************/
+ Software distributed under the License is distributed on an "AS IS" basis,
+ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ for the specific language governing rights and limitations under the License.
+
+ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
+ ******************************* END LICENSE BLOCK ***************************/
 
 package org.sensorhub.impl.sensor.android.audio;
 
-import android.graphics.ImageFormat;
-import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
-import android.hardware.Camera.Parameters;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaCodec;
@@ -29,7 +23,6 @@ import android.media.MediaCodec.BufferInfo;
 import android.media.MediaRecorder;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
 
 import net.opengis.swe.v20.BinaryBlock;
 import net.opengis.swe.v20.BinaryComponent;
@@ -39,19 +32,13 @@ import net.opengis.swe.v20.ByteOrder;
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
-import net.opengis.swe.v20.DataRecord;
-import net.opengis.swe.v20.DataStream;
 import net.opengis.swe.v20.DataType;
-import net.opengis.swe.v20.Quantity;
 
-import org.sensorhub.algo.vecmath.Vect3d;
-import org.sensorhub.api.sensor.SensorDataEvent;
+import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
 import org.sensorhub.impl.sensor.android.IAndroidOutput;
-import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
-import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vast.cdm.common.CDMException;
@@ -59,11 +46,8 @@ import org.vast.data.AbstractDataBlock;
 import org.vast.data.DataBlockMixed;
 import org.vast.swe.SWEConstants;
 import org.vast.swe.SWEHelper;
-import org.vast.swe.helper.GeoPosHelper;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.List;
 
 
 /**
@@ -76,8 +60,7 @@ import java.util.List;
  * @since Mar 22, 2021
  */
 @SuppressWarnings("deprecation")
-public abstract class AndroidAudioOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput
-{
+public abstract class AndroidAudioOutput extends AbstractSensorOutput<AndroidSensorsDriver> implements IAndroidOutput {
     // keep logger name short because in LogCat it's max 23 chars
     static final Logger log = LoggerFactory.getLogger(AndroidAudioOutput.class.getSimpleName());
 
@@ -106,8 +89,7 @@ public abstract class AndroidAudioOutput extends AbstractSensorOutput<AndroidSen
     protected abstract void addPacketHeader(byte[] packet, int packetLen);
 
 
-    protected AndroidAudioOutput(AndroidSensorsDriver parentModule, String name) throws SensorException
-    {
+    protected AndroidAudioOutput(AndroidSensorsDriver parentModule, String name) throws SensorException {
         super(name, parentModule);
 
         // init audio recorder and codec
@@ -117,32 +99,31 @@ public abstract class AndroidAudioOutput extends AbstractSensorOutput<AndroidSen
     }
 
 
-    protected void initOutputStructure()
-    {
+    protected void initOutputStructure() {
         // create SWE Common data structure and encoding
         SWEHelper swe = new SWEHelper();
         String numSamplesId = "NUM_SAMPLES";
         dataStruct = swe.createRecord()
-            .name(getName())
-            .definition(SWEHelper.getPropertyUri("AudioFrame"))
-            .addField("time", swe.createTime().asPhenomenonTimeIsoUTC().build())
-            .addField("sampleRate", swe.createQuantity()
-                .label("Sample Rate")
-                .description("Number of audio samples per second")
-                .definition(SWEHelper.getQudtUri("DataRate"))
-                .uomCode("Hz"))
-            .addField("numSamples", swe.createCount()
-                .id(numSamplesId)
-                .label("Num Samples")
-                .description("Number of audio samples packaged in this record"))
-            .addField("samples", swe.createArray()
-                .withVariableSize(numSamplesId)
-                .withElement("sample", swe.createCount()
-                    .label("Audio Sample")
-                    .definition(SWEConstants.DEF_DN)
-                    .dataType(DataType.SHORT))
-                .build())
-            .build();
+                .name(getName())
+                .definition(SWEHelper.getPropertyUri("AudioFrame"))
+                .addField("time", swe.createTime().asPhenomenonTimeIsoUTC().build())
+                .addField("sampleRate", swe.createQuantity()
+                        .label("Sample Rate")
+                        .description("Number of audio samples per second")
+                        .definition(SWEHelper.getQudtUri("DataRate"))
+                        .uomCode("Hz"))
+                .addField("numSamples", swe.createCount()
+                        .id(numSamplesId)
+                        .label("Num Samples")
+                        .description("Number of audio samples packaged in this record"))
+                .addField("samples", swe.createArray()
+                        .withVariableSize(numSamplesId)
+                        .withElement("sample", swe.createCount()
+                                .label("Audio Sample")
+                                .definition(SWEConstants.DEF_DN)
+                                .dataType(DataType.SHORT))
+                        .build())
+                .build();
 
         //////////////////////////
         // binary encoding spec //
@@ -176,39 +157,37 @@ public abstract class AndroidAudioOutput extends AbstractSensorOutput<AndroidSen
         compressedBlock.setCompression(getCodecName());
         dataEnc.addMemberAsBlock(compressedBlock);
 
-        try
-        {
+        try {
             SWEHelper.assignBinaryEncoding(dataStruct, dataEnc);
-        }
-        catch (CDMException e)
-        {
+        } catch (CDMException e) {
             throw new RuntimeException("Invalid binary encoding configuration", e);
-        };
+        }
+        ;
 
         this.dataEncoding = dataEnc;
     }
 
 
-    protected void initAudio() throws SensorException
-    {
+    @SuppressLint("MissingPermission")
+    protected void initAudio() throws SensorException {
         AudioEncoderConfig audioConfig = parentSensor.getConfiguration().audioConfig;
         sampleRateHz = audioConfig.sampleRate;
         bitrate = audioConfig.bitRate * 1000;
 
         if (numSamplesPerRecord <= 0)
-            numSamplesPerRecord = (int)(sampleRateHz/10);
+            numSamplesPerRecord = (int) (sampleRateHz / 10);
         bytesPerSample = (pcmEncoding == AudioFormat.ENCODING_PCM_8BIT) ? 1 : 2;
-        bytesPerRecord = numSamplesPerRecord*bytesPerSample;
+        bytesPerRecord = numSamplesPerRecord * bytesPerSample;
 
         // create audio recorder object
         // we use an internal buffer twice as big as the read buffer
         // so we have time to compress a chunk while we're recording the next one
         audioRecord = new AudioRecord(
-            MediaRecorder.AudioSource.MIC,
-            sampleRateHz,
-            AudioFormat.CHANNEL_IN_MONO,
-            pcmEncoding,
-            bytesPerRecord*2);
+                MediaRecorder.AudioSource.MIC,
+                sampleRateHz,
+                AudioFormat.CHANNEL_IN_MONO,
+                pcmEncoding,
+                bytesPerRecord * 2);
     }
 
 
@@ -326,7 +305,7 @@ public abstract class AndroidAudioOutput extends AbstractSensorOutput<AndroidSen
         // send event
         latestRecord = newRecord;
         latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, latestRecord));
+        eventHandler.publish(new DataEvent(latestRecordTime, this, latestRecord));
     }
 
 

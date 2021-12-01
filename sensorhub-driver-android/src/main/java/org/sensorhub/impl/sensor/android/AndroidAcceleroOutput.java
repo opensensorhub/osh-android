@@ -14,13 +14,15 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.android;
 
-import net.opengis.swe.v20.DataBlock;
-import org.sensorhub.api.sensor.SensorDataEvent;
-import org.vast.swe.helper.GeoPosHelper;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+
+import net.opengis.swe.v20.DataBlock;
+
+import org.sensorhub.api.data.DataEvent;
+import org.vast.swe.helper.GeoPosHelper;
 
 
 /**
@@ -71,6 +73,6 @@ public class AndroidAcceleroOutput extends AndroidSensorOutput implements Sensor
         // update latest record and send event
         latestRecord = dataBlock;
         latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, dataBlock));
+        eventHandler.publish(new DataEvent(latestRecordTime, this, dataBlock));
     }    
 }

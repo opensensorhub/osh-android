@@ -14,14 +14,17 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.android;
 
-import java.util.List;
-import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.DataComponent;
-import org.sensorhub.api.common.CommandStatus;
-import org.sensorhub.api.sensor.SensorException;
-import org.sensorhub.impl.sensor.AbstractSensorControl;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.DataComponent;
+
+import org.sensorhub.api.command.CommandAck;
+import org.sensorhub.api.sensor.SensorException;
+import org.sensorhub.impl.sensor.AbstractSensorControl;
+
+import java.util.List;
 
 
 /**
@@ -40,7 +43,7 @@ public class AndroidSensorControl extends AbstractSensorControl<AndroidSensorsDr
     
     protected AndroidSensorControl(AndroidSensorsDriver parentModule, SensorManager aSensorManager, Sensor aSensor)
     {
-        super(parentModule);
+        super(aSensor.getName()+"_control", parentModule);
         this.aSensorManager = aSensorManager;
         this.aSensor = aSensor;
     }
@@ -61,19 +64,20 @@ public class AndroidSensorControl extends AbstractSensorControl<AndroidSensorsDr
     }
 
 
-    @Override
-    public CommandStatus execCommand(DataBlock command) throws SensorException
+    //TODO: Check that these are the correct types
+    /*@Override
+    public boolean execCommand(DataBlock command) throws SensorException
     {
         // TODO Auto-generated method stub
         return null;
-    }
+    }*/
 
 
-    @Override
-    public CommandStatus execCommandGroup(List<DataBlock> commands) throws SensorException
+    /*@Override
+    public CommandAck execCommandGroup(List<DataBlock> commands) throws SensorException
     {
         // TODO Auto-generated method stub
         return null;
-    }
+    }*/
 
 }
