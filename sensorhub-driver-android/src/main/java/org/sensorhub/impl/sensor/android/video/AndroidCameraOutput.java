@@ -39,12 +39,11 @@ import net.opengis.swe.v20.DataType;
 import net.opengis.swe.v20.Quantity;
 
 import org.sensorhub.algo.vecmath.Vect3d;
-import org.sensorhub.api.sensor.SensorDataEvent;
+import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
 import org.sensorhub.impl.sensor.android.IAndroidOutput;
-import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig.VideoPreset;
 import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,7 +127,8 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         dataStruct.setDefinition("http://sensorml.com/ont/swe/property/VideoFrame");
 
         // add video roll component if enabled and gravity sensor is available
-        if (getParentModule().getConfiguration().outputVideoRoll)
+//        if (getParentModule().getConfiguration().outputVideoRoll)
+        if (getParentProducer().getConfiguration().outputVideoRoll)
         {
             List<Sensor> gravitySensors = sensorManager.getSensorList(Sensor.TYPE_GRAVITY);
             if (!gravitySensors.isEmpty()) {
@@ -136,7 +136,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
 
                 Quantity roll = fac.createQuantity()
                     .name("videoRoll")
-                    .definition(GeoPosHelper.DEF_ROLL)
+                    .definition(GeoPosHelper.DEF_ROLL_ANGLE)
                     .label("Video Roll Angle")
                     .uomCode("deg")
                     .build();
@@ -398,7 +398,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         // send event
         latestRecord = newRecord;
         latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, AndroidCameraOutput.this, latestRecord));
+        eventHandler.publish(new DataEvent(latestRecordTime, AndroidCameraOutput.this, latestRecord));
     }
 
 
