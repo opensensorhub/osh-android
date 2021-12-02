@@ -14,29 +14,28 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.android;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-
+import android.app.Service;
 import android.content.Context;
-import android.graphics.PixelFormat;
+import android.content.Intent;
 import android.graphics.SurfaceTexture;
-import android.os.*;
+import android.os.Binder;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.IBinder;
 import android.os.Process;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.SurfaceView;
-import android.view.WindowManager;
-import org.sensorhub.api.common.IEventListener;
-import org.sensorhub.api.common.SensorHubException;
+
+import org.sensorhub.api.event.IEventListener;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
-import org.sensorhub.impl.common.EventBus;
+import org.sensorhub.impl.event.EventBus;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.service.HttpServer;
 import org.vast.xml.XMLImplFinder;
-import android.app.Service;
-import android.content.Intent;
+
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilderFactory;
 
 
 /**
@@ -56,6 +55,7 @@ public class SensorHubService extends Service
     boolean hasVideo;
     static Context context;
     static SurfaceTexture videoTex;
+    String serverId;
 
 
     public class LocalBinder extends Binder
@@ -110,13 +110,28 @@ public class SensorHubService extends Service
         this.hasVideo = hasVideo;
 
         msgHandler.post(new Runnable() {
-            public void run()
-            {
+
+            // TODO: Make sure this isn't breaking anything - Do we need to register a listener or should it subscribe now?
+            public void run() {
                 // create and start sensorhub instance
-                EventBus eventBus = new EventBus();
-                ModuleRegistry reg = new ModuleRegistry(config, eventBus);
-                reg.registerListener(listener);
-                sensorhub = SensorHub.createInstance(new SensorHubConfig(), reg, eventBus);
+                // EventBus eventBus = new EventBus();
+                EventBus eventBus;
+                // ModuleRegistry reg = new ModuleRegistry(config, eventBus);
+                ModuleRegistry reg;
+
+                // reg.registerListener(listener);
+                // sensorhub = SensorHub.createInstance(new SensorHubConfig(), reg, eventBus);
+                sensorhub = new SensorHub(new SensorHubConfig());
+                eventBus = (EventBus) sensorhub.getEventBus();
+                reg = (ModuleRegistry) sensorhub.getModuleRegistry();
+                // TODO: is this a reasonable way to get the server module?
+                List<ModuleConfig> modules = (List<ModuleConfig>)reg.getAvailableModules();
+                for(ModuleConfig cfg : modules){
+                    if(cfg.moduleClass == "HTTPServer"){
+                        serverId = cfg.id;
+                    }
+                }
+
                 sensorhub.start();
             }
         });
@@ -133,17 +148,18 @@ public class SensorHubService extends Service
         msgHandler.post(new Runnable() {
             public void run() {
                 sensorhub.stop();
-                SensorHub.clearInstance();
                 sensorhub = null;
 
-                // Make sure the server gets cleaned up
+               /* // Make sure the server gets cleaned up
                 try {
-                    if (HttpServer.getInstance() != null) {
-                        HttpServer.getInstance().cleanup();
+                    // Check modules for an HTTPServer
+                    ModuleRegistry reg = sensorhub.getModuleRegistry();
+                    if (serverId != null) {
+                        reg.stopModule(serverId);
                     }
                 } catch (SensorHubException e) {
                     e.printStackTrace();
-                }
+                }*/
             }
         });
     }    
