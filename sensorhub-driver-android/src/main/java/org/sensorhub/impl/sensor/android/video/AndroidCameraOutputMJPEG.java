@@ -13,32 +13,17 @@
 
 package org.sensorhub.impl.sensor.android.video;
 
-import java.io.ByteArrayOutputStream;
-
-import android.graphics.SurfaceTexture;
-import android.os.Handler;
-
-import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.DataComponent;
-import net.opengis.swe.v20.DataEncoding;
-import net.opengis.swe.v20.DataStream;
-
-import org.sensorhub.api.sensor.SensorDataEvent;
-import org.sensorhub.api.sensor.SensorException;
-import org.sensorhub.impl.sensor.AbstractSensorOutput;
-import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
-import org.sensorhub.impl.sensor.android.IAndroidOutput;
-import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
-import org.vast.data.AbstractDataBlock;
-import org.vast.data.DataBlockMixed;
-
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
+import android.graphics.SurfaceTexture;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
-import android.hardware.Camera.Parameters;
-import android.os.Looper;
 import android.os.SystemClock;
+
+import org.sensorhub.api.sensor.SensorException;
+import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
+
+import java.io.ByteArrayOutputStream;
 
 
 /**
