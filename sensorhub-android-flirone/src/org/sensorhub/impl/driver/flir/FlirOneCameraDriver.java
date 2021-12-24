@@ -119,7 +119,7 @@ public class FlirOneCameraDriver extends AbstractSensorModule<FlirOneCameraConfi
     }
     
     
-    @Override
+//    @Override
     public AbstractFeature getCurrentFeatureOfInterest()
     {
         if (config.runName != null && config.runName.length() > 0)
