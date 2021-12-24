@@ -64,7 +64,8 @@ public class SOSServiceWithIPC extends SOSService
 
             ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
             request.setResponseStream(responseStream);
-            servlet.handleRequest(request);
+            // TODO: determine why this error appears when trying to call handle request
+//            servlet.handleRequest(request);
 
             /**
              * request are small usually, but responses can be really large. There is a limit to the size of response

@@ -54,10 +54,11 @@ import org.sensorhub.android.comm.BluetoothCommProvider;
 import org.sensorhub.android.comm.BluetoothCommProviderConfig;
 import org.sensorhub.android.comm.ble.BleConfig;
 import org.sensorhub.android.comm.ble.BleNetwork;
-import org.sensorhub.api.event.Event;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.data.IStreamingDataInterface;
+import org.sensorhub.api.event.Event;
 import org.sensorhub.api.event.IEventListener;
+import org.sensorhub.api.event.ISubscriptionBuilder;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleConfig;
@@ -66,12 +67,13 @@ import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
-//import org.sensorhub.impl.driver.flir.FlirOneCameraConfig;
+import org.sensorhub.impl.event.EventBus;
 import org.sensorhub.impl.module.InMemoryConfigDb;
+import org.sensorhub.impl.module.ModuleClassFinder;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.persistence.GenericStreamStorage;
-import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
-import org.sensorhub.impl.persistence.StreamStorageConfig;
+//import org.sensorhub.impl.persistence.GenericStreamStorage;
+//import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
+//import org.sensorhub.impl.persistence.StreamStorageConfig;
 import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
@@ -79,14 +81,14 @@ import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
 import org.sensorhub.impl.sensor.android.audio.AudioEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig.VideoPreset;
-import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
-import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
-import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
+//import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
+//import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
+//import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
-import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
-import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
+//import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
+//import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
 
 import java.io.File;
 import java.io.IOException;
@@ -169,7 +171,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     protected void updateConfig(SharedPreferences prefs, String runName)
     {
         deviceID = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
-        sensorhubConfig = new InMemoryConfigDb();
+        sensorhubConfig = new InMemoryConfigDb(new ModuleClassFinder());
 
         // get SOS URL from config
         String sosUriConfig = prefs.getString("sos_uri", "http://127.0.0.1:8585");
@@ -336,18 +338,24 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             basicStorageConfig.moduleClass = "org.sensorhub.impl.persistence.h2.MVObsStorageImpl";
             basicStorageConfig.storagePath = dbFile.getAbsolutePath() + "/${STORAGE_ID}.dat";
             basicStorageConfig.autoStart = true;
-            sosConfig.newStorageConfig = basicStorageConfig;
+//            sosConfig.newStorageConfig = basicStorageConfig;
 
-            StreamStorageConfig androidStreamStorageConfig = createStreamStorageConfig(androidSensorsConfig);
-            addStorageConfig(androidSensorsConfig, androidStreamStorageConfig);
+//            StreamStorageConfig androidStreamStorageConfig = createStreamStorageConfig(androidSensorsConfig);
+//            addStorageConfig(androidSensorsConfig, androidStreamStorageConfig);
+
+           /* File dbFile = new File(getApplicationContext().getFilesDir() + "/db/");
+            dbFile.mkdirs();
+
+            MVStorageConfig storageConfig = new MVStorageConfig();
+            storageConfig.setStorageIdentifier("OSH_CONNECT_OBS");*/
         }
 
-        SensorDataProviderConfig androidDataProviderConfig = createDataProviderConfig(androidSensorsConfig);
-        addSosServerConfig(sosConfig, androidDataProviderConfig);
+//        SensorDataProviderConfig androidDataProviderConfig = createDataProviderConfig(androidSensorsConfig);
+//        addSosServerConfig(sosConfig, androidDataProviderConfig);
         // END SOS CONFIG **************************************************************************
 
         // TruPulse sensor
-        boolean enabled = prefs.getBoolean("trupulse_enabled", false);
+       /* boolean enabled = prefs.getBoolean("trupulse_enabled", false);
         if (enabled)
         {
             TruPulseConfig trupulseConfig = new TruPulseConfig();
@@ -386,10 +394,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             trupulseConfig.commSettings = btConf;
             sensorhubConfig.add(trupulseConfig);
             addSosTConfig(trupulseConfig, sosUser, sosPwd);
-        }
+        }*/
 
         // AngelSensor
-        enabled = prefs.getBoolean("angel_enabled", false);
+        /*enabled = prefs.getBoolean("angel_enabled", false);
         if (enabled)
         {
             BleConfig bleConf = new BleConfig();
@@ -424,7 +432,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             showVideo = true;
             sensorhubConfig.add(flironeConfig);
             addSosTConfig(flironeConfig, sosUser, sosPwd);
-        }
+        }*/
 
         // DJI Drone
         /*enabled = prefs.getBoolean("dji_enabled", false);
@@ -455,7 +463,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.id = sensorConf.id + "_SOST";
         sosConfig.name = sensorConf.name.replaceAll("\\[.*\\]", "");// + "SOS-T Client";
         sosConfig.autoStart = true;
-        sosConfig.dataSourceID = sensorConf.id;
         sosConfig.sos.remoteHost = sosUrl.getHost();
         sosConfig.sos.remotePort = sosUrl.getPort() < 0 ? sosUrl.getDefaultPort() : sosUrl.getPort();
         sosConfig.sos.resourcePath = sosUrl.getPath();
@@ -767,7 +774,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // first display error messages if any
         for (SOSTClient client: sostClients)
         {
-            Map<IStreamingDataInterface, StreamInfo> dataStreams = client.getDataStreams();
+            Map<String, StreamInfo> dataStreams = client.getDataStreams();
             boolean showError = (client.getCurrentError() != null);
             boolean showMsg = (dataStreams.size() == 0) && (client.getStatusMessage() != null);
             
@@ -794,12 +801,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         mainInfoText.append("<p>");
         for (SOSTClient client: sostClients)
         {
-            Map<IStreamingDataInterface, StreamInfo> dataStreams = client.getDataStreams();
+            Map<String, StreamInfo> dataStreams = client.getDataStreams();
             long now = System.currentTimeMillis();
             
-            for (Entry<IStreamingDataInterface, StreamInfo> stream : dataStreams.entrySet())
+            for (Entry<String, StreamInfo> stream : dataStreams.entrySet())
             {
-                mainInfoText.append("<b>" + stream.getKey().getName() + " : </b>");
+                mainInfoText.append("<b>" + stream.getKey() + " : </b>");
 
                 long lastEventTime = stream.getValue().lastEventTime;
                 long dt = now - lastEventTime;
@@ -871,14 +878,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             }
         });
     }
-    
-    
-    protected void startListeningForEvents()
-    {
+
+
+    protected void startListeningForEvents() {
         if (boundService == null || boundService.getSensorHub() == null)
             return;
-        
-        boundService.getSensorHub().getModuleRegistry().registerListener(this);
+
+        // TODO: Implement a listener that can sub to the status of the hub
+//        boundService.getSensorHub().getModuleRegistry().registerListener(this);
+
     }
     
     
@@ -887,7 +895,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if (boundService == null || boundService.getSensorHub() == null)
             return;
 
-        boundService.getSensorHub().getModuleRegistry().unregisterListener(this);
+        // TODO: Unsub the listener here
+//        boundService.getSensorHub().getModuleRegistry().unregisterListener(this);
     }
 
 
@@ -947,20 +956,27 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         return false;
     }
 
-    private SensorDataProviderConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig) {
+//    private SensorDataProviderConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig) {
+    private SensorConfig createDataProviderConfig(AndroidSensorsConfig sensorConfig) {
         Context androidContext = SensorHubService.getContext();
-        SensorDataProviderConfig dataProviderConfig = new SensorDataProviderConfig();
-        dataProviderConfig.sensorID = sensorConfig.id;
-        dataProviderConfig.offeringID = "urn:android:device:" + Secure.getString(androidContext.getContentResolver(), Secure.ANDROID_ID);
-        dataProviderConfig.storageID = sensorConfig.id + "#storage";
-        dataProviderConfig.enabled = true;
-        dataProviderConfig.liveDataTimeout = 600.0;
-        dataProviderConfig.maxFois = 10;
+        SensorConfig dataProviderConfig = new SensorConfig();
+//        dataProviderConfig.sensorID = sensorConfig.id;
+//        dataProviderConfig.offeringID = "urn:android:device:" + Secure.getString(androidContext.getContentResolver(), Secure.ANDROID_ID);
+//        dataProviderConfig.storageID = sensorConfig.id + "#storage";
+//        dataProviderConfig.enabled = true;
+//        dataProviderConfig.liveDataTimeout = 600.0;
+//        dataProviderConfig.maxFois = 10;
+
+        dataProviderConfig.id = sensorConfig.id;
+        dataProviderConfig.name = sensorConfig.name;
+        dataProviderConfig.moduleClass = sensorConfig.moduleClass;
+        dataProviderConfig.description = sensorConfig.description;
 
         return dataProviderConfig;
     }
 
-    private StreamStorageConfig createStreamStorageConfig(AndroidSensorsConfig sensorConfig) {
+    // TODO: we might not need to configure the storage in the same way
+    /*private StreamStorageConfig createStreamStorageConfig(AndroidSensorsConfig sensorConfig) {
         // H2 Storage Config
         File dbFile = new File(getApplicationContext().getFilesDir() + "/db/", deviceID + "_h2.dat");
         dbFile.getParentFile().mkdirs();
@@ -997,9 +1013,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         streamStorageConfig.autoPurgeConfig = autoPurgeConfig;
         streamStorageConfig.storageConfig = storageConfig;
         return streamStorageConfig;
-    }
+    }*/
 
-    protected void addStorageConfig(SensorConfig sensorConf, StreamStorageConfig storageConf) {
+    // TODO: we may not have to go through this process to add the storage config
+    /*protected void addStorageConfig(SensorConfig sensorConf, StreamStorageConfig storageConf) {
         if (sensorConf instanceof AndroidSensorsConfig) {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
             SensorManager sensorManager = (SensorManager) getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
@@ -1120,9 +1137,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
 
         sensorhubConfig.add(storageConf);
-    }
+    }*/
 
-    protected void addSosServerConfig(SOSServiceConfig sosConf, SensorDataProviderConfig dataProviderConf) {
+    // TODO: This may not be added the same way in v2
+    /*protected void addSosServerConfig(SOSServiceConfig sosConf, SensorDataProviderConfig dataProviderConf) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         SensorManager sensorManager = (SensorManager) getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
@@ -1249,8 +1267,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 //        }
 
         sosConf.dataProviders.add(dataProviderConf);
-    }
+    }*/
 
+    // TODO: This may not be be the same in v2
     private SensorConfig createSensorConfig(Sensors sensor) {
         SensorConfig sensorConfig;
 
