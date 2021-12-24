@@ -1,15 +1,12 @@
 package org.sensorhub.impl.sensor.blebeacon;
 
-import android.content.Intent;
-import android.util.Log;
-
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.Vector;
 
 import org.altbeacon.beacon.Beacon;
-import org.sensorhub.api.sensor.SensorDataEvent;
+import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.vast.swe.helper.GeoPosHelper;
 
@@ -26,7 +23,7 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
 
 
     protected BLEBeaconLocationOutput(BLEBeaconDriver parentModule) {
-        super(parentModule);
+        super(parentModule.getName() + " Location", parentModule);
         this.name = parentModule.getName() + " Location";
 
         // output structure (time + location)
@@ -137,6 +134,6 @@ public class BLEBeaconLocationOutput extends AbstractSensorOutput<BLEBeaconDrive
 
         // update latest record and send event
         latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, BLEBeaconLocationOutput.this, dataBlock));
+        eventHandler.publish(new DataEvent(latestRecordTime, BLEBeaconLocationOutput.this, dataBlock));
     }
 }

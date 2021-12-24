@@ -1,5 +1,12 @@
 apply plugin: 'com.android.library'
 
+repositories{
+    mavenCentral()
+    flatDir {
+        dirs 'src/libs'
+    }
+}
+
 android {
     compileSdkVersion 28
 
@@ -31,8 +38,11 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation project(path: ':sensorhub-core')
-    implementation 'org.altbeacon:android-beacon-library:2.16.2'
+//    implementation 'org.altbeacon:android-beacon-library:2.16.2'
+//    implementation 'org.altbeacon:android-beacon-library:2.13.1'
     implementation project(path: ':sensorhub-process-vecmath')
 //    implementation project(path: ':sensorhub-process-geoloc')
-    implementation 'com.android.volley:volley:1.1.1'
+    implementation 'com.android.volley:volley:1.2.1'
+
+    implementation(name: 'android-beacon-library-2.16.4', ext:'aar')
 }

@@ -27,11 +27,11 @@ import org.altbeacon.beacon.utils.UrlBeaconUrlCompressor;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.sensorhub.algo.geoloc.GeoTransforms;
+//import org.sensorhub.algo.geoloc.GeoTransforms;
 import org.sensorhub.algo.vecmath.Mat3d;
 import org.sensorhub.algo.vecmath.Vect3d;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.sensor.ISensorDataInterface;
+//import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,9 +186,9 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         mBeaconManager.unbind(this);
     }
 
-    protected void useSensor(ISensorDataInterface output, Sensor sensor) {
-        addOutput(output, false);
-    }
+//    protected void useSensor(ISensorDataInterface output, Sensor sensor) {
+//        addOutput(output, false);
+//    }
 
     @Override
     public boolean isConnected() {
@@ -250,7 +250,8 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
 
             checkForOldBeacons();
             Beacon[] bArr = beaconMap.values().toArray(new Beacon[0]);
-            double[] estimatedLocation = determineLocation();
+//            double[] estimatedLocation = determineLocation();
+            double[] estimatedLocation = {0,0,0};
             if (estimatedLocation.length != 0) {
                 locOutput.sendMeasurement(estimatedLocation, bArr);   // Put better checks in place after testing}
             }
@@ -258,7 +259,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
         }
     }
 
-    private double[] determineLocation() {
+    /*private double[] determineLocation() {
         double[] distances = new double[3];
         Vect3d[] locations = new Vect3d[3];
         double[][] locationArr = new double[3][3];
@@ -319,7 +320,7 @@ public class BLEBeaconDriver extends AbstractSensorModule<BLEBeaconConfig> imple
 
         }
         return new double[]{}; // Todo: add better handling of this case
-    }
+    }*/
 
     private Vect3d MatrixVectorProduct(Mat3d mat, Vect3d vec) {
         Vect3d resultVector = new Vect3d();

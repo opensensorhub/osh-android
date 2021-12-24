@@ -8,7 +8,7 @@ import net.opengis.swe.v20.DataEncoding;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
-import org.sensorhub.api.sensor.SensorDataEvent;
+import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.vast.swe.SWEHelper;
 
@@ -28,7 +28,7 @@ public class BLEBeaconRawOutput extends AbstractSensorOutput<BLEBeaconDriver>{
 
 
     protected BLEBeaconRawOutput(BLEBeaconDriver parent) {
-        super(parent);
+        super("BLE Beacon Raw Data", parent);
 
         // create output structure
         SWEHelper fac = new SWEHelper();
@@ -113,6 +113,6 @@ public class BLEBeaconRawOutput extends AbstractSensorOutput<BLEBeaconDriver>{
 
         // Push the data
         latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, BLEBeaconRawOutput.this, dataBlock));
+        eventHandler.publish(new DataEvent(latestRecordTime, BLEBeaconRawOutput.this, dataBlock));
     }
 }
