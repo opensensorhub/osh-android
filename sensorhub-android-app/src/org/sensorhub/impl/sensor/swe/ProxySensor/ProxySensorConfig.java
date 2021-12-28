@@ -1,4 +1,4 @@
-package org.sensorhub.impl.swe.proxysensor;
+package org.sensorhub.impl.sensor.swe.ProxySensor;
 
 import android.content.Context;
 

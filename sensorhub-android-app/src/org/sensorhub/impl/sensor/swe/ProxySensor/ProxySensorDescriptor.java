@@ -1,4 +1,4 @@
-package org.sensorhub.impl.swe.proxysensor;
+package org.sensorhub.impl.sensor.swe.ProxySensor;
 
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleProvider;

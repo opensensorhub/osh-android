@@ -1,4 +1,4 @@
-package org.sensorhub.impl.swe.proxysensor;
+package org.sensorhub.impl.sensor.swe.ProxySensor;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -6,26 +6,16 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
-import org.sensorhub.android.SOSServiceWithIPCConfig;
-import org.sensorhub.api.sensor.ISensorDataInterface;
-import org.sensorhub.impl.sensor.swe.SWEVirtualSensor;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import net.opengis.gml.v32.AbstractFeature;
 import net.opengis.sensorml.v20.AbstractPhysicalProcess;
 import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.DataChoice;
 import net.opengis.swe.v20.DataComponent;
 
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.impl.client.sos.SOSClient;
 import org.sensorhub.impl.client.sos.SOSClient.SOSRecordListener;
 import org.sensorhub.impl.client.sps.SPSClient;
-import org.sensorhub.impl.sensor.AbstractSensorModule;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
+import org.sensorhub.impl.sensor.swe.SWEVirtualSensor;
 import org.vast.ows.GetCapabilitiesRequest;
 import org.vast.ows.OWSException;
 import org.vast.ows.OWSUtils;
@@ -34,6 +24,11 @@ import org.vast.ows.sos.SOSOfferingCapabilities;
 import org.vast.ows.sos.SOSServiceCapabilities;
 import org.vast.ows.sos.SOSUtils;
 import org.vast.util.TimeExtent;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProxySensor extends SWEVirtualSensor {
     //    protected static final Logger log = LoggerFactory.getLogger(ProxySensor.class);
@@ -86,16 +81,17 @@ public class ProxySensor extends SWEVirtualSensor {
         OWSUtils owsUtils = new OWSUtils();
 
         // create SOS clients, to be started by a different event
-        if (config.sosEndpointUrl != null) {
+        if (config.sosEndpoint != null) {
             // find matching offering(s) for sensor UID
             SOSServiceCapabilities caps = null;
             try {
                 GetCapabilitiesRequest getCap = new GetCapabilitiesRequest();
                 getCap.setService(SOSUtils.SOS);
                 getCap.setVersion(SOS_VERSION);
-                getCap.setGetServer(config.sosEndpointUrl);
+                // TODO: Verify that this is giving us a complete url
+                getCap.setGetServer(config.sosEndpoint.resourcePath);
                 caps = owsUtils.<SOSServiceCapabilities>sendRequest(getCap, false);
-            } catch (OWSException e) {
+            } catch (OWSException | IOException e) {
                 throw new SensorHubException("Cannot retrieve SOS capabilities", e);
             }
 
@@ -110,11 +106,12 @@ public class ProxySensor extends SWEVirtualSensor {
                         if (offering.getObservableProperties().contains(obsProp)) {
                             // create data request
                             GetResultRequest req = new GetResultRequest();
-                            req.setGetServer(config.sosEndpointUrl);
+                            // TODO: same as above, verify URL
+                            req.setGetServer(config.sosEndpoint.resourcePath);
                             req.setVersion(SOS_VERSION);
                             req.setOffering(offeringID);
                             req.getObservables().add(obsProp);
-                            req.setTime(TimeExtent.getPeriodStartingNow(STREAM_END_TIME));
+                            req.setTime(TimeExtent.beginNow(Instant.ofEpochMilli((long)STREAM_END_TIME) ));
                             req.setXmlWrapper(false);
 
                             // create client and retrieve result template
@@ -134,7 +131,7 @@ public class ProxySensor extends SWEVirtualSensor {
                             }
 
                             // create output
-                            final ProxySensorOutput output = new ProxySensorOutput(this, recordDef, sos.getRecommendedEncoding());
+                            final ProxySensorOutput output = new ProxySensorOutput(this, recordDef, sos.getRecommendedEncoding(), sos);
                             this.addOutput(output, false);
 
                             // HACK TO PREVENT GETRESULT TIME ERROR
@@ -153,7 +150,7 @@ public class ProxySensor extends SWEVirtualSensor {
             }
 
             if (sosClients.isEmpty())
-                throw new SensorHubException("Requested observation data is not available from SOS " + config.sosEndpointUrl +
+                throw new SensorHubException("Requested observation data is not available from SOS " + config.sosEndpoint.resourcePath +
                         ". Check Sensor UID and observed properties have valid values.");
         }
 
