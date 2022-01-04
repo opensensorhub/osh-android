@@ -22,6 +22,11 @@ android {
     targetSdkVersion rootProject.targetSdkVersion
   }
 
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_11
+    targetCompatibility JavaVersion.VERSION_11
+  }
+
   lintOptions {
     abortOnError false
   }

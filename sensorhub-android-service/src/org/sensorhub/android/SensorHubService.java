@@ -121,8 +121,12 @@ public class SensorHubService extends Service
 
                 // reg.registerListener(listener);
                 // sensorhub = SensorHub.createInstance(new SensorHubConfig(), reg, eventBus);
-                sensorhub = new SensorHub(new SensorHubConfig());
+//                sensorhub = new SensorHub(new SensorHubConfig());
+                sensorhub = new SensorHubAndroid(new SensorHubConfig());
                 eventBus = (EventBus) sensorhub.getEventBus();
+
+                sensorhub.start();
+
                 reg = (ModuleRegistry) sensorhub.getModuleRegistry();
                 // TODO: is this a reasonable way to get the server module?
                 List<ModuleConfig> modules = (List<ModuleConfig>)reg.getAvailableModules();
@@ -131,8 +135,6 @@ public class SensorHubService extends Service
                         serverId = cfg.id;
                     }
                 }
-
-                sensorhub.start();
             }
         });
     }
