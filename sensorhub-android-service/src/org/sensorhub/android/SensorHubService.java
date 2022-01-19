@@ -51,7 +51,7 @@ public class SensorHubService extends Service
     final IBinder binder = new LocalBinder();
     private HandlerThread msgThread;
     private Handler msgHandler;
-    SensorHub sensorhub;
+    SensorHubAndroid sensorhub;
     boolean hasVideo;
     static Context context;
     static SurfaceTexture videoTex;
@@ -114,27 +114,11 @@ public class SensorHubService extends Service
             // TODO: Make sure this isn't breaking anything - Do we need to register a listener or should it subscribe now?
             public void run() {
                 // create and start sensorhub instance
-                // EventBus eventBus = new EventBus();
-                EventBus eventBus;
-                // ModuleRegistry reg = new ModuleRegistry(config, eventBus);
-                ModuleRegistry reg;
-
-                // reg.registerListener(listener);
-                // sensorhub = SensorHub.createInstance(new SensorHubConfig(), reg, eventBus);
-//                sensorhub = new SensorHub(new SensorHubConfig());
                 sensorhub = new SensorHubAndroid(new SensorHubConfig());
-                eventBus = (EventBus) sensorhub.getEventBus();
 
-                sensorhub.start();
+                ModuleRegistry reg = new ModuleRegistry(sensorhub, config);
 
-                reg = (ModuleRegistry) sensorhub.getModuleRegistry();
-                // TODO: is this a reasonable way to get the server module?
-                List<ModuleConfig> modules = (List<ModuleConfig>)reg.getAvailableModules();
-                for(ModuleConfig cfg : modules){
-                    if(cfg.moduleClass == "HTTPServer"){
-                        serverId = cfg.id;
-                    }
-                }
+                sensorhub.start(reg);
             }
         });
     }

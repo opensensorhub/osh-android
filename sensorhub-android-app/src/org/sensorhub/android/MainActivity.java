@@ -64,6 +64,8 @@ import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.sensor.SensorConfig;
+import org.sensorhub.impl.SensorHub;
+import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
@@ -123,6 +125,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     TextView videoInfoArea;
     SensorHubService boundService;
     IModuleConfigRepository sensorhubConfig;
+    SensorHubConfig shCfg;
     Handler displayHandler;
     Runnable displayCallback;
     StringBuffer mainInfoText = new StringBuffer();
@@ -235,8 +238,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorsConfig.name = "Android Sensors [" + deviceName + "]";
         sensorsConfig.id = "ANDROID_SENSORS";
         sensorsConfig.autoStart = true;
-        //TODO: try adding a few options
-//        sensorsConfig.
 
         sensorsConfig.activateAccelerometer = prefs.getBoolean("accel_enabled", false);
         sensorsConfig.activateGyrometer = prefs.getBoolean("gyro_enabled", false);

@@ -28,7 +28,7 @@ public class SensorHubAndroid extends SensorHub {
         super(config);
     }
 
-    public synchronized void start(){
+    public synchronized void start(ModuleRegistry reg){
         if (!started)
         {
             log.info("*****************************************");
@@ -46,7 +46,8 @@ public class SensorHubAndroid extends SensorHub {
             var configDB = config.getModuleConfigPath() != null ?
                     new ModuleConfigJsonFile(config.getModuleConfigPath(), true, classFinder) :
                     new InMemoryConfigDb(classFinder);
-            this.moduleRegistry = new ModuleRegistry(this, configDB);
+//            this.moduleRegistry = new ModuleRegistry(this, configDB);
+            this.moduleRegistry = reg;
             this.eventBus = new EventBus();
             this.databaseRegistry = new DefaultDatabaseRegistry(this);
             this.driverRegistry = new DefaultSystemRegistry(this, new InMemorySystemStateDbConfig());
