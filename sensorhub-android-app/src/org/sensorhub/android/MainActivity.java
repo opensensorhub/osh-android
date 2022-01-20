@@ -162,6 +162,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         public void onServiceConnected(ComponentName className, IBinder service)
         {
             boundService = ((SensorHubService.LocalBinder) service).getService();
+//            boundService.initSensorhub();
         }
 
         public void onServiceDisconnected(ComponentName className)
@@ -501,6 +502,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         setupBroadcastReceivers();
 
         checkForPermissions();
+
+        // Due to changes with OSH, it may be best to create and start the hub immediately
+        // This allows us access to the module registry created by default
+//        boundService.initSensorhub();
     }
 
 
@@ -1536,4 +1541,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             requestPermissions(permARR, 100);
         }
     }
+
+//    private void addModulesToHub(){
+//        ModuleRegistry reg = boundService.getSensorHub().getModuleRegistry();
+//        List<>
+//        for()
+//    }
 }

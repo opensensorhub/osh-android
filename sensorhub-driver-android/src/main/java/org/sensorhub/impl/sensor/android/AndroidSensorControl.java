@@ -17,14 +17,9 @@ package org.sensorhub.impl.sensor.android;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 
-import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 
-import org.sensorhub.api.command.CommandAck;
-import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorControl;
-
-import java.util.List;
 
 
 /**

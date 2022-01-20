@@ -24,6 +24,7 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Process;
 
+import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.event.IEventListener;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleConfig;
@@ -114,11 +115,15 @@ public class SensorHubService extends Service
             // TODO: Make sure this isn't breaking anything - Do we need to register a listener or should it subscribe now?
             public void run() {
                 // create and start sensorhub instance
-                sensorhub = new SensorHubAndroid(new SensorHubConfig());
+                sensorhub = new SensorHubAndroid(new SensorHubConfig(), config);
 
-                ModuleRegistry reg = new ModuleRegistry(sensorhub, config);
+//                ModuleRegistry reg = new ModuleRegistry(sensorhub, config);
 
-                sensorhub.start(reg);
+                try {
+                    sensorhub.start();
+                } catch (SensorHubException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
