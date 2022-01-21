@@ -69,6 +69,7 @@ import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
+import org.sensorhub.impl.datastore.view.ObsSystemDatabaseViewConfig;
 import org.sensorhub.impl.event.EventBus;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.module.ModuleClassFinder;
@@ -475,6 +476,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.connection.usePersistentConnection = true;
         sosConfig.connection.reconnectAttempts = 9;
         sosConfig.connection.maxQueueSize = 100;
+        sosConfig.dataSourceSelector = new ObsSystemDatabaseViewConfig();
         sensorhubConfig.add(sosConfig);
     }
 
