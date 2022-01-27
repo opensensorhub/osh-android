@@ -302,14 +302,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         // START SOS Config ************************************************************************
 //        if(prefs.getBoolean("hub_enable", true)) {
-        if(shouldServe(prefs)) {
+//        if(shouldServe(prefs)) {
             // Setup HTTPServerConfig for enabling more complete node functionality
             HttpServerConfig serverConfig = new HttpServerConfig();
             serverConfig.proxyBaseUrl = "";
             serverConfig.httpPort = 8585;
             serverConfig.autoStart = true;
             sensorhubConfig.add(serverConfig);
-        }
+//        }
 
         // SOS Config
 //        SOSServiceConfig sosConfig = new SOSServiceWithIPCConfig();
