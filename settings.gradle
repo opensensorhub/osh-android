@@ -18,7 +18,8 @@ def repos = [
         'sensorhub-storage-perst',
 
         'sensorhub-utils-kryo',
-        'sensorhub-datastore-h2'
+        'sensorhub-datastore-h2',
+        'sensorhub-service-sweapi',
     ],
     'osh-addons': [
         'persistence/sensorhub-storage-compat',

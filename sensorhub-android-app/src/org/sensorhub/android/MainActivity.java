@@ -31,10 +31,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
-import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -50,51 +46,38 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import org.sensorhub.android.comm.BluetoothCommProvider;
-import org.sensorhub.android.comm.BluetoothCommProviderConfig;
-import org.sensorhub.android.comm.ble.BleConfig;
-import org.sensorhub.android.comm.ble.BleNetwork;
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.data.IStreamingDataInterface;
+import org.sensorhub.api.datastore.obs.DataStreamFilter;
 import org.sensorhub.api.event.Event;
 import org.sensorhub.api.event.IEventListener;
-import org.sensorhub.api.event.ISubscriptionBuilder;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
+import org.sensorhub.api.datastore.obs.ObsFilter;
 import org.sensorhub.api.sensor.SensorConfig;
-import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
 import org.sensorhub.impl.datastore.view.ObsSystemDatabaseViewConfig;
-import org.sensorhub.impl.event.EventBus;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.module.ModuleClassFinder;
 import org.sensorhub.impl.module.ModuleRegistry;
-//import org.sensorhub.impl.persistence.GenericStreamStorage;
-//import org.sensorhub.impl.persistence.MaxAgeAutoPurgeConfig;
-//import org.sensorhub.impl.persistence.StreamStorageConfig;
-import org.sensorhub.impl.persistence.h2.MVMultiStorageImpl;
 import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
 import org.sensorhub.impl.sensor.android.audio.AudioEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig.VideoPreset;
-//import org.sensorhub.impl.sensor.angel.AngelSensorConfig;
-//import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
-//import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
-//import org.sensorhub.impl.service.sos.SensorDataProviderConfig;
-//import org.sensorhub.test.sensor.trupulse.SimulatedDataStream;
+import org.sensorhub.impl.service.sweapi.SWEApiService;
+import org.sensorhub.impl.service.sweapi.SWEApiServiceConfig;
+
 
 import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.X509Certificate;
@@ -127,6 +110,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     SensorHubService boundService;
     IModuleConfigRepository sensorhubConfig;
     SensorHubConfig shCfg;
+    ObsSystemDatabaseViewConfig obsSystemDatabaseViewConfig;
     Handler displayHandler;
     Runnable displayCallback;
     StringBuffer mainInfoText = new StringBuffer();
@@ -323,6 +307,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sosConfig.name = "SOS Service";
         sosConfig.autoStart = true;
         sosConfig.enableTransactional = true;
+        sosConfig.exposedResources = new ObsSystemDatabaseViewConfig();
 
         // Push Sensors Config
         AndroidSensorsConfig androidSensorsConfig = sensorsConfig;
@@ -330,7 +315,16 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if (isPushingSensor(Sensors.Android)) {
             addSosTConfig(androidSensorsConfig, sosUser, sosPwd);
         }
-//        addSosTConfig(sensorsConfig,sosUser,sosPwd);
+
+        SWEApiServiceConfig sweApiServiceConfig = new SWEApiServiceConfig();
+        sweApiServiceConfig.moduleClass = SWEApiService.class.getCanonicalName();
+        sweApiServiceConfig.id = "SWEAPI_SERVICE";
+        sweApiServiceConfig.name = "SWE API Service";
+        sweApiServiceConfig.autoStart = true;
+        sweApiServiceConfig.enableHttpGET = true;
+
+        sensorhubConfig.add(sweApiServiceConfig);
+
 
         //Storage Configuration
 //        if(prefs.getBoolean("hub_enable", true) && prefs.getBoolean("hub_enable_local_storage", true)) {

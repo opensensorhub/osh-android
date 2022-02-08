@@ -85,7 +85,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
 
 
     @Override
-    public synchronized void init() throws SensorHubException
+    protected synchronized void doInit() throws SensorHubException
     {
         Context androidContext = SensorHubService.getContext();
 
@@ -157,7 +157,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
 
 
     @Override
-    public void start() throws SensorException
+    protected void doStart() throws SensorException
     {
         // start event handling thread
         eventThread = new HandlerThread("SensorThread " + getName());
@@ -295,7 +295,7 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
 
     
     @Override
-    public void stop() throws SensorException
+    protected void doStop() throws SensorException
     {
         // stop all outputs
 //        for (IStreamingDataInterface o: this.getAllOutputs().values())
@@ -340,7 +340,8 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
                 }
             }
 
-            sensorDescription.setFeaturesOfInterest(foiList);
+//            sensorDescription.setFeaturesOfInterest(foiList);
+            sensorDescription.setFeaturesOfInterest(getCurrentFeaturesOfInterestList());
 
             // add components
             int index = 0;
@@ -353,8 +354,25 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     }
 
 
-    @Override
-    public Map<String, ? extends IFeature> getCurrentFeaturesOfInterest()
+//    @Override
+//    public Map<String, ? extends IFeature> getCurrentFeaturesOfInterest()
+//    {
+//        if (config.runName != null && config.runName.length() > 0)
+//        {
+//            AbstractFeature foi = new GenericFeatureImpl(new QName(SMLStaxBindings.NS_URI, "Feature", "sml"));
+//            String uid = "urn:android:foi:" + config.runName.replaceAll("[ |']", "");
+//            foi.setUniqueIdentifier(uid);
+//            foi.setName(config.runName);
+//            foi.setDescription(config.runDescription);
+//            this.addFoi(foi);
+//
+//            return Collections.unmodifiableMap(foiMap);
+//        }
+//
+//        return null;
+//    }
+
+    public FeatureList getCurrentFeaturesOfInterestList()
     {
         if (config.runName != null && config.runName.length() > 0)
         {
@@ -364,9 +382,13 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
             foi.setName(config.runName);
             foi.setDescription(config.runDescription);
             this.addFoi(foi);
+
+            FeatureList featureList = new FeatureListImpl();
+            featureList.addFeature(foi);
+            return featureList;
         }
 
-        return Collections.unmodifiableMap(foiMap);
+        return null;
     }
 
 
