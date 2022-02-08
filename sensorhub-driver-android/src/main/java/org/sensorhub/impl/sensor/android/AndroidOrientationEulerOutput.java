@@ -61,7 +61,7 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
         dataStruct.addComponent("time", fac.newTimeStampIsoUTC());
 
         // euler angles vector
-        Vector vec = fac.newEulerOrientationENU(null, "degrees");
+        Vector vec = fac.newEulerOrientationENU(null, "deg");
         vec.setLocalFrame(parentSensor.localFrameURI);
         dataStruct.addComponent("orient", vec);
         
