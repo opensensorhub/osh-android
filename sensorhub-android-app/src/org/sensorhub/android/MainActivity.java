@@ -56,11 +56,13 @@ import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
 import org.sensorhub.api.datastore.obs.ObsFilter;
 import org.sensorhub.api.sensor.SensorConfig;
+import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
 import org.sensorhub.impl.datastore.view.ObsSystemDatabaseViewConfig;
+import org.sensorhub.impl.event.EventBus;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.module.ModuleClassFinder;
 import org.sensorhub.impl.module.ModuleRegistry;
@@ -91,6 +93,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Flow;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -100,7 +105,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 
-public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, IEventListener
+public class MainActivity extends Activity implements TextureView.SurfaceTextureListener, Flow.Subscriber<Event>
 {
     public static final String ACTION_BROADCAST_RECEIVER = "org.sensorhub.android.BROADCAST_RECEIVER";
     public static final String ANDROID_SENSORS_MODULE_ID = "ANDROID_SENSORS";
@@ -124,6 +129,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     String deviceID;
     String deviceName;
     String runName;
+
+    private Flow.Subscription subscription;
+    Flow.Subscriber mainActivity = this;
 
     // Request codes for permissions
     final int FINE_LOC_RC = 101;
@@ -599,7 +607,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     }
 
 
-    protected void showRunNamePopup()
+    protected synchronized void showRunNamePopup()
     {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
@@ -635,7 +643,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 } else {
                     newStatusMessage("Starting SensorHub...");
                     sostClients.clear();
-                    boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
+                    boundService.startSensorHub(sensorhubConfig, showVideo);
 
                     if (boundService.hasVideo())
                         mainInfoArea.setBackgroundColor(0x80FFFFFF);
@@ -652,6 +660,29 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 //                        throw new SensorHubException("Cannot retrieve SOS capabilities", e);
                         Log.e(TAG, "ERR: Cannot retrieve SOS Capabilities", e);
                     }*/
+
+                    // TODO: try to get event bus and status
+
+                    // Spawn future to wait for event bus to be initialized
+//                    CompletableFuture<Boolean> completableFuture = CompletableFuture.supplyAsync(() -> {
+//
+//
+//                        return true;
+//                    });
+
+                    while(boundService.getSensorHub() == null){
+                        System.out.println("Waiting for BoundService Hub to start...");
+                    }
+                    System.out.println("BoundService SensorHub Started...");
+                    while(boundService.getSensorHub().getEventBus() == null){
+                        System.out.println("Waiting for BoundService Hub EventBus to start...");
+                    }
+                    System.out.println("BoundService SensorHub EventBus Started...");
+                    EventBus shEvtBus = (EventBus) boundService.getSensorHub().getEventBus();
+
+                    shEvtBus.newSubscription()
+                            .withTopicID(ModuleRegistry.EVENT_GROUP_ID)
+                            .subscribe(mainActivity);
                 }
 
             }
@@ -702,39 +733,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             }
         });
         alert.show();
-    }
-
-
-    @Override
-    public void handleEvent(Event e)
-    {
-        if (e instanceof ModuleEvent)
-        {
-            // start refreshing status on first module loaded
-            if (!oshStarted && ((ModuleEvent) e).getType() == ModuleEvent.Type.LOADED)
-            {
-                oshStarted = true;
-                startRefreshingStatus();
-                return;
-            }
-
-            // detect when Android sensor driver is started
-            else if (e.getSource() instanceof AndroidSensorsDriver)
-            {
-                this.androidSensors = (AndroidSensorsDriver)e.getSource();
-            }
-
-            // detect when SOS-T modules are connected
-            else if (e.getSource() instanceof SOSTClient && ((ModuleEvent)e).getType() == ModuleEvent.Type.STATE_CHANGED)
-            {
-                switch (((ModuleEvent)e).getNewState())
-                {
-                    case INITIALIZING:
-                        sostClients.add((SOSTClient)e.getSource());
-                        break;
-                }
-            }
-        }
     }
     
     
@@ -1397,9 +1395,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                         updateConfig(PreferenceManager.getDefaultSharedPreferences(MainActivity.this), runName);
                         sostClients.clear();
-                        boundService.startSensorHub(sensorhubConfig, showVideo, MainActivity.this);
+                        boundService.startSensorHub(sensorhubConfig, showVideo);
                         if (boundService.hasVideo())
                             mainInfoArea.setBackgroundColor(0x80FFFFFF);
+
+                        EventBus shEventBus = (EventBus) boundService.getSensorHub().getEventBus();
+//                        shEventBus.newSubscription()
+//                                .withTopicID(ModuleRegistry.EVENT_GROUP_ID)
+//                                .subscribe();
                     } catch (InterruptedException e) {
                         Log.e("OSHApp", "Error Loading Proxy Sensor", e);
                     }
@@ -1538,9 +1541,56 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         }
     }
 
-//    private void addModulesToHub(){
-//        ModuleRegistry reg = boundService.getSensorHub().getModuleRegistry();
-//        List<>
-//        for()
-//    }
+    @Override
+    public void onSubscribe(Flow.Subscription subscription) {
+        this.subscription = subscription;
+        System.out.println("MainActivity Subscribed...");
+        subscription.request(1);
+    }
+
+    @Override
+    public void onNext(Event e) {
+        System.out.println("Event of : " + e);
+
+        System.out.println(e.getSource());
+        if (e instanceof ModuleEvent)
+        {
+            // start refreshing status on first module loaded
+            if (!oshStarted && ((ModuleEvent) e).getType() == ModuleEvent.Type.LOADED)
+            {
+                oshStarted = true;
+                startRefreshingStatus();
+                return;
+            }
+
+            // detect when Android sensor driver is started
+            else if (e.getSource() instanceof AndroidSensorsDriver)
+            {
+                this.androidSensors = (AndroidSensorsDriver)e.getSource();
+            }
+
+            // detect when SOS-T modules are connected
+            else if (e.getSource() instanceof SOSTClient && ((ModuleEvent)e).getType() == ModuleEvent.Type.STATE_CHANGED)
+            {
+                switch (((ModuleEvent)e).getNewState())
+                {
+                    case INITIALIZING:
+                        sostClients.add((SOSTClient)e.getSource());
+                        break;
+                }
+            }
+        }
+
+        subscription.request(1);
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
+
+    }
+
+    @Override
+    public void onComplete() {
+
+    }
 }

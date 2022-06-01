@@ -103,7 +103,7 @@ public class SensorHubService extends Service
     }
     
     
-    public synchronized void startSensorHub(final IModuleConfigRepository config, final boolean hasVideo, final IEventListener listener)
+    public synchronized void startSensorHub(final IModuleConfigRepository config, final boolean hasVideo)
     {
         if (sensorhub != null)
             return;
@@ -112,13 +112,9 @@ public class SensorHubService extends Service
 
         msgHandler.post(new Runnable() {
 
-            // TODO: Make sure this isn't breaking anything - Do we need to register a listener or should it subscribe now?
             public void run() {
                 // create and start sensorhub instance
                 sensorhub = new SensorHubAndroid(new SensorHubConfig(), config);
-
-//                ModuleRegistry reg = new ModuleRegistry(sensorhub, config);
-
                 try {
                     sensorhub.start();
                 } catch (SensorHubException e) {
