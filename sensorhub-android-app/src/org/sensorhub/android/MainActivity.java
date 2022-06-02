@@ -1545,7 +1545,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     public void onSubscribe(Flow.Subscription subscription) {
         this.subscription = subscription;
         System.out.println("MainActivity Subscribed...");
-        subscription.request(1);
+        subscription.request(10);
     }
 
     @Override
@@ -1581,7 +1581,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             }
         }
 
-        subscription.request(1);
+        subscription.request(10);
     }
 
     @Override
