@@ -22,9 +22,9 @@ dependencies {
   implementation 'android.arch.navigation:navigation-fragment:1.0.0'
   implementation 'android.arch.navigation:navigation-ui:1.0.0'
   implementation 'com.android.support:support-v4:26.1.0'
-  implementation project(path: ':sensorhub-storage-compat')
+//  implementation project(path: ':sensorhub-storage-compat')
 //    implementation project(path: ':sensorhub-android-sos-ipc')
-  implementation project(path: ':sensorhub-storage-h2')
+  implementation project(path: ':sensorhub-datastore-h2')
   implementation project(path: ':sensorhub-service-sweapi')
 }
 

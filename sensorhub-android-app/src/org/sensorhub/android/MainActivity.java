@@ -47,26 +47,22 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import org.sensorhub.api.common.SensorHubException;
-import org.sensorhub.api.datastore.obs.DataStreamFilter;
 import org.sensorhub.api.event.Event;
-import org.sensorhub.api.event.IEventListener;
 import org.sensorhub.api.module.IModule;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.module.ModuleEvent;
-import org.sensorhub.api.datastore.obs.ObsFilter;
 import org.sensorhub.api.sensor.SensorConfig;
-import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.SensorHubConfig;
 import org.sensorhub.impl.client.sost.SOSTClient;
 import org.sensorhub.impl.client.sost.SOSTClient.StreamInfo;
 import org.sensorhub.impl.client.sost.SOSTClientConfig;
+import org.sensorhub.impl.datastore.h2.MVObsSystemDatabaseConfig;
 import org.sensorhub.impl.datastore.view.ObsSystemDatabaseViewConfig;
 import org.sensorhub.impl.event.EventBus;
 import org.sensorhub.impl.module.InMemoryConfigDb;
 import org.sensorhub.impl.module.ModuleClassFinder;
 import org.sensorhub.impl.module.ModuleRegistry;
-import org.sensorhub.impl.persistence.h2.MVStorageConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsConfig;
 import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
 import org.sensorhub.impl.sensor.android.audio.AudioEncoderConfig;
@@ -77,7 +73,6 @@ import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sweapi.SWEApiService;
 import org.sensorhub.impl.service.sweapi.SWEApiServiceConfig;
-
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -93,8 +88,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Flow;
 
 import javax.net.ssl.HostnameVerifier;
@@ -339,7 +332,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         if(shouldStore(prefs)) {
             File dbFile = new File(getApplicationContext().getFilesDir() + "/db/");
             dbFile.mkdirs();
-            MVStorageConfig basicStorageConfig = new MVStorageConfig();
+            MVObsSystemDatabaseConfig basicStorageConfig = new MVObsSystemDatabaseConfig();
             basicStorageConfig.moduleClass = "org.sensorhub.impl.persistence.h2.MVObsStorageImpl";
             basicStorageConfig.storagePath = dbFile.getAbsolutePath() + "/${STORAGE_ID}.dat";
             basicStorageConfig.autoStart = true;
@@ -561,31 +554,26 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             Intent statusIntent = new Intent(this, AppStatusActivity.class);
             if(boundService.sensorhub != null) {
                 ModuleRegistry moduleRegistry = boundService.sensorhub.getModuleRegistry();
-                Collection<ModuleConfig> modules = moduleRegistry.getAvailableModules();
+                Collection<IModule<?>> modules = moduleRegistry.getLoadedModules();
 
-                for (ModuleConfig moduleConf: modules) {
-                    IModule module = null;
-                    try {
-                        module = moduleRegistry.getModuleById(moduleConf.id);
-                        String status = module.getCurrentState().name();
+                for (IModule module: modules) {
+//                    IModule module = null;
+                    var moduleConf = module.getConfiguration();
+                    String status = module.getCurrentState().name();
 
-                        switch (moduleConf.id){
-                            case "HTTP_SERVER_0":
-                                statusIntent.putExtra("httpStatus", status);
-                                break;
-                            case "SOS_SERVICE":
-                                statusIntent.putExtra("sosService", status);
-                                break;
-                            case "ANDROID_SENSORS":
-                                statusIntent.putExtra("androidSensorStatus", status);
-                                break;
-                            case "ANDROID_SENSORS#storage":
-                                statusIntent.putExtra("sensorStorageStatus", status);
-                                break;
-                        }
-
-                    } catch (SensorHubException e) {
-                        e.printStackTrace();
+                    switch (moduleConf.id){
+                        case "HTTP_SERVER_0":
+                            statusIntent.putExtra("httpStatus", status);
+                            break;
+                        case "SOS_SERVICE":
+                            statusIntent.putExtra("sosService", status);
+                            break;
+                        case "ANDROID_SENSORS":
+                            statusIntent.putExtra("androidSensorStatus", status);
+                            break;
+                        case "ANDROID_SENSORS#storage":
+                            statusIntent.putExtra("sensorStorageStatus", status);
+                            break;
                     }
 
                 }

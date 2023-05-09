@@ -13,7 +13,7 @@ import net.opengis.swe.v20.DataComponent;
 
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.impl.client.sos.SOSClient;
-import org.sensorhub.impl.client.sos.SOSClient.SOSRecordListener;
+import org.sensorhub.impl.client.sos.SOSClient.StreamingListener;
 import org.sensorhub.impl.client.sps.SPSClient;
 import org.sensorhub.impl.sensor.swe.SWEVirtualSensor;
 import org.vast.ows.GetCapabilitiesRequest;
@@ -159,11 +159,16 @@ public class ProxySensor extends SWEVirtualSensor {
     public void startSOSStreams() throws SensorHubException {
         for (int i = 0; i < sosClients.size(); i++) {
             String name = sosClients.get(i).getRecordDescription().getName();
-            SOSRecordListener rl = new SOSRecordListener() {
+            StreamingListener rl = new StreamingListener() {
                 @Override
-                public void newRecord(DataBlock data) {
+                public void recordReceived(DataBlock dataBlock) {
                     ProxySensorOutput output = (ProxySensorOutput) getObservationOutputs().get(name);
-                    output.publishNewRecord(data);
+                    output.publishNewRecord(dataBlock);
+                }
+
+                @Override
+                public void stopped(SOSClient.StreamingStopReason streamingStopReason, Throwable throwable) {
+
                 }
             };
             sosClients.get(i).startStream(rl);
@@ -173,11 +178,16 @@ public class ProxySensor extends SWEVirtualSensor {
     public void startSOSStream(String outputName) throws SensorHubException {
         for (SOSClient client : sosClients) {
             if (client.getRecordDescription().getName().equals(outputName)) {
-                SOSRecordListener recordListener = new SOSRecordListener() {
+                StreamingListener recordListener = new StreamingListener() {
                     @Override
-                    public void newRecord(DataBlock data) {
+                    public void recordReceived(DataBlock dataBlock) {
                         ProxySensorOutput output = (ProxySensorOutput) getObservationOutputs().get(outputName);
-                        output.publishNewRecord(data);
+                        output.publishNewRecord(dataBlock);
+                    }
+
+                    @Override
+                    public void stopped(SOSClient.StreamingStopReason streamingStopReason, Throwable throwable) {
+
                     }
                 };
                 client.startStream(recordListener);
