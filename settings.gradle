@@ -1,5 +1,6 @@
 rootProject.name = 'osh-android'
-def oshMainDir = "$rootDir/.."
+def includeBaseDir = "$rootDir/submodules"
+gradle.ext.oshCoreDir = "$includeBaseDir/osh-core"
 
 // include builds from other repos
 def repos = [
@@ -15,30 +16,26 @@ def repos = [
         'lib-ogc/sensorml-core',
         'sensorhub-core',
         'sensorhub-service-swe',
-        'sensorhub-storage-perst',
-
+        'sensorhub-service-sweapi',
         'sensorhub-utils-kryo',
         'sensorhub-datastore-h2',
-        'sensorhub-service-sweapi',
     ],
     'osh-addons': [
-        'persistence/sensorhub-storage-compat',
-        'persistence/sensorhub-storage-h2',
         'comm/sensorhub-comm-ble',
         'comm/sensorhub-comm-ble-dbus',
-        'sensors/health/sensorhub-driver-angelsensor',
-        'sensors/video/sensorhub-driver-videocam',
         'services/sensorhub-service-video',
+        'sensors/video/sensorhub-driver-videocam',
         'sensors/positioning/sensorhub-driver-trupulse',
+        'sensors/health/sensorhub-driver-angelsensor',
         'processing/sensorhub-process-vecmath',
         'processing/sensorhub-process-geoloc'
     ]
 ]
 
 repos.each { repoName, modules ->
-  File repoDir = new File(oshMainDir, repoName).getCanonicalFile()
+  File repoDir = new File(includeBaseDir, repoName).getCanonicalFile()
   if (!repoDir.exists())
-    throw new GradleException('Repository ' + repoName + ' is missing. Please clone it from https://github.com/opensensorhub/' + repoName)
+    throw new GradleException('Repository ' + repoName + ' is missing. Please update submodules using "git submodule update --init --recursive"')
   modules.each { moduleName ->
     File moduleDir = new File(repoDir, moduleName).getCanonicalFile()
     // include all folders with build.gradle as subprojects
@@ -53,7 +50,7 @@ repos.each { repoName, modules ->
 }
 
 // include all folders with build.gradle as subprojects
-FileTree subprojects = fileTree(rootDir).include('**/build.gradle')
+FileTree subprojects = fileTree(rootDir).include('**/build.gradle').exclude('submodules')
 subprojects.files.each { File f ->
   File projectFolder = f.parentFile
   if (projectFolder != rootDir) {
