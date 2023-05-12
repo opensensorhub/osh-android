@@ -87,15 +87,13 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     @Override
     protected synchronized void doInit() throws SensorHubException
     {
-        Context androidContext = SensorHubService.getContext();
-
         // generate identifiers
-        String deviceID = Secure.getString(androidContext.getContentResolver(), Secure.ANDROID_ID);
         this.xmlID = "ANDROID_SENSORS_" + Build.SERIAL;
-        this.uniqueID = "urn:android:device:" + deviceID;
+        this.uniqueID = AndroidSensorsConfig.getAndroidSensorsUid();
         this.localFrameURI = this.uniqueID + "#" + LOCAL_REF_FRAME;
 
         // create data interfaces for sensors
+        Context androidContext = SensorHubService.getContext();
         this.sensorManager = (SensorManager)androidContext.getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
         for (Sensor sensor: deviceSensors)

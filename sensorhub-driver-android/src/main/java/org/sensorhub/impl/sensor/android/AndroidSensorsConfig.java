@@ -15,12 +15,15 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 package org.sensorhub.impl.sensor.android;
 
 import android.graphics.SurfaceTexture;
+
+import org.sensorhub.android.SensorHubService;
 import org.sensorhub.api.module.ModuleConfig;
 import org.sensorhub.api.sensor.SensorConfig;
 import org.sensorhub.impl.sensor.android.audio.AudioEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 
 import android.content.Context;
+import android.provider.Settings;
 
 
 /**
@@ -58,5 +61,13 @@ public class AndroidSensorsConfig extends SensorConfig
     public AndroidSensorsConfig()
     {
         this.moduleClass = AndroidSensorsDriver.class.getCanonicalName();
+    }
+
+
+    public static String getAndroidSensorsUid()
+    {
+        Context androidContext = SensorHubService.getContext();
+        String deviceID = Settings.Secure.getString(androidContext.getContentResolver(), Settings.Secure.ANDROID_ID);
+        return "urn:android:device:" + deviceID;
     }
 }

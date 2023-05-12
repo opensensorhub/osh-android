@@ -31,6 +31,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -46,6 +48,8 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.sensorhub.android.comm.BluetoothCommProvider;
+import org.sensorhub.android.comm.BluetoothCommProviderConfig;
 import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.event.Event;
 import org.sensorhub.api.module.IModule;
@@ -68,11 +72,14 @@ import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
 import org.sensorhub.impl.sensor.android.audio.AudioEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig.VideoPreset;
+import org.sensorhub.impl.sensor.trupulse.TruPulseConfig;
+import org.sensorhub.impl.sensor.trupulse.TruPulseWithGeolocConfig;
 import org.sensorhub.impl.service.HttpServerConfig;
 import org.sensorhub.impl.service.sos.SOSService;
 import org.sensorhub.impl.service.sos.SOSServiceConfig;
 import org.sensorhub.impl.service.sweapi.SWEApiService;
 import org.sensorhub.impl.service.sweapi.SWEApiServiceConfig;
+import org.sensorhub.impl.sensor.trupulse.SimulatedDataStream;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -353,7 +360,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         // END SOS CONFIG **************************************************************************
 
         // TruPulse sensor
-       /* boolean enabled = prefs.getBoolean("trupulse_enabled", false);
+        boolean enabled = prefs.getBoolean("trupulse_enabled", false);
         if (enabled)
         {
             TruPulseConfig trupulseConfig = new TruPulseConfig();
@@ -375,7 +382,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 }
 
                 trupulseConfig = new TruPulseWithGeolocConfig();
-                ((TruPulseWithGeolocConfig)trupulseConfig).locationSourceID = sensorsConfig.id;
+                ((TruPulseWithGeolocConfig)trupulseConfig).locationSourceUID = AndroidSensorsConfig.getAndroidSensorsUid();
                 ((TruPulseWithGeolocConfig)trupulseConfig).locationOutputName = gpsOutputName;
             }
 
@@ -391,8 +398,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 btConf.moduleClass = BluetoothCommProvider.class.getCanonicalName();
             trupulseConfig.commSettings = btConf;
             sensorhubConfig.add(trupulseConfig);
-            addSosTConfig(trupulseConfig, sosUser, sosPwd);
-        }*/
+
+            // don't add it to SOS-T here since it's already configured with a wildcard
+            // meaning it will forward data from all systems by default
+            //addSosTConfig(trupulseConfig, sosUser, sosPwd);
+        }
 
         // AngelSensor
         /*enabled = prefs.getBoolean("angel_enabled", false);
