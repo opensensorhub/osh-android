@@ -86,6 +86,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -109,6 +110,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 {
     public static final String ACTION_BROADCAST_RECEIVER = "org.sensorhub.android.BROADCAST_RECEIVER";
     public static final String ANDROID_SENSORS_MODULE_ID = "ANDROID_SENSORS";
+
+    public static final Date ANDROID_SENSORS_LAST_UPDATED = new Date(Instant.parse("2023-05-28T12:00:00Z").toEpochMilli());
+    public static final Date TRUPULSE_SENSOR_LAST_UPDATED = ANDROID_SENSORS_LAST_UPDATED;
 
     TextView mainInfoArea;
     TextView videoInfoArea;
@@ -232,6 +236,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         sensorsConfig.name = "Android Sensors [" + deviceName + "]";
         sensorsConfig.id = "ANDROID_SENSORS";
         sensorsConfig.autoStart = true;
+        sensorsConfig.lastUpdated = ANDROID_SENSORS_LAST_UPDATED;
 
         sensorsConfig.activateAccelerometer = prefs.getBoolean("accel_enabled", false);
         sensorsConfig.activateGyrometer = prefs.getBoolean("gyro_enabled", false);
@@ -389,6 +394,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             trupulseConfig.id = "TRUPULSE_SENSOR";
             trupulseConfig.name = "TruPulse Range Finder [" + deviceName + "]";
             trupulseConfig.autoStart = true;
+            trupulseConfig.lastUpdated = TRUPULSE_SENSOR_LAST_UPDATED;
             trupulseConfig.serialNumber = deviceID;
             BluetoothCommProviderConfig btConf = new BluetoothCommProviderConfig();
             btConf.protocol.deviceName = "TP360RB.*";
