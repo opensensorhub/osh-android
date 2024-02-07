@@ -1,5 +1,4 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <EditTextPreference
         android:capitalize="words"
         android:defaultValue="MyDevice"
@@ -9,36 +8,89 @@
         android:selectAllOnFocus="true"
         android:singleLine="true"
         android:title="Device Name" />
-    
-    <EditTextPreference
-        android:defaultValue="http://192.168.0.10:8181/sensorhub/sos"
-        android:inputType="textUri"
-        android:key="sos_uri"
-        android:maxLines="1"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:title="SOS Endpoint URL" />
-    
-    <EditTextPreference
-        android:inputType="text"
-        android:key="sos_username"
-        android:maxLines="1"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:title="SOS Username"
-        android:summary="Enter your username or leave blank" />
-    
-    <EditTextPreference
-        android:inputType="textPassword"
-        android:key="sos_password"
-        android:selectAllOnFocus="true"
-        android:title="SOS Password"
-        android:summary="Enter your password or leave blank" />
 
-    <CheckBoxPreference
+    <Preference
+        android:enabled="true"
+        android:key="nop_ipAddress"
+        android:selectable="false"
+        android:summary=""
+        android:title="Current IP Address" />
+
+    <PreferenceCategory android:title="@string/sos_settings">
+        <EditTextPreference
+            android:defaultValue="http://127.0.0.1:8585/sensorhub/sos"
+            android:inputType="textUri"
+            android:key="sos_uri"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="SOS Endpoint URL" />
+
+        <EditTextPreference
+            android:inputType="text"
+            android:key="sos_username"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="Enter your username or leave blank"
+            android:title="SOS Username" />
+
+        <EditTextPreference
+            android:inputType="textPassword"
+            android:key="sos_password"
+            android:selectAllOnFocus="true"
+            android:summary="Enter your password or leave blank"
+            android:title="SOS Password" />
+    </PreferenceCategory>
+
+<!--    <PreferenceCategory android:title="@string/sost_settings">-->
+<!--        <EditTextPreference-->
+<!--            android:defaultValue="http://127.0.0.1:8585/sensorhub/sos"-->
+<!--            android:inputType="textUri"-->
+<!--            android:key="sost_uri"-->
+<!--            android:maxLines="1"-->
+<!--            android:selectAllOnFocus="true"-->
+<!--            android:singleLine="true"-->
+<!--            android:title="SOS-T Endpoint URL" />-->
+<!--        <EditTextPreference-->
+<!--            android:inputType="text"-->
+<!--            android:key="sost_username"-->
+<!--            android:selectAllOnFocus="true"-->
+<!--            android:summary="Enter SOS-T username or leave blank"-->
+<!--            android:title="SOS-T Username" />-->
+<!--        <EditTextPreference-->
+<!--            android:inputType="textPassword"-->
+<!--            android:key="sost_password"-->
+<!--            android:selectAllOnFocus="true"-->
+<!--            android:summary="Enter SOS-T password or leave blank"-->
+<!--            android:title="SOS-T Password" />-->
+<!--    </PreferenceCategory>-->
+
+    <SwitchPreference
         android:defaultValue="false"
         android:key="sos_disable_ssl_check"
         android:summary="Disable SSL certificate validation"
         android:title="Disable SSL check" />
+
+<!--    <PreferenceCategory android:title="Hub Settings">-->
+<!--    <SwitchPreference-->
+<!--        android:defaultValue="true"-->
+<!--        android:key="hub_enable"-->
+<!--        android:summary="Enable Local Sensor Hub"-->
+<!--        android:title="Enable Local Hub" />-->
+
+<!--    <SwitchPreference-->
+<!--        android:defaultValue="true"-->
+<!--        android:key="hub_enable_local_storage"-->
+<!--        android:summary="Enable Local Sensor Data Storage"-->
+<!--        android:title="Enable Local Storage" />-->
+
+<!--    <SwitchPreference-->
+<!--        android:defaultValue="true"-->
+<!--        android:key="hub_enable_ipc_mode"-->
+<!--        android:summary="Enable IPC Mode"-->
+<!--        android:title="Enable IPC" />-->
+<!--    </PreferenceCategory>-->
+
 
 </PreferenceScreen>

@@ -1,17 +1,208 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SensorHubConnect</string>
-    <string name="hello_world">Please configure and start SensorHub using the Options Menu</string>
+    <string name="app_name">OpenSensorHub SmartHub</string>
+    <string name="hello_world">Please configure and start SmartHub using the Options Menu</string>
     <string name="action_settings">Settings</string>
-    <string name="action_start">Start SensorHub</string>
-    <string name="action_stop">Stop SensorHub</string>
+    <string name="action_start">Start SmartHub</string>
+    <string name="action_stop">Stop SmartHub</string>
+    <string name="action_status">App Status</string>
     <string name="action_about">About</string>
-    
+    <string name="action_proxy">Start Proxy</string>
+    <string name="action_stop_proxy">Stop Proxy</string>
+    <string name="sos_settings">SOS Settings (Required)</string>
+    <string name="sost_settings">SOS-T Settings (Optional)</string>
+    <string name="sensor_android">Android Sensor</string>
+    <string name="sensor_trupulse">TruPulse Range Finder Sensor</string>
+    <string name="sensor_angel">Angel Sensor</string>
+    <string name="sensor_flirone">Flirone Sensor</string>
     <string-array name="video_codec_list">
         <item>JPEG</item>
         <item>H264</item>
         <item>H265</item>
         <item>VP9</item>
         <item>VP8</item>
+    </string-array>
+
+    <string-array name="orientation_angle_list">
+        <item>Quaternion</item>
+        <item>Euler</item>
+    </string-array>
+    <string-array name="orientation_angle_values">
+        <item>QUATERNION</item>
+        <item>EULER</item>
+    </string-array>
+    <string-array name="orientation_angle_defaults">
+        <item>QUATERNION</item>
+    </string-array>
+
+    <string-array name="location_type_list">
+        <item>GPS</item>
+        <item>Network</item>
+    </string-array>
+    <string-array name="location_type_values">
+        <item>GPS</item>
+        <item>NETWORK</item>
+    </string-array>
+    <string-array name="location_type_defaults">
+        <item>GPS</item>
+    </string-array>
+
+    <string-array name="sos_option_list">
+        <item>Fetchable</item>
+        <item>Store Locally</item>
+        <item>Push Remote</item>
+    </string-array>
+    <string-array name="sos_option_values">
+        <item>FETCH_LOCAL</item>
+        <item>STORE_LOCAL</item>
+        <item>PUSH_REMOTE</item>
+    </string-array>
+    <string-array name="sos_option_defaults">
+        <item>PUSH_REMOTE</item>
+    </string-array>
+
+    <string-array name="trupulse_datasource_list">
+        <item>Streaming Physical Device</item>
+        <item>Simulate Virtual Device</item>
+    </string-array>
+    <string-array name="trupulse_datasource_values">
+        <item>STREAM</item>
+        <item>SIMULATED</item>
+    </string-array>
+    <string name="trupulse_datasource_default">STREAM</string>
+
+    <string-array name="spot_report_feature_type_list">
+        <item>Select Reporting Item</item>
+        <item>Street Closure</item>
+        <item>Flooding</item>
+        <item>Medical</item>
+        <item>Aid</item>
+    </string-array>
+
+    <string-array name="ble_location_method_list">
+        <item>Nearest Beacon</item>
+        <item>Trilateration</item>
+    </string-array>
+    <string-array name="ble_location_method_values">
+        <item>NEAREST</item>
+        <item>TRILATERATION</item>
+    </string-array>
+    <string-array name="ble_location_method_defaults">
+        <item>NEAREST</item>
+    </string-array>
+
+    <string-array name="spot_report_location_source_list">
+        <item>GPS</item>
+        <item>Laser Range Finder</item>
+        <item>Network</item>
+    </string-array>
+
+    <string name="spot_report">Spot Report</string>
+    <string name="spot_name_field">NAME:</string>
+    <string name="spot_description_field">DESCRIPTION:</string>
+    <string name="spot_take_image_button">CAPTURE</string>
+    <string name="spot_reset_image_button"> RESET </string>
+    <string name="spot_submit_report_button">SUBMIT REPORT</string>
+    <string name="spot_name_description">A name for the report</string>
+
+    <string name="spot_report_radius">Radius:</string>
+    <string name="spot_report_latitude">Lat:</string>
+    <string name="spot_report_longitude">Lon:</string>
+    <string name="spot_report_ft">Ft.</string>
+
+    <string-array name="spot_report_closure_type">
+        <item>Select...</item>
+        <item>Public</item>
+        <item>All</item>
+    </string-array>
+
+    <string-array name="spot_report_action_items">
+        <item>Select...</item>
+        <item>Open</item>
+        <item>Close</item>
+    </string-array>
+
+    <string name="spot_report_action">Action:</string>
+    <string name="spot_report_id">Ref. Id:</string>
+
+
+    <string name="spot_report_closure_type">Type:</string>
+
+    <string-array name="spot_report_flood_feature_type">
+        <item>Select...</item>
+        <item>Channel Drainage</item>
+        <item>Land Surface</item>
+    </string-array>
+
+    <string-array name="spot_report_observation_modes">
+        <item>Select...</item>
+        <item>Meter</item>
+        <item>Visual</item>
+        <item>Model</item>
+    </string-array>
+
+    <string name="spot_report_flood_feature">Feature Type:</string>
+    <string name="spot_report_depth">Depth:</string>
+    <string name="spot_report_observation_mode">Obs. Mode:</string>
+
+    <string name="spot_report_med_sign">Describe Medical Condition...</string>
+    <string name="spot_report_med_value">Enter measurement (BP, Temp, etc.)...</string>
+    <string name="spot_report_med_emergency">Emergency (T/F)</string>
+
+    <string-array name="spot_report_aid_types">
+        <item>Select...</item>
+        <item>Environment</item>
+        <item>Health</item>
+        <item>Safety</item>
+        <item>Services</item>
+    </string-array>
+
+    <string-array name="spot_report_aid_urgency_value">
+        <item>Select...</item>
+        <item>5</item>
+        <item>4</item>
+        <item>3</item>
+        <item>2</item>
+        <item>1</item>
+    </string-array>
+
+    <string name="spot_report_aid_type">Aid Type:</string>
+    <string name="spot_report_aid_num"># Persons:</string>
+    <string name="spot_report_aid_urgency">Urgency:</string>
+    <string name="spot_report_aid_description">Describe aid needed...</string>
+    <string name="spot_report_aid_reporter">Enter your name or id</string>
+
+    <string-array name="spot_report_tracked_resource">
+        <item>Select...</item>
+        <item>Person</item>
+        <item>Vehicle</item>
+        <item>Device</item>
+    </string-array>
+
+    <string-array name="spot_report_tracked_method">
+        <item>Select...</item>
+        <item>GPS</item>
+        <item>BlueTooth Beacon</item>
+        <item>WiFi</item>
+        <item>Cellular</item>
+        <item>UWB</item>
+        <item>N/A</item>
+    </string-array>
+
+    <string name="spot_report_track_resource_label">Tracking Resource:</string>
+    <string name="spot_report_track_method_label">Tracking Method:</string>
+    <string name="spot_report_track_id">Enter resource id</string>
+    <string name="spot_report_track_label">Enter resource label</string>
+
+
+
+    <string-array name="audio_codec_list">
+        <item>AAC</item>
+        <item>AMR-NB</item>
+        <item>AMR-WB</item>
+        <item>FLAC</item>
+        <item>VORBIS</item>
+        <item>OPUS</item>
+        <item>PCM</item>
     </string-array>
 </resources>

@@ -58,3 +58,4 @@ subprojects.files.each { File f ->
   }
 }
 
+include ':sensorhub-android-proxysensor'

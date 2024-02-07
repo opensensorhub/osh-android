@@ -10,16 +10,18 @@ dependencies {
   api project(':sensorhub-driver-android')
   api project(':sensorhub-android-flirone')
   //api project(':sensorhub-android-dji')
+  api project(':sensorhub-storage-h2')
 
   implementation 'org.slf4j:slf4j-android:1.6.1-RC1'
+  implementation('javax.xml.stream:stax-api:1.0-2')
 }
 
 configurations {
   api {
     // exclude stuff from APK
-    exclude group: "javax.servlet"
+//    exclude group: "javax.servlet"
     exclude group: "xml-apis"
-    exclude group: "org.eclipse.jetty"
+//    exclude group: "org.eclipse.jetty"
     exclude group: "org.n52.amused"
     exclude group: "ch.qos.logback"
     exclude group: "org.apache.felix"

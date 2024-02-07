@@ -37,6 +37,9 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.sensor.ISensorDataInterface;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorModule;
+import org.sensorhub.impl.sensor.android.audio.AndroidAudioOutputAAC;
+import org.sensorhub.impl.sensor.android.audio.AndroidAudioOutputOPUS;
+import org.sensorhub.impl.sensor.android.audio.AudioEncoderConfig;
 import org.sensorhub.impl.sensor.android.video.AndroidCameraOutputH264;
 import org.sensorhub.impl.sensor.android.video.AndroidCameraOutputH265;
 import org.sensorhub.impl.sensor.android.video.AndroidCameraOutputMJPEG;
@@ -141,6 +144,9 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         if (androidContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY))
             createCameraOutputs(androidContext);
 
+        // create data interfaces for audio
+        if (androidContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_MICROPHONE))
+            createAudioOutputs(androidContext);
     }
 
 
@@ -160,6 +166,8 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     @SuppressWarnings("deprecation")
     protected void createCameraOutputs(Context androidContext) throws SensorException
     {
+        int selectedCameraId = config.selectedCameraId;
+
         /*if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.LOLLIPOP)
         {
             CameraManager cameraManager = (CameraManager)androidContext.getSystemService(Context.CAMERA_SERVICE);
@@ -185,34 +193,37 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
         }
         else*/
         {
+            // TODO: check if the rotation issue may actually stem from here
             for (int cameraId = 0; cameraId < android.hardware.Camera.getNumberOfCameras(); cameraId++)
             {
                 android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
-                android.hardware.Camera.getCameraInfo(cameraId, info);
+//                android.hardware.Camera.getCameraInfo(cameraId, info);
+                android.hardware.Camera.getCameraInfo(selectedCameraId, info);
 
-                if ( (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_BACK && config.activateBackCamera) ||
-                     (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT && config.activateFrontCamera))
+                /*if ( (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_BACK && config.activateBackCamera) ||
+                     (info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT && config.activateFrontCamera))*/
+                if(config.enableCamera)
                 {
                     SurfaceTexture camPreviewTexture = SensorHubService.getVideoTexture();
                     if (VideoEncoderConfig.JPEG_CODEC.equals(config.videoConfig.codec)) {
-                        useCamera(new AndroidCameraOutputMJPEG(this, cameraId, camPreviewTexture), cameraId);
+                        useCamera(new AndroidCameraOutputMJPEG(this, selectedCameraId, camPreviewTexture), selectedCameraId);
                         break;
                     }
                     else if (VideoEncoderConfig.H264_CODEC.equals(config.videoConfig.codec)) {
-                        useCamera(new AndroidCameraOutputH264(this, cameraId, camPreviewTexture), cameraId);
+                        useCamera(new AndroidCameraOutputH264(this, selectedCameraId, camPreviewTexture), selectedCameraId);
                         // try a break to test
                         break;
                     }
                     else if (VideoEncoderConfig.H265_CODEC.equals(config.videoConfig.codec)) {
-                        useCamera(new AndroidCameraOutputH265(this, cameraId, camPreviewTexture), cameraId);
+                        useCamera(new AndroidCameraOutputH265(this, selectedCameraId, camPreviewTexture), selectedCameraId);
                         break;
                     }
                     else if (VideoEncoderConfig.VP9_CODEC.equals(config.videoConfig.codec)) {
-                        useCamera(new AndroidCameraOutputVP9(this, cameraId, camPreviewTexture), cameraId);
+                        useCamera(new AndroidCameraOutputVP9(this, selectedCameraId, camPreviewTexture), selectedCameraId);
                         break;
                     }
                     else if (VideoEncoderConfig.VP8_CODEC.equals(config.videoConfig.codec)) {
-                        useCamera(new AndroidCameraOutputVP8(this, cameraId, camPreviewTexture), cameraId);
+                        useCamera(new AndroidCameraOutputVP8(this, selectedCameraId, camPreviewTexture), selectedCameraId);
                         break;
                     }
                     else
@@ -223,6 +234,19 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     }
 
 
+    protected void createAudioOutputs(Context androidContext) throws SensorException
+    {
+        if(config.activateMicAudio) {
+            if (AudioEncoderConfig.AAC_CODEC.equals(config.audioConfig.codec))
+                useAudio(new AndroidAudioOutputAAC(this), "MIC");
+            else if (AudioEncoderConfig.OPUS_CODEC.equals(config.audioConfig.codec))
+                useAudio(new AndroidAudioOutputOPUS(this), "MIC");
+            else
+                throw new SensorException("Unsupported codec " + config.audioConfig.codec);
+        }
+    }
+
+    
     protected void useSensor(ISensorDataInterface output, Sensor sensor)
     {
         addOutput(output, false);
@@ -255,6 +279,14 @@ public class AndroidSensorsDriver extends AbstractSensorModule<AndroidSensorsCon
     }
 
 
+    protected void useAudio(ISensorDataInterface output, String srcName)
+    {
+        addOutput(output, false);
+        smlComponents.add(smlBuilder.getAudioComponentDescription(srcName));
+        log.info("Getting data from audio source " + srcName);
+    }
+
+    
     @Override
     public void stop() throws SensorException
     {

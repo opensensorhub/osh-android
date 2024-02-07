@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AppStatusActivity">
+
+    <TextView
+        android:id="@+id/sos_service_status_label"
+        android:layout_width="215dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:padding="10dp"
+        android:text="@string/sosServiceStatusLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/sos_service_state"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="10dp"
+        android:text="TextView"
+        android:textAlignment="center"
+        app:layout_constraintBottom_toBottomOf="@+id/sos_service_status_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/sos_service_status_label"
+        app:layout_constraintTop_toTopOf="@+id/sos_service_status_label" />
+
+    <TextView
+        android:id="@+id/http_server_status_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:padding="10dp"
+        android:text="@string/httpServerStatusLabel"
+        app:layout_constraintEnd_toEndOf="@+id/sos_service_status_label"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sos_service_status_label" />
+
+    <TextView
+        android:id="@+id/http_service_state"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="10dp"
+        android:text="TextView"
+        android:textAlignment="center"
+        app:layout_constraintBottom_toBottomOf="@+id/http_server_status_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/http_server_status_label"
+        app:layout_constraintTop_toTopOf="@+id/http_server_status_label" />
+
+    <TextView
+        android:id="@+id/android_sensor_status_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/http_server_status_label"
+        android:layout_marginStart="8dp"
+        android:padding="10dp"
+        android:text="@string/sensorServiceStatusLabel"
+        app:layout_constraintEnd_toEndOf="@+id/http_server_status_label"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/http_server_status_label" />
+
+    <TextView
+        android:id="@+id/sensor_service_state"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="10dp"
+        android:text="TextView"
+        android:textAlignment="center"
+        app:layout_constraintBottom_toBottomOf="@+id/android_sensor_status_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/android_sensor_status_label"
+        app:layout_constraintTop_toTopOf="@+id/android_sensor_status_label" />
+
+    <TextView
+        android:id="@+id/storage_service_status_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/android_sensor_status_label"
+        android:layout_marginStart="8dp"
+        android:padding="10dp"
+        android:text="@string/storageServiceStatusLabel"
+        app:layout_constraintEnd_toEndOf="@+id/android_sensor_status_label"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/android_sensor_status_label" />
+
+    <TextView
+        android:id="@+id/storage_service_state"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="10dp"
+        android:text="TextView"
+        android:textAlignment="center"
+        app:layout_constraintBottom_toBottomOf="@+id/storage_service_status_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/storage_service_status_label"
+        app:layout_constraintTop_toTopOf="@+id/storage_service_status_label" />
+
+
+</android.support.constraint.ConstraintLayout>

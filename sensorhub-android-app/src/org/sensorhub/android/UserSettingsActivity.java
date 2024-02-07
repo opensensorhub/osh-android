@@ -17,7 +17,9 @@ package org.sensorhub.android;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.hardware.Camera;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
@@ -28,14 +30,24 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.support.v7.view.menu.ListMenuPresenter;
 import android.text.InputType;
+import android.text.PrecomputedText;
+import android.util.Log;
 import android.widget.BaseAdapter;
 
 import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig;
 
+import java.math.BigInteger;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 
 public class UserSettingsActivity extends PreferenceActivity
@@ -152,6 +164,26 @@ public class UserSettingsActivity extends PreferenceActivity
             bindPreferenceSummaryToValue(findPreference("device_name"));
             bindPreferenceSummaryToValue(findPreference("sos_uri"));
             bindPreferenceSummaryToValue(findPreference("sos_username"));
+
+            WifiManager wifiManager = (WifiManager) getActivity().getApplicationContext().getSystemService(WIFI_SERVICE);
+            int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
+
+            // Convert little-endian to big-endianif needed
+            if (ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
+                ipAddress = Integer.reverseBytes(ipAddress);
+            }
+
+            byte[] ipByteArray = BigInteger.valueOf(ipAddress).toByteArray();
+
+            String ipAddressString;
+            try {
+                ipAddressString = InetAddress.getByAddress(ipByteArray).getHostAddress();
+            } catch (UnknownHostException ex) {
+                ipAddressString = "Unable to get IP Address";
+            }
+
+            Preference ipAddressLabel = getPreferenceScreen().findPreference("nop_ipAddress");
+            ipAddressLabel.setSummary(ipAddressString);
         }
     }
     
@@ -168,6 +200,115 @@ public class UserSettingsActivity extends PreferenceActivity
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_sensors);
             bindPreferenceSummaryToValue(findPreference("angel_address"));
+
+            SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
+
+            Preference accelerometerEnable = getPreferenceScreen().findPreference("accel_enabled");
+            Preference accelerometerOptions = getPreferenceScreen().findPreference("accel_options");
+            accelerometerOptions.setEnabled(prefs.getBoolean(accelerometerEnable.getKey(), false));
+            accelerometerEnable.setOnPreferenceChangeListener((preference, newValue) -> {
+                accelerometerOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference gyroEnabled = getPreferenceScreen().findPreference("gyro_enabled");
+            Preference gyroOptions = getPreferenceScreen().findPreference("gyro_options");
+            gyroOptions.setEnabled(prefs.getBoolean(gyroEnabled.getKey(), false));
+            gyroEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                gyroOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference magEnabled = getPreferenceScreen().findPreference("mag_enabled");
+            Preference magOptions = getPreferenceScreen().findPreference("mag_options");
+            magOptions.setEnabled(prefs.getBoolean(magEnabled.getKey(), false));
+            magEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                magOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference orientQuatEnabled = getPreferenceScreen().findPreference("orient_quat_enabled");
+            Preference orientQuatOptions = getPreferenceScreen().findPreference("orient_quat_options");
+            orientQuatOptions.setEnabled(prefs.getBoolean(orientQuatEnabled.getKey(), false));
+            orientQuatEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                orientQuatOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference orientEulerEnabled = getPreferenceScreen().findPreference("orient_euler_enabled");
+            Preference orientEulerOptions = getPreferenceScreen().findPreference("orient_euler_options");
+            orientEulerOptions.setEnabled(prefs.getBoolean(orientEulerEnabled.getKey(), false));
+            orientEulerEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                orientEulerOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference gpsEnabled = getPreferenceScreen().findPreference("gps_enabled");
+            Preference gpsOptions = getPreferenceScreen().findPreference("gps_options");
+            gpsOptions.setEnabled(prefs.getBoolean(gpsEnabled.getKey(), false));
+            gpsEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                gpsOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference netlocEnabled = getPreferenceScreen().findPreference("netloc_enabled");
+            Preference netlocOptions = getPreferenceScreen().findPreference("netloc_options");
+            netlocOptions.setEnabled(prefs.getBoolean(netlocEnabled.getKey(), false));
+            netlocEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                netlocOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference camEnabled = getPreferenceScreen().findPreference("cam_enabled");
+            Preference camOptions = getPreferenceScreen().findPreference("cam_options");
+            camOptions.setEnabled(prefs.getBoolean(camEnabled.getKey(), false));
+            camEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                camOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference videoRollEnabled = getPreferenceScreen().findPreference("video_roll_enabled");
+            Preference videoRollOptions = getPreferenceScreen().findPreference("video_roll_options");
+            videoRollOptions.setEnabled(prefs.getBoolean(videoRollEnabled.getKey(), false));
+            videoRollEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                videoRollOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference audioEnabled = getPreferenceScreen().findPreference("audio_enabled");
+            Preference audioOptions = getPreferenceScreen().findPreference("audio_options");
+            camOptions.setEnabled(prefs.getBoolean(camEnabled.getKey(), false));
+            audioEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                audioOptions.setEnabled((boolean) newValue);
+                return true;
+            });
+
+            Preference trupulseEnabled = getPreferenceScreen().findPreference("trupulse_enabled");
+            Preference trupulseOptions = getPreferenceScreen().findPreference("trupulse_options");
+            Preference trupulseDatasource = getPreferenceScreen().findPreference("trupulse_datasource");
+            trupulseOptions.setEnabled(prefs.getBoolean(trupulseEnabled.getKey(), false));
+            trupulseDatasource.setEnabled(prefs.getBoolean(trupulseEnabled.getKey(), false));
+            trupulseEnabled.setOnPreferenceChangeListener((preference, newValue) -> {
+                trupulseOptions.setEnabled((boolean) newValue);
+                trupulseDatasource.setEnabled((boolean) newValue);
+                return true;
+            });
+
+//            Preference bleEnable = getPreferenceScreen().findPreference("ble_enabled");
+//            Preference bleLocationMethod = getPreferenceScreen().findPreference("ble_loc_method");
+//            Preference bleOptions = getPreferenceScreen().findPreference("ble_options");
+//            Preference bleConfigURL = getPreferenceScreen().findPreference("ble_config_url");
+//            bleLocationMethod.setEnabled(prefs.getBoolean(bleEnable.getKey(), false));
+//            bleOptions.setEnabled((prefs.getBoolean(bleEnable.getKey(), false)));
+//            bleConfigURL.setEnabled((prefs.getBoolean(bleEnable.getKey(), false)));
+//            bleEnable.setOnPreferenceChangeListener(((preference, newValue) -> {
+//                bleLocationMethod.setEnabled((boolean) newValue);
+//                bleOptions.setEnabled((boolean) newValue);
+//                bleConfigURL.setEnabled((boolean) newValue);
+//                return true;
+//            }));
+
+            // TODO: introduce FLIR and ANGEL sensors
         }
     }
 
@@ -178,6 +319,9 @@ public class UserSettingsActivity extends PreferenceActivity
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class VideoPreferenceFragment extends PreferenceFragment
     {
+        ArrayList<String> frameRateList = new ArrayList<>();
+        ArrayList<String> resList = new ArrayList<>();
+
         @Override
         public void onCreate(Bundle savedInstanceState)
         {
@@ -185,15 +329,34 @@ public class UserSettingsActivity extends PreferenceActivity
             addPreferencesFromResource(R.xml.pref_video);
 
             PreferenceScreen videoOptsScreen = getPreferenceScreen();
+
+            // Create camera selection preference
+            ArrayList<String> cameras = new ArrayList<>();
+            for(int i = 0; i < Camera.getNumberOfCameras(); i++)
+            {
+                Camera.CameraInfo info = new Camera.CameraInfo();
+                Camera.getCameraInfo(i, info);
+                cameras.add(Integer.toString(i));
+            }
+            ListPreference cameraSelectList = (ListPreference)videoOptsScreen.findPreference("camera_select");
+//            cameraSelectList.setKey("camera_select");
+//            cameraSelectList.setTitle("Selected Camera");
+            cameraSelectList.setEntries(cameras.toArray(new String[0]));
+            cameraSelectList.setEntryValues(cameras.toArray(new String[0]));
+//            cameraSelectList.setDefaultValue(0);
+            bindPreferenceSummaryToValue(cameraSelectList);
+            videoOptsScreen.addPreference(cameraSelectList);
+
             bindPreferenceSummaryToValue(findPreference("video_codec"));
 
+            // TODO: verify that this works in cases where a camera might not be available, and also works on the default value
             // get possible video capture frame rates and sizes
             Camera camera = Camera.open(0);
             Camera.Parameters camParams = camera.getParameters();
-            ArrayList<String> frameRateList = new ArrayList<>();
+//            ArrayList<String> frameRateList = new ArrayList<>();
             for (int frameRate : camParams.getSupportedPreviewFrameRates())
                 frameRateList.add(Integer.toString(frameRate));
-            ArrayList<String> resList = new ArrayList<>();
+//            ArrayList<String> resList = new ArrayList<>();
             for (Camera.Size imgSize : camParams.getSupportedPreviewSizes())
                 resList.add(imgSize.width + "x" + imgSize.height);
             camera.release();
@@ -252,6 +415,58 @@ public class UserSettingsActivity extends PreferenceActivity
             presetIndexes.add("AUTO");
             selectedPresetList.setEntries(presetNames.toArray(new String[0]));
             selectedPresetList.setEntryValues(presetIndexes.toArray(new String[0]));
+
+            // Setup Camera Listener
+            cameraSelectList.setOnPreferenceChangeListener((preference, newValue) -> {
+                Log.d("CAMERA_SELECT", "New Camera Selected: " + newValue);
+                updateCameraSettings(Integer.parseInt((String) newValue));
+                cameraSelectList.setSummary(newValue.toString());
+                return true;
+            });
+        }
+
+        protected void updateCameraSettings(Integer cameraId){
+            Camera camera = Camera.open(cameraId);
+            Camera.Parameters camParams = camera.getParameters();
+            for (int frameRate : camParams.getSupportedPreviewFrameRates())
+                frameRateList.add(Integer.toString(frameRate));
+            for (Camera.Size imgSize : camParams.getSupportedPreviewSizes())
+                resList.add(imgSize.width + "x" + imgSize.height);
+            camera.release();
+        }
+    }
+
+
+    /*
+     * Fragment for audio settings
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class AudioPreferenceFragment extends PreferenceFragment
+    {
+        @Override
+        public void onCreate(Bundle savedInstanceState)
+        {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_audio);
+
+            PreferenceScreen audioOptsScreen = getPreferenceScreen();
+            bindPreferenceSummaryToValue(findPreference("audio_codec"));
+
+            // get possible video capture frame rates and sizes
+            List<String> sampleRateList = Arrays.asList("8000", "11025", "22050", "44100", "48000");
+            List<String> bitRateList = Arrays.asList("32", "64", "96", "128", "160", "192");
+
+            // add list of supported sample rates
+            ListPreference sampleRatePrefList = (ListPreference)audioOptsScreen.findPreference("audio_samplerate");
+            sampleRatePrefList.setEntries(sampleRateList.toArray(new String[0]));
+            sampleRatePrefList.setEntryValues(sampleRateList.toArray(new String[0]));
+            bindPreferenceSummaryToValue(findPreference("audio_samplerate"));
+
+            // add list of supported bitrates
+            ListPreference bitRatePrefList = (ListPreference)audioOptsScreen.findPreference("audio_bitrate");
+            bitRatePrefList.setEntries(bitRateList.toArray(new String[0]));
+            bitRatePrefList.setEntryValues(bitRateList.toArray(new String[0]));
+            bindPreferenceSummaryToValue(findPreference("audio_samplerate"));
         }
     }
 

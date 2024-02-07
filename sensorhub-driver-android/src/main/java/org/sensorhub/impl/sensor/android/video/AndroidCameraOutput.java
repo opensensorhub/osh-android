@@ -88,7 +88,6 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     int cameraOrientation;
     int videoRollAngle;
 
-    String name;
     DataComponent dataStruct;
     DataEncoding dataEncoding;
     int samplingPeriod;
@@ -103,9 +102,9 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
 
     protected AndroidCameraOutput(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture, String name) throws SensorException
     {
-        super(parentModule);
+        super(name, parentModule);
         this.cameraId = cameraId;
-        this.name = name;
+
         //this.previewSurfaceHolder = previewSurfaceHolder;
         this.previewTexture = previewTexture;
         this.sensorManager = parentModule.getSensorManager();
@@ -228,7 +227,13 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 camParams.setPreviewSize(imgWidth, imgHeight);
                 camParams.setVideoStabilization(camParams.isVideoStabilizationSupported());
                 camParams.setPreviewFormat(ImageFormat.NV21);
-                camParams.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+
+                // TODO: Do we need to add focus mode selection to UI? Do some cameras not support fixed? Is this a problem we wouldn't have with Camera2?
+                if(camParams.getSupportedFocusModes().contains(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+                    camParams.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+                }else{
+                    camParams.setFocusMode(Parameters.FOCUS_MODE_FIXED);
+                }
                 camParams.setPreviewFrameRate(frameRate);
                 camera.setParameters(camParams);
                 log.info("Fps ranges: {}", Arrays.deepToString(camParams.getSupportedPreviewFpsRange().toArray(new int[0][])));
@@ -241,7 +246,9 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 camera.addCallbackBuffer(imgBuf1);
                 camera.addCallbackBuffer(imgBuf2);
                 camera.setPreviewCallbackWithBuffer(AndroidCameraOutput.this);
-                camera.setDisplayOrientation(info.orientation);
+//                camera.setDisplayOrientation(info.orientation);
+                // TODO: need to test with more devices, Pixel 3a and Samsung Galaxy S20+ both accept this for all known cameras
+                camera.setDisplayOrientation(90);
                 cameraOrientation = info.orientation;
             }
             catch (Exception e)
@@ -439,13 +446,6 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
             bgLooper.quit();
             bgLooper = null;            
         }
-    }
-
-
-    @Override
-    public String getName()
-    {
-        return name;
     }
 
 

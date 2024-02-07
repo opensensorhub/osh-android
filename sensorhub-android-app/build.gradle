@@ -3,8 +3,25 @@ apply plugin: 'com.android.application'
 description = 'OSH Demo Android App'
 ext.details = 'OSH demo app for Android'
 
+repositories {
+  maven {
+    url "https://repo.eclipse.org/content/repositories/paho-releases/"
+  }
+}
+
 dependencies {
   api project(':sensorhub-android-lib')
+
+  implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
+  implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.0'
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support:design:26.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:2.0.4'
+    implementation 'android.arch.navigation:navigation-fragment:1.0.0'
+    implementation 'android.arch.navigation:navigation-ui:1.0.0'
+    implementation 'com.android.support:support-v4:26.1.0'
+//    implementation project(path: ':sensorhub-android-sos-ipc')
+//    implementation project(path: ':sensorhub-storage-h2')
 }
 
 android {
@@ -41,5 +58,8 @@ android {
   lintOptions {
     abortOnError false
   }
+    buildFeatures {
+        viewBinding true
+    }
 }
 
