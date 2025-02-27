@@ -5,6 +5,7 @@ import org.sensorhub.api.common.SensorHubException;
 import org.sensorhub.api.module.IModuleConfigRepository;
 import org.sensorhub.impl.SensorHub;
 import org.sensorhub.impl.comm.NetworkManagerImpl;
+import org.sensorhub.impl.common.IdEncodersDES;
 import org.sensorhub.impl.database.registry.DefaultDatabaseRegistry;
 import org.sensorhub.impl.datastore.mem.InMemorySystemStateDbConfig;
 import org.sensorhub.impl.event.EventBus;
@@ -58,6 +59,8 @@ public class SensorHubAndroid extends SensorHub {
             this.securityManager = new SecurityManagerImpl(this);
             this.networkManager = new NetworkManagerImpl(this);
             this.processingManager = new ProcessingManagerImpl(this);
+            this.idEncoders = new IdEncodersDES(this);
+
 
             // prepare client authenticator (e.g. for HTTP connections, etc...)
             ClientAuth.createInstance("keystore");
