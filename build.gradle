@@ -3,7 +3,7 @@ ext.compileSdkVersion = 34
 ext.minSdkVersion = 33
 ext.targetSdkVersion = 34
 ext.buildToolsVersion = "34.0.0"
-version = '5.0.1'
+version = '5.0.2'
 
 buildscript {
     ext.kotlin_version = '1.9.22'

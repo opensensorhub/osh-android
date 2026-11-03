@@ -176,7 +176,12 @@ class SensorHubViewModel(private val application: Application) : AndroidViewMode
                 app.startService(Intent(app, SensorHubService::class.java))
                 activeSensors = SensorRegistry.enabledSensorEntries(snapshot).toList()
                 Log.i(TAG, "Requesting SensorHub start with ${activeSensors.size} enabled sensor(s)")
-                current.startSensorHub(config.modules, config.cameraEnabled)
+                current.startSensorHub(
+                    config.modules,
+                    activeSensors.any { it.id == "gps" || it.id == "network" },
+                    config.cameraEnabled,
+                    activeSensors.any { it.id == "audio" }
+                )
             } catch (e: Exception) {
                 Log.e(TAG, "Unable to prepare or request SensorHub startup", e)
                 reportError(e.message ?: application.getString(R.string.ui_unable_to_start_smart_hub))

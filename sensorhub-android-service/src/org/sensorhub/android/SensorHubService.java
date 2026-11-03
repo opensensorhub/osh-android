@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.graphics.SurfaceTexture;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -94,7 +95,6 @@ public class SensorHubService extends Service
             msgThread.start();
             msgHandler = new Handler(msgThread.getLooper());
 
-            startForegroundService();
             log.info("SensorHub Android service initialized");
         }
         catch (Exception e)
@@ -103,14 +103,7 @@ public class SensorHubService extends Service
         }
     }
 
-//    private void startLocationManager() {
-//        LocationRequest request = new LocationRequest.Builder(
-//                Priority.PRIORITY_HIGH_ACCURACY,
-//                5000 // update interval (ms)
-//        ).build();
-//
-//    }
-    private void startForegroundService() {
+    private void startForegroundService(boolean usesLocation, boolean usesCamera, boolean usesMicrophone) {
         // Create notification channel for Android O and above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
@@ -171,11 +164,27 @@ public class SensorHubService extends Service
                     .build();
         }
 
+        int foregroundServiceTypes = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
+        if (usesLocation) {
+            foregroundServiceTypes |= ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
+        }
+        if (usesCamera) {
+            foregroundServiceTypes |= ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA;
+        }
+        if (usesMicrophone) {
+            foregroundServiceTypes |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
+        }
+
         // Start foreground
-        startForeground(NOTIFICATION_ID, notification);
+        startForeground(NOTIFICATION_ID, notification, foregroundServiceTypes);
     }
 
-    public synchronized void startSensorHub(final IModuleConfigRepository config, final boolean hasVideo)
+    public synchronized void startSensorHub(
+            final IModuleConfigRepository config,
+            final boolean usesLocation,
+            final boolean hasVideo,
+            final boolean usesMicrophone
+    )
     {
         Log.i(ANDROID_LOG_TAG, "SensorHub start requested; video=" + hasVideo);
         if (hubState == HubState.STARTING || hubState == HubState.RUNNING || hubState == HubState.STOPPING) {
@@ -197,7 +206,7 @@ public class SensorHubService extends Service
 
         try {
             acquireWakeLocks();
-            startForegroundService();
+            startForegroundService(usesLocation, hasVideo, usesMicrophone);
             if (msgHandler == null)
                 throw new IllegalStateException("SensorHub service did not initialize");
         } catch (RuntimeException e) {
