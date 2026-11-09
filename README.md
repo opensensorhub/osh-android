@@ -1,50 +1,108 @@
-### OpenSensorHub for Android
+# OpenSensorHub for Android
 
-This repo contains modules specific to Android, including:
+An Android application that collects sensor data from phones and tablets and streams it to a remote [OpenSensorHub](https://opensensorhub.org/) (OSH) server using OGC standards (SOS-T and Connected Systems API).
 
-- A demo Android app
-- A SensorHub service usable by other Android apps
-- Drivers for sensors accessible through the Android 
-  [Sensor API](http://developer.android.com/guide/topics/sensors/sensors_overview.html),
-  [Camera API](http://developer.android.com/guide/topics/media/camera.html) and
-  [Location API](http://developer.android.com/guide/topics/location/index.html)
-  
-The demo app allows a phone or tablet running Android 5.0 (Lollipop) or later to send sensor data to a remote OSH node using the SOS-T standard.
+## Supported Sensors
 
-Supported sensors include the ones that are on-board the phone:
-- GPS
-- Raw IMU (Accelerometers, Gyroscopes, Magnetometers)
-- Fused Orientation (Quaternions or Euler angles)
-- Video Camera (MJPEG or H264 codec)
+**On-Device:**
+- GPS location
+- IMU (accelerometers, gyroscopes, magnetometers)
+- Fused orientation (quaternions or Euler angles)
+- Video camera (H.264, H.265, VP8, VP9, MJPEG)
+- Audio microphone (AAC, OPUS)
 
-But also other sensors connected via USB, Bluetooth or Bluetooth Smart:
-- FLIR One Thermal Camera (USB)
-- Trupulse 360 Range Finder (Bluetooth)
-- Angel Sensor Wrist Band (Bluetooth Smart)
+**External (USB / Bluetooth / BLE):**
+- FLIR One thermal camera (USB)
+- Trupulse 360 range finder (Bluetooth)
+- Angel Sensor wrist band (BLE)
+- Kestrel weather meter (BLE)
+- Polar H9/H10 heart rate monitor (Bluetooth)
+- Meshtastic mesh radio (Bluetooth)
+- STE radiation pager
+- BLE beacons
+- Garmin Wearable Sensor
+
+## Requirements
+- **Android device** running Android 14 (API 34) or later
+- **JDK 17**
+- **Android SDK** with Build Tools 30.0.2 and API level 33 installed
+- **Android Studio** (recommended) or Gradle 7.4+ for command-line builds
+- **Git** (with submodule support)
+
+## Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone --recursive https://github.com/botts-innovative-research/osh-android.git
+cd osh-android
+```
+
+If you already cloned without `--recursive`, initialize the submodules separately:
+
+```bash
+git submodule update --init --recursive
+```
+
+This pulls in two required submodule dependencies:
+- **osh-core** -- the core OpenSensorHub framework
+- **osh-addons** -- additional sensor drivers and processing modules
+
+### 2. Configure the Android SDK Path
+Create or verify the `local.properties` file in the project root:
+
+```properties
+sdk.dir=/path/to/your/Android/sdk
+```
+
+On macOS this is typically `~/Library/Android/sdk`. On Linux it is often `~/Android/Sdk`.
+
+### 3. Build the App
+
+#### Option A: Android Studio (Recommended)
+1. Open Android Studio
+2. **File > Open** and select the `osh-android` project directory
+3. Wait for Gradle sync to complete
+4. **Build > Build Bundle(s) / APK(s) > Build APK(s)**
+5. The APK is output to `sensorhub-android-app/build/outputs/apk/debug/`
+
+#### Option B: Command Line
+```bash
+./gradlew build -x test
+```
+
+The APK is output to `sensorhub-android-app/build/outputs/apk/debug/`.
 
 
-### Build
+### 4. Install on a Device
 
-Building the latest version of the App has been successfully tested with Gradle 4.7 and Android Studio 3.2.1.
+```bash
+./gradlew :sensorhub-android-app:assembleDebug 
 
-You'll need to install an up-to-date Android SDK and set its path in the [local.properties](local.properties) file. Also make sure you pulled source code from the `osh-core` and `osh-addons` repositories, in the same location as this repo.
+adb install -r sensorhub-android-app/build/outputs/apk/debug/sensorhub-android-app-debug.apk
+```
 
-To build using command line gradle, `cd` in the `sensorhub-android-app` folder and just run `../gradlew build`. You'll find the resulting APK in `sensorhub-android-app/build/outputs/apk`
+## Project Structure
 
-You can also install it on a USB connected device by running `../gradlew installDebug`.
+```
+osh-android/
+  sensorhub-android-app/       # Main demo application (APK)
+  sensorhub-android-service/   # Background SensorHub service library
+  sensorhub-android-lib/       # Dependency aggregation library
+  sensorhub-driver-android/    # Core Android sensor & camera driver
+  sensorhub-android-polar/     # Polar heart rate monitor driver
+  sensorhub-android-meshtastic/# Meshtastic mesh radio driver
+  sensorhub-android-ste/       # STE radiation pager driver
+  sensorhub-android-flirone/   # FLIR One thermal camera driver
+  sensorhub-android-blebeacon/ # BLE beacon detector driver
+  submodules/
+    osh-core/                   # Core OSH framework
+    osh-addons/                 # Additional drivers & processing
+```
 
-
-### How to use the App
-
-The App is designed to be connected to an OSH server (for instance, you can use the [osh-base](https://github.com/opensensorhub/osh-distros/tree/master/osh-base) distribution) and upload inertial, GPS and video data to it.
-
-For the connection to be established, you'll have to configure the App with the correct endpoint of the server (see the [App Documentation](http://docs.opensensorhub.org/user/android-app/))
-
-You'll also have to enable transactional operations on the server side so the phone can register itself and send its data. For this, use the following steps:
-
-- Open the web admin interface at <http://your_domain:port/sensorhub/admin>
-- Go to the "Services" tab on the left
-- Select "SOS Service"
-- Check "Enable Transactional"
-- Click "Apply Changes" at the top right
-- Optionally click the "Save" button to keep this configuration after restart
+## Troubleshooting
+- **Gradle sync fails**: Verify that submodules are initialized (`git submodule update --init --recursive`) and that `local.properties` points to a valid Android SDK.
+- **Build errors with JDK**: Ensure JDK 17 is installed and selected in Android Studio (File > Settings > Build > Gradle > Gradle JDK).
+- **App crashes on launch**: Confirm the device runs Android 14 (API 34) or later.
+- **No data reaching server**: Check that the server IP/port are correct, and the device has network connectivity.
+- **Bluetooth sensors not connecting**: Pair the external sensor in Android system Bluetooth settings before enabling it in the app.

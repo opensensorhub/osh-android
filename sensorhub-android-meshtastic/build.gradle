@@ -1,0 +1,33 @@
+plugins {
+    id 'com.android.library'
+    id 'com.google.protobuf' version '0.9.5'
+}
+
+description = 'Meshtastic Node'
+ext.details = 'Driver for Meshtastic Node'
+version = '1.0.0'
+
+dependencies {
+    api project(':sensorhub-core')
+    implementation ('org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5')
+    implementation("com.google.protobuf:protobuf-java:4.33.0")
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    implementation project(':sensorhub-android-service')
+    implementation project(':sensorhub-driver-android')
+}
+
+configurations.configureEach {
+    exclude group: "ch.qos.logback"
+}
+
+
+android {
+    namespace 'org.sensorhub.impl.sensor.meshtastic'
+    compileSdkVersion rootProject.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.minSdkVersion   // ← important
+        targetSdkVersion rootProject.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+}

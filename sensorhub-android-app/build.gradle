@@ -1,45 +1,123 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
-description = 'OSH Demo Android App'
-ext.details = 'OSH demo app for Android'
+description = 'OSH Android App'
+ext.details = 'OSH app for Android'
+
+repositories {
+//  maven {
+//    url "https://repo.eclipse.org/content/repositories/paho-releases/"
+//  }
+}
 
 dependencies {
-  api project(':sensorhub-android-lib')
+    testImplementation "junit:junit:4.13.2"
+    api project(':sensorhub-android-lib')
+
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+    implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.preference:preference:1.2.0'
+
+    implementation project(path: ':sensorhub-datastore-h2')
+    implementation project(path: ':sensorhub-service-consys')
+    implementation project(path: ':sensorhub-service-discovery')
+    implementation project(':sensorhub-android-ste')
+    implementation project(':sensorhub-android-meshtastic')
+    implementation project(':sensorhub-android-polar')
+    implementation project(':sensorhub-android-wardriving')
+    implementation project(':sensorhub-android-controller')
+    implementation project(':sensorhub-android-template')
+    implementation project(':sensorhub-driver-android')
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation 'com.github.tony19:logback-android:3.0.0'
+
+    implementation "com.squareup.okhttp3:okhttp:4.12.0"
+
+    // compose deps
+    implementation platform('androidx.compose:compose-bom:2024.02.02')
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.material:material-icons-extended'
+    implementation 'androidx.activity:activity-compose:1.8.2'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.7.0'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+    implementation("androidx.navigation:navigation-compose:2.8.4")
+
+    // Map
+    implementation 'org.osmdroid:osmdroid-android:6.1.20'
+    // implementation 'org.osmdroid:osmdroid-wms:6.1.20'
+    // implementation 'org.osmdroid:osmdroid-mapsforge:6.1.20'
+    // implementation 'org.osmdroid:osmdroid-geopackage:6.1.20'
+}
+
+allprojects {
+    configurations.all {
+
+        exclude group: 'ch.qos.logback', module: 'logback-classic'
+        exclude group: 'ch.qos.logback', module: 'logback-core'
+
+        resolutionStrategy {
+            force "org.jetbrains.kotlin:kotlin-stdlib:1.9.22"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.22"
+        }
+    }
 }
 
 android {
-  compileSdkVersion rootProject.compileSdkVersion
-  buildToolsVersion rootProject.buildToolsVersion
+    namespace 'org.sensorhub.android'
+    compileSdkVersion rootProject.compileSdkVersion
+    buildToolsVersion rootProject.buildToolsVersion
 
-  defaultConfig {
-    minSdkVersion rootProject.minSdkVersion
-    targetSdkVersion rootProject.targetSdkVersion
-    versionCode 1
-    versionName rootProject.version
-  }
-
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
-  }
-
-  packagingOptions {
-    exclude 'META-INF/LICENSE'
-    exclude '**/empty'
-    exclude 'META-INF/rxjava.properties'
-  }
-
-  sourceSets {
-    main {
-      manifest.srcFile 'AndroidManifest.xml'
-      java.srcDirs = ['src']
-      res.srcDirs = ['res']
-      assets.srcDirs = ['assets']
+    defaultConfig {
+        minSdkVersion rootProject.minSdkVersion
+        targetSdkVersion rootProject.targetSdkVersion
+        versionCode 1
+        versionName rootProject.version
+        applicationId "com.georobotix.android"
     }
-  }
 
-  lintOptions {
-    abortOnError false
-  }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    packaging {
+        resources {
+            excludes += ['META-INF/LICENSE', '**/empty', 'META-INF/rxjava.properties', 'META-INF/INDEX.LIST']
+        }
+    }
+
+
+    sourceSets {
+        test.java.srcDirs = ["tests"]
+        main {
+            java.srcDirs = ['src']
+            manifest.srcFile 'src/AndroidManifest.xml'
+            res.srcDirs = ['res']
+            assets.srcDirs = ['assets']
+        }
+    }
+
+    lint {
+        abortOnError false
+    }
+
+    buildFeatures {
+        compose true
+        buildConfig true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = '1.5.10'
+    }
+
 }
-

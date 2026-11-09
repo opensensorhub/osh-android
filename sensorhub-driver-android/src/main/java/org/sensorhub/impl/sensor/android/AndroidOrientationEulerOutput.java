@@ -14,18 +14,20 @@ Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.sensor.android;
 
-import net.opengis.swe.v20.AllowedValues;
-import net.opengis.swe.v20.DataBlock;
-import net.opengis.swe.v20.Quantity;
-import net.opengis.swe.v20.Vector;
-import org.sensorhub.algo.vecmath.Quat4d;
-import org.sensorhub.algo.vecmath.Vect3d;
-import org.sensorhub.api.sensor.SensorDataEvent;
-import org.vast.swe.helper.GeoPosHelper;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+
+import net.opengis.swe.v20.AllowedValues;
+import net.opengis.swe.v20.DataBlock;
+import net.opengis.swe.v20.Quantity;
+import net.opengis.swe.v20.Vector;
+
+import org.sensorhub.algo.vecmath.Quat4d;
+import org.sensorhub.algo.vecmath.Vect3d;
+import org.sensorhub.api.data.DataEvent;
+import org.vast.swe.helper.GeoPosHelper;
 
 
 /**
@@ -41,9 +43,13 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
     // for euler computation
     Quat4d att = new Quat4d();
     Vect3d look = new Vect3d();
+    Vect3d up = new Vect3d();
     Vect3d euler = new Vect3d();
-    
-    
+
+    private final float[] rotationMatrix = new float[9];
+    private final float[] orientationAngles = new float[3];
+
+
     protected AndroidOrientationEulerOutput(AndroidSensorsDriver parentModule, SensorManager aSensorManager, Sensor aSensor)
     {
         super(parentModule, aSensorManager, aSensor);
@@ -59,7 +65,7 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
         dataStruct.addComponent("time", fac.newTimeStampIsoUTC());
 
         // euler angles vector
-        Vector vec = fac.newEulerOrientationENU(null);
+        Vector vec = fac.newEulerOrientationENU(null, "deg");
         vec.setLocalFrame(parentSensor.localFrameURI);
         dataStruct.addComponent("orient", vec);
         
@@ -94,50 +100,28 @@ public class AndroidOrientationEulerOutput extends AndroidSensorOutput implement
     {
         double sampleTime = getJulianTimeStamp(e.timestamp);
 
-        // convert to quaternion + normalize
-        AndroidOrientationQuatOutput.getQuaternionFromVector(att, e.values);
-        att.normalize();
-        
-        // Y direction in phone ref frame
-        look.x = 0;
-        look.y = 1;
-        look.z = 0;
-        
-        // rotate to ENU
-        att.rotate(look, look);
-                
-        double heading = 90. - Math.toDegrees(Math.atan2(look.y, look.x)); 
-        if (heading > 180.)
-            heading -= 360.;
-        double pitch = 0.0;//Math.toDegrees(Math.atan2(look.y, look.x)) - 90.;
-        double roll = 0.0;
-        
-        /*double sqw = q.w*q.w;
-        double sqx = q.x*q.x;
-        double sqy = q.y*q.y;
-        double sqz = q.z*q.z;
-        System.out.println(q0);
-        euler.z = Math.atan2(2.0 * (q.x*q.y + q.z*q.W), sqx - sqy - sqz + sqw);     // heading
-        euler.y = Math.atan2(2.0 * (q.y*q.z + q.x*q.w), -sqx - sqy + sqz + sqw);    // pitch
-        euler.x = Math.asin(-2.0 * (q.x*q.z - q.y*q.w));                            // roll
-        euler.scale(180./Math.PI);
-        
-        double oldx = euler.x; // convert to ENU
-        euler.x = euler.y;
-        euler.y = oldx;
-        euler.z = -euler.z;*/
-        
-        // build and populate datablock
-        DataBlock dataBlock = dataStruct.createDataBlock();
-        dataBlock.setDoubleValue(0, sampleTime);
-        dataBlock.setFloatValue(1, (float)heading);
-        dataBlock.setFloatValue(2, (float)pitch);
-        dataBlock.setFloatValue(3, (float)roll);
-        
-        // TODO since this sensor is high rate, we could package several records in a single event
-        // update latest record and send event
-        latestRecord = dataBlock;
-        latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, this, dataBlock)); 
+        if (e.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+            SensorManager.getRotationMatrixFromVector(rotationMatrix, e.values);
+
+            SensorManager.getOrientation(rotationMatrix, orientationAngles);
+
+            float azimuth = (float) Math.toDegrees(orientationAngles[0]);
+            float pitch = (float) Math.toDegrees(orientationAngles[1]);
+            float roll = (float) Math.toDegrees(orientationAngles[2]);
+
+
+            // build and populate datablock
+            DataBlock dataBlock = dataStruct.createDataBlock();
+            dataBlock.setDoubleValue(0, sampleTime);
+            dataBlock.setFloatValue(1, (float) azimuth);
+            dataBlock.setFloatValue(2, (float) pitch);
+            dataBlock.setFloatValue(3, (float) roll);
+
+            // TODO since this sensor is high rate, we could package several records in a single event
+            // update latest record and send event
+            latestRecord = dataBlock;
+            latestRecordTime = System.currentTimeMillis();
+            eventHandler.publish(new DataEvent(latestRecordTime, this, dataBlock));
+        }
     }    
 }

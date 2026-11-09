@@ -11,9 +11,16 @@ dependencies {
   api project(':sensorhub-driver-videocam')
   api project(':sensorhub-process-vecmath')
   api project(':sensorhub-android-service')
+  testImplementation 'junit:junit:4.12'
+
+}
+
+configurations.configureEach {
+  exclude group: "ch.qos.logback"
 }
 
 android {
+  namespace 'org.sensorhub.impl.sensor.android'
   compileSdkVersion rootProject.compileSdkVersion
   buildToolsVersion rootProject.buildToolsVersion
 
@@ -22,13 +29,12 @@ android {
     targetSdkVersion rootProject.targetSdkVersion
   }
 
-  lintOptions {
+  lint {
     abortOnError false
   }
 
   sourceSets {
     main {
-      manifest.srcFile 'AndroidManifest.xml'
       java.srcDirs = ['src/main/java']
       resources.srcDirs = ['src/main/resources']
       res.srcDirs = ['res']

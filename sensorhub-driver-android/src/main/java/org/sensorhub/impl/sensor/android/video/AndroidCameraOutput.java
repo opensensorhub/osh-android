@@ -39,12 +39,11 @@ import net.opengis.swe.v20.DataType;
 import net.opengis.swe.v20.Quantity;
 
 import org.sensorhub.algo.vecmath.Vect3d;
-import org.sensorhub.api.sensor.SensorDataEvent;
+import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.sensorhub.impl.sensor.android.AndroidSensorsDriver;
 import org.sensorhub.impl.sensor.android.IAndroidOutput;
-import org.sensorhub.impl.sensor.android.video.VideoEncoderConfig.VideoPreset;
 import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +87,6 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     int cameraOrientation;
     int videoRollAngle;
 
-    String name;
     DataComponent dataStruct;
     DataEncoding dataEncoding;
     int samplingPeriod;
@@ -103,9 +101,9 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
 
     protected AndroidCameraOutput(AndroidSensorsDriver parentModule, int cameraId, SurfaceTexture previewTexture, String name) throws SensorException
     {
-        super(parentModule);
+        super(name, parentModule);
         this.cameraId = cameraId;
-        this.name = name;
+
         //this.previewSurfaceHolder = previewSurfaceHolder;
         this.previewTexture = previewTexture;
         this.sensorManager = parentModule.getSensorManager();
@@ -129,7 +127,8 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         dataStruct.setDefinition("http://sensorml.com/ont/swe/property/VideoFrame");
 
         // add video roll component if enabled and gravity sensor is available
-        if (getParentModule().getConfiguration().outputVideoRoll)
+//        if (getParentModule().getConfiguration().outputVideoRoll)
+        if (getParentProducer().getConfiguration().outputVideoRoll)
         {
             List<Sensor> gravitySensors = sensorManager.getSensorList(Sensor.TYPE_GRAVITY);
             if (!gravitySensors.isEmpty()) {
@@ -137,7 +136,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
 
                 Quantity roll = fac.createQuantity()
                     .name("videoRoll")
-                    .definition(GeoPosHelper.DEF_ROLL)
+                    .definition(GeoPosHelper.DEF_ROLL_ANGLE)
                     .label("Video Roll Angle")
                     .uomCode("deg")
                     .build();
@@ -228,7 +227,13 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 camParams.setPreviewSize(imgWidth, imgHeight);
                 camParams.setVideoStabilization(camParams.isVideoStabilizationSupported());
                 camParams.setPreviewFormat(ImageFormat.NV21);
-                camParams.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+
+                // TODO: Do we need to add focus mode selection to UI? Do some cameras not support fixed? Is this a problem we wouldn't have with Camera2?
+                if(camParams.getSupportedFocusModes().contains(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+                    camParams.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+                }else{
+                    camParams.setFocusMode(Parameters.FOCUS_MODE_FIXED);
+                }
                 camParams.setPreviewFrameRate(frameRate);
                 camera.setParameters(camParams);
                 log.info("Fps ranges: {}", Arrays.deepToString(camParams.getSupportedPreviewFpsRange().toArray(new int[0][])));
@@ -241,7 +246,9 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
                 camera.addCallbackBuffer(imgBuf1);
                 camera.addCallbackBuffer(imgBuf2);
                 camera.setPreviewCallbackWithBuffer(AndroidCameraOutput.this);
-                camera.setDisplayOrientation(info.orientation);
+//                camera.setDisplayOrientation(info.orientation);
+                // TODO: need to test with more devices, Pixel 3a and Samsung Galaxy S20+ both accept this for all known cameras
+                camera.setDisplayOrientation(90);
                 cameraOrientation = info.orientation;
             }
             catch (Exception e)
@@ -391,7 +398,7 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         // send event
         latestRecord = newRecord;
         latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, AndroidCameraOutput.this, latestRecord));
+        eventHandler.publish(new DataEvent(latestRecordTime, AndroidCameraOutput.this, latestRecord));
     }
 
 
@@ -413,14 +420,100 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
     }
 
 
+    public void switchCamera(int newCameraId) throws SensorException
+    {
+        if (newCameraId == this.cameraId)
+            return;
+
+        if (camera != null)
+        {
+            camera.stopPreview();
+            camera.setPreviewCallbackWithBuffer(null);
+            camera.release();
+            camera = null;
+        }
+
+        if (mCodec != null)
+        {
+            mCodec.stop();
+            mCodec.release();
+            mCodec = null;
+        }
+
+        if (bgLooper != null)
+        {
+            bgLooper.quit();
+            bgLooper = null;
+        }
+
+        codecInfoData = null;
+
+        this.cameraId = newCameraId;
+        initCam();
+        initCodec();
+
+        if (mCodec != null)
+            mCodec.start();
+
+        try
+        {
+            if (previewTexture != null)
+                camera.setPreviewTexture(previewTexture);
+            camera.startPreview();
+        }
+        catch (Exception e)
+        {
+            throw new SensorException("Cannot restart camera preview after switch", e);
+        }
+    }
+
+
+    public void setZoom(int zoomLevel) throws SensorException
+    {
+        if (camera == null)
+            throw new SensorException("Camera is not initialized");
+        if (bgLooper == null)
+            throw new SensorException("Camera looper is not running");
+
+        new Handler(bgLooper).post(() -> {
+            try
+            {
+                Camera.Parameters params = camera.getParameters();
+                if (!params.isZoomSupported())
+                {
+                    log.warn("Zoom is not supported on camera {}", cameraId);
+                    return;
+                }
+
+                int maxZoom = params.getMaxZoom();
+                int clampedZoom = Math.max(0, Math.min(zoomLevel, maxZoom));
+                params.setZoom(clampedZoom);
+                camera.setParameters(params);
+                log.info("Zoom set to {}/{} on camera #{}", clampedZoom, maxZoom, cameraId);
+            }
+            catch (Exception e)
+            {
+                log.error("Failed to set zoom on camera {}", cameraId, e);
+            }
+        });
+    }
+
+
     @Override
     public void stop()
     {
         if (camera != null)
         {
             camera.stopPreview();
+            camera.setPreviewCallbackWithBuffer(null);
             camera.release();
             camera = null;
+        }
+
+        if (previewTexture != null)
+        {
+            previewTexture.release();
+            previewTexture = null;
         }
 
         if (sensorManager != null)
@@ -432,20 +525,14 @@ public abstract class AndroidCameraOutput extends AbstractSensorOutput<AndroidSe
         {
             mCodec.stop();
             mCodec.release();
+            mCodec = null;
         }
-        
+
         if (bgLooper != null)
         {
             bgLooper.quit();
-            bgLooper = null;            
+            bgLooper = null;
         }
-    }
-
-
-    @Override
-    public String getName()
-    {
-        return name;
     }
 
 

@@ -1,0 +1,51 @@
+apply plugin: 'com.android.library'
+
+repositories{
+    mavenCentral()
+    flatDir {
+        dirs 'src/libs'
+    }
+}
+
+configurations.configureEach {
+    exclude group: "ch.qos.logback"
+}
+android {
+    namespace 'org.sensorhub.impl.sensor.blebeacon'
+
+    compileSdkVersion rootProject.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.minSdkVersion   // ← important
+        targetSdkVersion rootProject.targetSdkVersion
+
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    implementation project(path: ':sensorhub-core')
+//    implementation 'org.altbeacon:android-beacon-library:2.16.2'
+//    implementation 'org.altbeacon:android-beacon-library:2.13.1'
+    implementation project(path: ':sensorhub-process-vecmath')
+//    implementation project(path: ':sensorhub-process-geoloc')
+    implementation 'com.android.volley:volley:1.2.1'
+    implementation(name: 'android-beacon-library-2.16.4', ext:'aar')
+}

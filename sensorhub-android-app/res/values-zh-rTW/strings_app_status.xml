@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_status_main_fragment">應用程式狀態</string>
+
+    <string-array name="status_options">
+        <item>初始化中</item>
+        <item>已初始化</item>
+        <item>啟動中</item>
+        <item>已啟動</item>
+        <item>停止中</item>
+        <item>已停止</item>
+        <item>未知</item>
+    </string-array>
+
+    <string name="sosServiceStatusLabel">SOS 服務狀態</string>
+    <string name="conSysServiceStatusLabel">ConSys 服務狀態</string>
+    <string name="discoveryServiceStatusLabel">探索服務狀態</string>
+    <string name="httpServerStatusLabel">HTTP 伺服器狀態</string>
+    <string name="sensorServiceStatusLabel">Android 感測器狀態</string>
+    <string name="storageServiceStatusLabel">Android 感測器儲存狀態</string>
+</resources>

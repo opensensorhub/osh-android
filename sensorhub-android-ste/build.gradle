@@ -1,0 +1,27 @@
+apply plugin: 'com.android.library'
+
+description = 'STE Radiation Pager'
+ext.details = 'Driver for STE Radiation Pager'
+
+dependencies {
+    api project(':sensorhub-core')
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    implementation project(':sensorhub-android-service')
+    implementation project(':sensorhub-driver-android')
+
+}
+
+configurations.configureEach {
+    exclude group: "ch.qos.logback"
+}
+
+android {
+    namespace 'org.sensorhub.impl.sensor.ste'
+    compileSdkVersion rootProject.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.minSdkVersion   // ← important
+        targetSdkVersion rootProject.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+}

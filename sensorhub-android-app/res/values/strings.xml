@@ -1,12 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SensorHubConnect</string>
-    <string name="hello_world">Please configure and start SensorHub using the Options Menu</string>
+    <string name="system_detail_default_title">System</string>
+    <string name="system_detail_missing_system">This system is no longer available.</string>
+    <string name="system_detail_no_datastreams">No datastreams are available for this system.</string>
+    <string name="system_detail_datastream">Datastream</string>
+    <string name="system_detail_location">Location</string>
+    <string name="system_detail_video">Video</string>
+    <string name="system_detail_ptz_controls">PTZ Controls</string>
+    <string name="system_detail_absolute_position">Absolute position</string>
+    <string name="system_detail_relative_controls">Relative controls</string>
+    <string name="system_detail_pan">Pan</string>
+    <string name="system_detail_tilt">Tilt</string>
+    <string name="system_detail_zoom">Zoom</string>
+    <string name="system_detail_live">Live</string>
+    <string name="system_detail_paused">Paused</string>
+    <string name="system_detail_disconnected_with_error">Disconnected: %1$s</string>
+    <string name="system_detail_waiting_for_observations">Waiting for observations…</string>
+    <string name="system_detail_receiving_observations">Receiving observations</string>
+    <string name="system_detail_disconnected">Disconnected</string>
+    <string name="system_detail_ptz_control">PTZ control</string>
+    <string name="system_detail_tilt_up">Tilt up</string>
+    <string name="system_detail_tilt_down">Tilt down</string>
+    <string name="system_detail_pan_left">Pan left</string>
+    <string name="system_detail_home">Home Preset</string>
+    <string name="system_detail_pan_right">Pan right</string>
+    <string name="system_detail_zoom_out">Zoom out</string>
+    <string name="system_detail_zoom_in">Zoom in</string>
+    <string name="system_detail_video_stream">Video stream</string>
+    <string name="system_detail_pause_video">Pause video</string>
+    <string name="system_detail_play_video">Play video</string>
+    <plurals name="system_detail_value_count">
+        <item quantity="one">%d value</item>
+        <item quantity="other">%d values</item>
+    </plurals>
+    <string name="app_name">OSH Android</string>
+    <string name="hello_world">Configure settings and tap the play button to start SmartHub</string>
     <string name="action_settings">Settings</string>
-    <string name="action_start">Start SensorHub</string>
-    <string name="action_stop">Stop SensorHub</string>
+    <string name="action_nodes">Nodes</string>
+    <string name="action_start">Start SmartHub</string>
+    <string name="action_stop">Stop SmartHub</string>
+    <string name="action_status">App Status</string>
+    <string name="action_test_connection">Test Connection</string>
     <string name="action_about">About</string>
-    
+    <string name="action_proxy">Start Proxy</string>
+    <string name="action_stop_proxy">Stop Proxy</string>
+    <string name="action_meshtastic">Meshtastic Msg</string>
+    <string name="sensor_android">Android Sensor</string>
+    <string name="sensor_angel">Angel Health Monitor</string>
+    <string name="sensor_meshtastic">Meshtastic Radio</string>
+    <string name="sensor_wardriving">Wardriving</string>
+    <string name="sensor_polar">Polar Heart Monitor</string>
+    <string name="sensor_kestrel">Kestrel Weather Meter</string>
+    <string name="sensor_controller">USB Controller</string>
+    <string name="sensor_trupulse">TruPulse Range Finder</string>
+    <string name="sensor_flirone">Flirone</string>
+    <string name="sensor_ste">STE Radiation Pager</string>
+    <string name="sensor_template">Template</string>
+    <string name="sensor_accelerometer">Accelerometer</string>
+    <string name="sensor_gyroscope">Gyroscope</string>
+    <string name="sensor_magnetometer">Magnetometer</string>
+    <string name="sensor_orientation_quat">Orientation (Quaternions)</string>
+    <string name="sensor_orientation_euler">Orientation (Euler Angles)</string>
+    <string name="sensor_gps">GPS Location</string>
+    <string name="sensor_network_location">Network Location</string>
+    <string name="sensor_video">Video Data</string>
+    <string name="sensor_video_roll">Video Roll</string>
+    <string name="sensor_audio">Audio</string>
+
+    <string name="device_name">Device Name</string>
+    <string name="device_ip_address">Device IP Address</string>
+    <string name="server_profiles">Configured Nodes</string>
+    <string name="manage_servers">Manage Nodes</string>
+    <string name="manage_vis">Manage Visualizations</string>
+    <string name="services">Services on this device</string>
+    <string name="enable_sos_service">SOS Service</string>
+    <string name="enable_csapi_service">Connected Systems Service</string>
+    <string name="enable_discovery_service">Discovery Service</string>
+
+    <string name="summary_push_options">Options for pushing data</string>
+    <string name="summary_csapi">OGC standard REST API serving this device’s sensor data.</string>
+    <string name="summary_sos">Legacy API serving sensor data as XML over HTTP</string>
+    <string name="summary_discovery">Service providing discovery based on definable rulesets</string>
+    <string name="summary_select_device">Tap to select or enter device address</string>
+    <string name="pref_uid_extension">Sensors UID Extension</string>
+
     <string-array name="video_codec_list">
         <item>JPEG</item>
         <item>H264</item>
@@ -14,4 +91,546 @@
         <item>VP9</item>
         <item>VP8</item>
     </string-array>
+
+    <string-array name="video_framerate">
+        <item>24</item>
+        <item>30</item>
+        <item>60</item>
+        <item>120</item>
+    </string-array>
+
+    <string-array name="video_resolution_list">
+        <item>24</item>
+        <item>30</item>
+        <item>60</item>
+        <item>120</item>
+    </string-array>
+
+    <string-array name="orientation_angle_list">
+        <item>Quaternion</item>
+        <item>Euler</item>
+    </string-array>
+    <string-array name="orientation_angle_values">
+        <item>QUATERNION</item>
+        <item>EULER</item>
+    </string-array>
+    <string-array name="orientation_angle_defaults">
+        <item>QUATERNION</item>
+    </string-array>
+
+    <string-array name="location_type_list">
+        <item>GPS</item>
+        <item>Network</item>
+    </string-array>
+    <string-array name="location_type_values">
+        <item>GPS</item>
+        <item>NETWORK</item>
+    </string-array>
+    <string-array name="location_type_defaults">
+        <item>GPS</item>
+    </string-array>
+
+    <string-array name="sos_option_list">
+        <item>Fetchable</item>
+        <item>Store Locally</item>
+        <item>Push Remote</item>
+    </string-array>
+    <string-array name="sos_option_values">
+        <item>FETCH_LOCAL</item>
+        <item>STORE_LOCAL</item>
+        <item>PUSH_REMOTE</item>
+    </string-array>
+    <string-array name="sos_option_defaults">
+        <item>PUSH_REMOTE</item>
+    </string-array>
+
+    <string name="trupulse_device_name">Trupulse Device Name</string>
+    <string-array name="trupulse_datasource_list">
+        <item>Streaming Physical Device</item>
+        <item>Simulate Virtual Device</item>
+    </string-array>
+    <string-array name="trupulse_datasource_values">
+        <item>STREAM</item>
+        <item>SIMULATED</item>
+    </string-array>
+    <string name="trupulse_datasource_default">STREAM</string>
+
+    <string-array name="spot_report_feature_type_list">
+        <item>Select Reporting Item</item>
+        <item>Street Closure</item>
+        <item>Flooding</item>
+        <item>Medical</item>
+        <item>Aid</item>
+    </string-array>
+
+    <string-array name="ble_location_method_list">
+        <item>Nearest Beacon</item>
+        <item>Trilateration</item>
+    </string-array>
+    <string-array name="ble_location_method_values">
+        <item>NEAREST</item>
+        <item>TRILATERATION</item>
+    </string-array>
+    <string-array name="ble_location_method_defaults">
+        <item>NEAREST</item>
+    </string-array>
+
+    <string-array name="spot_report_location_source_list">
+        <item>GPS</item>
+        <item>Laser Range Finder</item>
+        <item>Network</item>
+    </string-array>
+
+    <string name="spot_report">Spot Report</string>
+    <string name="spot_name_field">NAME:</string>
+    <string name="spot_description_field">DESCRIPTION:</string>
+    <string name="spot_take_image_button">CAPTURE</string>
+    <string name="spot_reset_image_button"> RESET </string>
+    <string name="spot_submit_report_button">SUBMIT REPORT</string>
+    <string name="spot_name_description">A name for the report</string>
+
+    <string name="spot_report_radius">Radius:</string>
+    <string name="spot_report_latitude">Lat:</string>
+    <string name="spot_report_longitude">Lon:</string>
+    <string name="spot_report_ft">Ft.</string>
+
+    <string-array name="spot_report_closure_type">
+        <item>Select...</item>
+        <item>Public</item>
+        <item>All</item>
+    </string-array>
+
+    <string-array name="spot_report_action_items">
+        <item>Select...</item>
+        <item>Open</item>
+        <item>Close</item>
+    </string-array>
+
+    <string name="spot_report_action">Action:</string>
+    <string name="spot_report_id">Ref. Id:</string>
+
+
+    <string name="spot_report_closure_type">Type:</string>
+
+    <string-array name="spot_report_flood_feature_type">
+        <item>Select...</item>
+        <item>Channel Drainage</item>
+        <item>Land Surface</item>
+    </string-array>
+
+    <string-array name="spot_report_observation_modes">
+        <item>Select...</item>
+        <item>Meter</item>
+        <item>Visual</item>
+        <item>Model</item>
+    </string-array>
+
+    <string name="spot_report_flood_feature">Feature Type:</string>
+    <string name="spot_report_depth">Depth:</string>
+    <string name="spot_report_observation_mode">Obs. Mode:</string>
+
+    <string name="spot_report_med_sign">Describe Medical Condition...</string>
+    <string name="spot_report_med_value">Enter measurement (BP, Temp, etc.)...</string>
+    <string name="spot_report_med_emergency">Emergency (T/F)</string>
+
+    <string-array name="spot_report_aid_types">
+        <item>Select...</item>
+        <item>Environment</item>
+        <item>Health</item>
+        <item>Safety</item>
+        <item>Services</item>
+    </string-array>
+
+    <string-array name="spot_report_aid_urgency_value">
+        <item>Select...</item>
+        <item>5</item>
+        <item>4</item>
+        <item>3</item>
+        <item>2</item>
+        <item>1</item>
+    </string-array>
+
+    <string name="spot_report_aid_type">Aid Type:</string>
+    <string name="spot_report_aid_num"># Persons:</string>
+    <string name="spot_report_aid_urgency">Urgency:</string>
+    <string name="spot_report_aid_description">Describe aid needed...</string>
+    <string name="spot_report_aid_reporter">Enter your name or id</string>
+
+    <string-array name="spot_report_tracked_resource">
+        <item>Select...</item>
+        <item>Person</item>
+        <item>Vehicle</item>
+        <item>Device</item>
+    </string-array>
+
+    <string-array name="spot_report_tracked_method">
+        <item>Select...</item>
+        <item>GPS</item>
+        <item>BlueTooth Beacon</item>
+        <item>WiFi</item>
+        <item>Cellular</item>
+        <item>UWB</item>
+        <item>N/A</item>
+    </string-array>
+
+    <string name="spot_report_track_resource_label">Tracking Resource:</string>
+    <string name="spot_report_track_method_label">Tracking Method:</string>
+    <string name="spot_report_track_id">Enter resource id</string>
+    <string name="spot_report_track_label">Enter resource label</string>
+
+    <string-array name="audio_codec_list">
+        <item>AAC</item>
+        <item>AMR-NB</item>
+        <item>AMR-WB</item>
+        <item>FLAC</item>
+        <item>VORBIS</item>
+        <item>OPUS</item>
+        <item>PCM</item>
+    </string-array>
+
+    <string-array name="caliber_list">
+        <item>0.172</item>
+        <item>0.204</item>
+        <item>0.222</item>
+        <item>0.224</item>
+        <item>0.257</item>
+    </string-array>
+
+    <string-array name="unit_list">
+        <item>inches</item>
+        <item>mil</item>
+        <item>tmoa</item>
+        <item>smoa</item>
+        <item>clicks</item>
+        <item>cm</item>
+    </string-array>
+
+    <string-array name="left_right">
+        <item>L</item>
+        <item>R</item>
+    </string-array>
+
+    <string-array name="bluetooth_mac_address_list">
+        <item></item>
+    </string-array>
+
+    <string-array name="bluetooth_scanned_address_list">
+        <item></item>
+    </string-array>
+
+    <string name="tab_sensors">Sensors</string>
+    <string name="tab_dashboard">Home</string>
+    <string name="tab_settings">Settings</string>
+    <string name="tab_map">Map</string>
+    <string name="tab_system">Systems</string>
+    <string name="app_preferences">App Preferences</string>
+    <string name="add_server">New Node</string>
+    <string name="summary_app_preferences">summ</string>
+    <string name="configuration">Configuration</string>
+    <string name="review">Review</string>
+    <string name="scanner">Scan</string>
+
+    <string name="meshtastic_msg">Enter a message!</string>
+    <string name="message_hint">Enter a message!</string>
+    <string name="meshtastic_nodeId">Enter the destination Node ID (integer)</string>
+    <string name="destination_node_hint">Enter the destination Node ID (integer)</string>
+
+    <!-- App Preferences -->
+    <string name="title_notifications">Notifications</string>
+    <string name="title_language">Language</string>
+    <string name="title_version">Version</string>
+    <string name="title_about">About application</string>
+    <string name="github_repo">GitHub repository</string>
+    <string name="title_help_faq">Help / FAQ</string>
+    <string name="title_language_dialog">Language</string>
+    <string name="title_theme">Theme</string>
+    <string name="theme_system_default">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="about_description">A software platform for building smart sensor networks and the Internet of Things</string>
+
+    <string name="hint_tap_to_configure">Tap to configure</string>
+    <string name="send_feedback_desc">Send Feedback</string>
+
+    <!-- Sensor Preferences -->
+    <string name="category_on_device">On Device</string>
+    <string name="category_bluetooth">Bluetooth</string>
+    <string name="category_usb">USB</string>
+    <string name="category_others">Others</string>
+    <string name="category_attn">Needs attention</string>
+    <string name="category_all">All</string>
+    <string name="title_codec">Codec</string>
+    <string name="title_frame_rate">Frame Rate</string>
+    <string name="title_resolution">Resolution</string>
+    <string name="title_camera">Camera</string>
+    <string name="title_sample_rate">Sample Rate</string>
+    <string name="title_bitrate">Bitrate (kbps)</string>
+    <string name="title_select_meshtastic">Select Meshtastic Device</string>
+    <string name="title_select_polar">Select Polar HR Device</string>
+    <string name="title_select_kestrel">Select Kestrel Device</string>
+    <string name="title_trupulse_datasource">TruPulse Data Source</string>
+    <string name="title_select_trupulse">Select TruPulse Device</string>
+    <string name="title_use_simulated_trupulse">Use Simulated TruPulse Data</string>
+    <string name="title_select_template">Select template Device</string>
+    <string name="summary_uid_extension">An ID attached to the end of each systems UID</string>
+    <string name="title_discovery_rules">URL to Discovery Rules.txt</string>
+
+    <!-- Dashboard -->
+    <string name="video_stream">Video Stream</string>
+    <string name="switch_camera">Switch Camera</string>
+    <string name="btn_show">Show</string>
+    <string name="btn_hide">Hide</string>
+    <string name="meshtastic_label">Meshtastic</string>
+    <string name="meshtastic_connected">Connected</string>
+    <string name="btn_message">Message</string>
+    <string name="title_sensors">Sensors</string>
+    <string name="no_sensors_push">No Sensors Set to Push Remotely</string>
+    <string name="title_run_name">Run Name</string>
+    <string name="msg_enter_run_name">Please enter the name for this run</string>
+    <string name="title_send_meshtastic">Send Meshtastic Message</string>
+
+    <!-- Nodes -->
+    <string name="empty_server_profiles">No nodes configured.\nTap + to create one.</string>
+    <string name="content_desc_add_server">Add node</string>
+    <string name="title_delete_server">Delete Server</string>
+    <string name="title_server_profiles">Node Manager</string>
+    <string name="node_manager_title">Node Manager</string>
+    <string name="visualizations_title">Visualizations</string>
+    <string name="this_device">This Device</string>
+    <string name="this_device_summary">Local services and connection details</string>
+    <string name="remote_nodes">Remote Nodes</string>
+    <string name="content_desc_open_this_device">Open this device node</string>
+    <string name="local_services">Services</string>
+    <string name="ip_address_unavailable">Unavailable</string>
+    <string name="msg_delete_server">Remove \"%s\"?</string>
+
+    <!-- Edit Node -->
+    <string name="section_client">CLIENT</string>
+    <string name="btn_csapi_client">CS API Client</string>
+    <string name="btn_sost_client">SOS-T Client</string>
+    <string name="section_connection">CONNECTION</string>
+    <string name="hint_server_name">Server name</string>
+    <string name="hint_host_ip">Host / IP</string>
+    <string name="hint_port">Port</string>
+    <string name="hint_endpoint_path">Endpoint path</string>
+    <string name="default_endpoint_path" translatable="false">/sensorhub/api</string>
+    <string name="switch_enable_tls">Enable TLS</string>
+    <string name="switch_disable_ssl">Disable SSL Validation</string>
+    <string name="disable_ssl_description">Accept certificates and hostnames that Android cannot verify.</string>
+    <string name="disable_ssl_warning">Certificate validation is disabled for this server.</string>
+    <string name="section_authentication">AUTHENTICATION</string>
+    <string name="auth_none">None</string>
+    <string name="auth_basic">Basic</string>
+    <string name="auth_oauth">OAuth</string>
+    <string name="hint_username">Username</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_token_endpoint">Token Endpoint</string>
+    <string name="hint_client_id">Client ID</string>
+    <string name="hint_client_secret">Client Secret</string>
+    <string name="btn_add_server">Add Server</string>
+    <string name="btn_edit">Edit</string>
+    <string name="btn_delete">Delete</string>
+
+    <!-- Dialogs -->
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_send">Send</string>
+    <string name="title_select_device">Select Device</string>
+    <string name="title_enter_device">Enter Device Name or Address</string>
+    <string name="msg_enter_device">Enter a device name (e.g. \"Ballistic\") or MAC address. Names are matched from the start, case-insensitive.</string>
+    <string name="title_edit_server">Update Server</string>
+    <string name="sensor_garmin">Garmin</string>
+    <string name="title_select_garmin">Select Garmin Device</string>
+    <string name="hint_manual_device">e.g. Ballistic or AA:BB:CC:DD:EE:FF</string>
+    <string name="manual_entry_option">Enter name or address manually…</string>
+    <string name="scan_new_devices">Scan for new devices…</string>
+    <string name="content_desc_switch_camera">Switch Camera</string>
+    <string name="content_desc_zoom_in">Zoom In</string>
+    <string name="content_desc_zoom_out">Zoom Out</string>
+
+    <!-- Status Messages -->
+    <string name="stopping_sensorhub">Stopping SensorHub</string>
+    <string name="sensorhub_stopped">SensorHub Stopped</string>
+    <string name="starting_sensorhub">Starting SensorHub…</string>
+    <string name="sensorhub_start_failed">SensorHub failed to start</string>
+    <string name="video_config_error">Video Config Error: Check Settings</string>
+    <string name="video_config_error_msg">Check Video Settings and ensure the resolution for the selected preset has been set.</string>
+    <string name="msg_sensorhub_not_running">SensorHub not running</string>
+    <string name="msg_message_sent">Message sent</string>
+    <string name="msg_message_failed">Failed to send message</string>
+    <string name="msg_profile_not_found">Profile not found</string>
+    <string name="msg_name_host_port_required">Name, host, and port are required</string>
+    <string name="msg_no_protocol">Host should not include a protocol (e.g. http://)</string>
+    <string name="msg_port_number">Port should be a number</string>
+    <string name="msg_port_range">Port should be between 1 and 65535</string>
+
+    <!-- Garmin -->
+    <string name="title_license_required">License Key Required</string>
+    <string name="msg_garmin_license">Garmin Health SDK license key is not configured. Add it to gradle.properties.</string>
+    <string name="title_garmin_sdk_error">Garmin SDK Error</string>
+    <string name="msg_garmin_sdk_init_failed">Failed to initialize Garmin Health SDK: %s</string>
+    <string name="title_scan_failed">Scan Failed</string>
+    <string name="msg_garmin_scan_failed">Garmin device scan failed (error %d)</string>
+    <string name="title_scanning_garmin">Scanning for Garmin Devices…</string>
+    <string name="msg_scanning_garmin">Make sure your Garmin device is nearby and in pairing mode.</string>
+    <string name="title_found_garmin_devices">Found %d Garmin Device(s)</string>
+    <string name="title_pairing_timeout">Pairing Timeout</string>
+    <string name="msg_pairing_timeout">Authentication timed out. Please try again.</string>
+    <string name="title_pairing">Pairing…</string>
+    <string name="msg_pairing_with">Pairing with %s.\nPlease confirm on your Garmin device if prompted.</string>
+    <string name="title_paired_successfully">Paired Successfully</string>
+    <string name="msg_paired_with">Paired with %s</string>
+    <string name="title_pairing_failed">Pairing Failed</string>
+    <string name="msg_pairing_failed">Failed to pair: %s</string>
+    <string name="btn_stop">Stop</string>
+    <string name="btn_keep_scanning">Keep scanning…</string>
+    <string name="unable_to_get_ip">Unable to get IP Address</string>
+    <string name="ui_connecting">Connecting…</string>
+    <string name="ui_starting">Starting…</string>
+    <string name="ui_stopping">Stopping…</string>
+    <string name="ui_stop_streaming">Stop Streaming</string>
+    <string name="ui_start_streaming">Start Streaming</string>
+    <string name="ui_start_streaming_title">Start streaming</string>
+    <string name="ui_run_name">Run name</string>
+    <string name="ui_run_name_placeholder">Enter a run name</string>
+    <string name="ui_smarthub">SmartHub</string>
+    <string name="ui_enable_sensors_on_the_sensors_screen_to_see_their_readings">Enable sensors on the Sensors screen to see their readings.</string>
+    <string name="ui_grant_required_sensor_permissions">Grant the requested permissions for your enabled sensors to start collection.</string>
+    <string name="ui_https_required_for_authenticated_connections">Use an HTTPS URL when authentication is enabled.</string>
+    <string name="ui_connection">Connection</string>
+    <string name="ui_connection_url">Connection URL</string>
+    <string name="ui_https_ip_port_sensorhub_api">https://ip:port/sensorhub/api</string>
+    <string name="ui_authentication">Authentication</string>
+    <string name="ui_username_optional">Username </string>
+    <string name="ui_password_optional">Password </string>
+    <string name="ui_toggle_password_visibility">Toggle password visibility</string>
+    <string name="ui_enable_oauth">Enable OAuth</string>
+    <string name="ui_token_endpoint">Token endpoint</string>
+    <string name="ui_toggle_secret_visibility">Toggle secret visibility</string>
+    <string name="ui_save_changes">Save changes</string>
+    <string name="ui_testing">Testing…</string>
+    <string name="ui_connection_to_smart_hub_was_lost">Connection to Smart Hub was lost.</string>
+    <string name="ui_unable_to_read_current_sensor_status">Unable to read current sensor status.</string>
+    <string name="ui_unable_to_bind_to_smart_hub">Unable to bind to Smart Hub.</string>
+    <string name="ui_unable_to_connect_to_smart_hub">Unable to connect to Smart Hub.</string>
+    <string name="ui_unable_to_start_smart_hub">Unable to start Smart Hub.</string>
+    <string name="ui_unable_to_stop_smart_hub">Unable to stop Smart Hub.</string>
+    <string name="ui_unable_to_start_sensor_settings">Unable to start Smart Hub. Check sensor settings and try again.</string>
+    <string name="ui_run_1_s">Run-%1$s</string>
+    <string name="ui_x_acceleration">X acceleration</string>
+    <string name="ui_y_acceleration">Y acceleration</string>
+    <string name="ui_z_acceleration">Z acceleration</string>
+    <string name="ui_x_angular_velocity">X angular velocity</string>
+    <string name="ui_y_angular_velocity">Y angular velocity</string>
+    <string name="ui_z_angular_velocity">Z angular velocity</string>
+    <string name="ui_x_magnetic_field">X magnetic field</string>
+    <string name="ui_y_magnetic_field">Y magnetic field</string>
+    <string name="ui_z_magnetic_field">Z magnetic field</string>
+    <string name="ui_heading_angle">Heading angle</string>
+    <string name="ui_pitch_angle">Pitch angle</string>
+    <string name="ui_roll_angle">Roll angle</string>
+    <string name="ui_quaternion_x">Quaternion X</string>
+    <string name="ui_quaternion_y">Quaternion Y</string>
+    <string name="ui_quaternion_z">Quaternion Z</string>
+    <string name="ui_quaternion_w">Quaternion W</string>
+    <string name="ui_latitude">Latitude</string>
+    <string name="ui_longitude">Longitude</string>
+    <string name="ui_altitude">Altitude</string>
+    <string name="ui_num_samples">Num Samples</string>
+    <string name="ui_samples">Samples</string>
+    <string name="ui_camera_with_roll_output_is_required">Camera with roll output is required</string>
+    <string name="ui_sensor_or_driver_not_available">Sensor or driver not available</string>
+    <string name="ui_waiting_for_data">Waiting for data</string>
+    <string name="ui_no_recent_data_showing_last_reading">No recent data · showing last reading</string>
+    <string name="ui_receiving_data">Receiving data</string>
+    <string name="ui_unable_to_read_sensor_output">Unable to read sensor output</string>
+    <string name="ui_available">Available</string>
+    <string name="ui_enter_a_server_name">Enter a server name</string>
+    <string name="ui_enter_a_client_id">Enter a client ID</string>
+    <string name="ui_enter_a_client_secret">Enter a client secret</string>
+    <string name="ui_enter_a_username_without_a_colon">Enter a username without a colon</string>
+    <string name="ui_check_the_highlighted_fields_before_testing">Check the highlighted fields before testing</string>
+    <string name="ui_enter_a_valid_http_or_https_url">Enter a valid HTTPS URL</string>
+    <string name="ui_enter_a_valid_https_url">Enter a valid HTTPS URL</string>
+    <string name="ui_enter_a_valid_url">Enter a valid URL</string>
+    <string name="ui_port_must_be_between_1_and_65535">Port must be between 1 and 65535</string>
+    <string name="ui_enter_a_valid_port">Enter a valid port</string>
+    <string name="ui_server">server</string>
+    <string name="ui_oauth_token_endpoint">OAuth token endpoint</string>
+    <string name="ui_connected">Endpoint reachable</string>
+    <string name="ui_connection_failed">Connection failed</string>
+    <string name="ui_success">Success</string>
+    <string name="ui_attention_required">Attention required</string>
+    <string name="ui_authentication_401">401 Unauthorized: Request lacks valid credentials</string>
+    <string name="ui_access_denied_403">403 Forbidden: Access denied to this resource</string>
+    <string name="ui_unable_to_obtain_oauth_token">Unable to obtain OAuth token</string>
+    <string name="ui_oauth_invalid_bearer">OAuth endpoint returned an invalid Bearer token response</string>
+    <string name="ui_server_redirected">Server redirected the request (HTTP %1$d). Use the final endpoint URL.</string>
+    <string name="ui_server_returned">Server returned HTTP %1$d</string>
+    <string name="ui_connection_timed_out">Connection to %1$s timed out</string>
+    <string name="ui_unable_to_connect">Unable to connect to %1$s. Check the URL, network, and certificate.</string>
+    <string name="ui_oauth_token_request_failed">OAuth token request failed (HTTP %1$d). Check the token endpoint and client credentials.</string>
+    <string name="ui_collapse">Collapse</string>
+    <string name="ui_expand">Expand</string>
+    <string name="dashboard_no_matching_sensors">No sensors match this filter. Select All to see every enabled sensor.</string>
+    <string name="dashboard_sensor_count">Sensors: %1$d</string>
+    <string name="dashboard_receiving_count">%1$d receiving</string>
+    <string name="dashboard_waiting_count">%1$d waiting</string>
+    <string name="dashboard_stale_count">%1$d stale</string>
+    <string name="dashboard_unavailable_count">%1$d unavailable</string>
+    <string name="dashboard_server_status">Server Status</string>
+    <string name="dashboard_no_obs">NO OBS</string>
+    <string name="dashboard_ok_ms">OK (%1$dms)</string>
+    <string name="dashboard_nok_ms">NOK (%1$dms)</string>
+    <string name="dashboard_errors"> (%1$d errors)</string>
+    <string name="dashboard_no_remote_clients">No remote server connections configured</string>
+    <string name="dashboard_sost">SOS-T</string>
+    <string name="dashboard_consys">Connected Systems</string>
+    <string name="dashboard_last_reading">Last reading: %1$s</string>
+    <string name="dashboard_no_reading_yet">No reading received yet</string>
+    <string name="health_active">Active</string>
+    <string name="health_attention">Needs attention</string>
+    <string name="health_error">Error</string>
+    <string name="health_starting">Starting</string>
+    <string name="health_stopping">Stopping</string>
+    <string name="health_stopped">Stopped</string>
+    <string name="health_unknown">Status unknown</string>
+    <string name="destination_error">Client error.</string>
+    <string name="destination_not_started">Client is not running.</string>
+    <string name="destination_waiting">Waiting for observation streams.</string>
+    <string name="destination_active">Streaming data.</string>
+    <string name="destination_attention">Some data streams are idle or may need attention.</string>
+    <string name="destination_stream_error">Client reported stream errors</string>
+    <string name="destination_stream_waiting">NO OBS</string>
+    <string name="destination_stream_active">OK</string>
+    <string name="destination_stream_stale">NOK</string>
+    <string name="sensors_configure">Configure</string>
+    <string name="sensors_live">Live</string>
+    <string name="sensors_live_start_run">Start a run to view live sensor readings.</string>
+    <string name="sensors_live_no_enabled">No sensors are enabled. Enable sensors in Configure.</string>
+    <string name="sensors_empty">No sensors to show</string>
+    <string name="sensors_sample_rate_hz">%1$s Hz</string>
+    <string name="sensors_bit_rate_kbps">%1$s kbps</string>
+    <string name="sensors_camera_number">Camera %1$s</string>
+    <string name="sensors_frame_rate_fps">%1$s fps</string>
+    <string name="content_desc_toggle_map_layer">Toggle map layer</string>
+    <string name="content_desc_map_options">Map options</string>
+    <string name="client_title">Client</string>
+    <string name="content_desc_refresh_profiles">Refresh profiles</string>
+    <string name="client_empty">Add and enable a node in Settings to use OSH Client.</string>
+    <string name="client_servers">Select Node(s)</string>
+    <string name="client_selected_count">%1$d selected</string>
+    <string name="client_select_node">Select a node to view its systems.</string>
+    <string name="content_desc_server">Server</string>
+    <string name="content_desc_system">System</string>
+    <string name="client_discovering_systems">Discovering systems</string>
+    <string name="client_tap_to_discover">Tap to discover systems</string>
+    <string name="client_systems_discovered">%1$d systems discovered</string>
+    <string name="client_systems_title">Systems</string>
+    <string name="client_no_systems">No systems found for this node.</string>
+    <string name="client_retry">Retry</string>
+    <string name="client_datastream_count">%1$d datastreams</string>
+    <string name="content_desc_edit_server">Edit %1$s</string>
+    <string name="client_selected_name">Select node(s) to fetch system(s) from</string>
+    <string name="client_no_configured_nodes">No configured nodes</string>
 </resources>

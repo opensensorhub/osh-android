@@ -9,30 +9,54 @@ dependencies {
   //api 'org.sensorhub:sensorhub-process-vecmath:[1.0,2.0)'
   api project(':sensorhub-core')
   api project(':sensorhub-comm-ble')
+  api project(':sensorhub-service-consys')
   api project(':sensorhub-service-swe')
   api 'javax.xml.stream:stax-api:1.0-2'
+//  implementation 'androidx.core:core:1.12.0'
+
+  testImplementation 'junit:junit:4.12'
+  androidTestImplementation 'androidx.test:core:1.5.0'
+  androidTestImplementation 'androidx.test:runner:1.5.2'
+  androidTestImplementation 'androidx.test:rules:1.5.0'
+  androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+  androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+  implementation("com.squareup.okhttp3:okhttp:4.12.0")
+}
+
+configurations.configureEach {
+  exclude group: "ch.qos.logback"
 }
 
 android {
+  namespace 'org.sensorhub.android.service'
   compileSdkVersion rootProject.compileSdkVersion
   buildToolsVersion rootProject.buildToolsVersion
 
   defaultConfig {
     minSdkVersion rootProject.minSdkVersion
     targetSdkVersion rootProject.targetSdkVersion
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
 
-  lintOptions {
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+
+  lint {
     abortOnError false
   }
 
   sourceSets {
     main {
-      manifest.srcFile 'AndroidManifest.xml'
       java.srcDirs = ['src']
       res.srcDirs = ['res']
       assets.srcDirs = ['assets']
     }
+
+    // Add this section for androidTest
+    androidTest {
+      java.srcDirs = ['src/androidTest/java']
+    }
   }
 }
-

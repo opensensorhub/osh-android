@@ -106,6 +106,15 @@ public class SensorMLBuilder
         comp.setName("Android Camera #" + cameraId);
         return comp;
     }
+
+
+    public PhysicalComponent getAudioComponentDescription(String audioSrcName)
+    {
+        PhysicalComponent comp = smlFac.newPhysicalComponent();
+        comp.setId("AUDIO_" + audioSrcName);
+        comp.setName("Android Audio " + audioSrcName);
+        return comp;
+    }
     
     
     protected String formatId(String name)

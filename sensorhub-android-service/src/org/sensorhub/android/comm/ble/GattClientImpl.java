@@ -26,6 +26,8 @@ import org.sensorhub.api.comm.ble.IGattClient;
 import org.sensorhub.api.comm.ble.IGattDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -54,10 +56,10 @@ public class GattClientImpl implements IGattClient
     GattCallback callback;
     Map<BluetoothGattService, GattServiceImpl> services;
     ExecutorService bleCmdExec;
-    
     Context aContext;
     BluetoothDevice aDevice;
     BluetoothGatt aGatt;
+    final Object mtuLock = new Object();
         
     
     public GattClientImpl(Context aContext, BluetoothDevice aDevice, GattCallback callback)
@@ -136,7 +138,14 @@ public class GattClientImpl implements IGattClient
                 IGattDescriptor descriptor = getDescObject(aDesc);
                 notifyCommandExecuted(descriptor);
                 callback.onDescriptorWrite(GattClientImpl.this, descriptor, status);
-            }           
+            }
+
+            @Override
+            public void onMtuChanged(BluetoothGatt gatt, int mtu, int status)
+            {
+                log.debug("MTU changed to: " + mtu + ", status: " + status);
+                notifyCommandExecuted(mtuLock);
+            }
         });
     }
     
@@ -240,7 +249,19 @@ public class GattClientImpl implements IGattClient
         
         return true;
     }
-    
+
+    @Override
+    public boolean requestMtu(int mtu) {
+        bleCmdExec.submit(new Runnable() {
+            public void run()
+            {
+                aGatt.requestMtu(mtu);
+                waitForCommandExecuted(mtuLock);
+            }
+        });
+
+        return true;
+    }
     
     protected IGattCharacteristic getCharObject(BluetoothGattCharacteristic aChar)
     {
@@ -284,6 +305,12 @@ public class GattClientImpl implements IGattClient
     @Override
     public void close()
     {
+        if (bleCmdExec != null)
+        {
+            bleCmdExec.shutdown();
+            bleCmdExec = null;
+        }
+
         if (aGatt != null)
         {
             aGatt.disconnect();

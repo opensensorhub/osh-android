@@ -17,6 +17,7 @@ package org.sensorhub.android.comm;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -31,7 +32,7 @@ public class BluetoothManager
 {
 
     
-    public List<BluetoothDevice> discoverDevices(Context context, final String deviceNameRegex)
+    public List<BluetoothDevice> discoverDevices(Context context, final String macAddress)
     {
         final ArrayList<BluetoothDevice> foundDevices = new ArrayList<BluetoothDevice>();
         
@@ -49,9 +50,9 @@ public class BluetoothManager
                 if (BluetoothDevice.ACTION_FOUND.equals(action))
                 {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    System.out.println("  Device: " + device.getName() + ", " + device);
+                    System.out.println("  Device: " + device.getAddress() + ", " + device);
                     
-                    if (device.getName().matches(deviceNameRegex))
+                    if (device.getAddress().matches(macAddress))
                         foundDevices.add(device);
                 }
                 else
@@ -93,7 +94,7 @@ public class BluetoothManager
                     }
                 }
             }
-        }, filter); // Don't forget to unregister during onDestroy
+        }, filter, Context.RECEIVER_EXPORTED); // Don't forget to unregister during onDestroy
 
         // Getting the Bluetooth adapter
         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -106,27 +107,42 @@ public class BluetoothManager
     
     
     /**
-     * Returns the first paired device whose name matches the given pattern
-     * @param deviceNameRegex regular expression to match device names
+     * Returns the first paired device whose address or name matches the given identifier.
+     * Tries MAC address match first, then falls back to name matching (startsWith, case-insensitive).
+     * @param deviceId MAC address or device name to match
      * @return first matching device
-     * @throws IOException if a paired device with a matching name cannot be found
+     * @throws IOException if a paired device with a matching address or name cannot be found
      */
-    public BluetoothDevice findDevice(String deviceNameRegex) throws IOException
+    public BluetoothDevice findDevice(String deviceId) throws IOException
     {
         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if(btAdapter == null || !btAdapter.isEnabled()) throw new IOException("Bluetooth is not available or not enabled");
+
+        // match by MAC address
         for (BluetoothDevice dev: btAdapter.getBondedDevices())
         {
-            if (dev.getName().matches(deviceNameRegex))
+            if (dev.getAddress() != null && dev.getAddress().equalsIgnoreCase(deviceId)) {
                 return dev;
+            }
         }
-        
-        throw new IOException("Cannot find device " + deviceNameRegex);
+
+        // match by device name (case-insensitive startsWith)
+        String lowerDeviceId = deviceId.toLowerCase();
+        for (BluetoothDevice dev: btAdapter.getBondedDevices())
+        {
+            if (dev.getName() != null && dev.getName().toLowerCase().startsWith(lowerDeviceId)) {
+                return dev;
+            }
+        }
+
+        throw new IOException("Cannot find device " + deviceId);
     }
     
     
-    public BluetoothSocket connectToSerialDevice(String deviceNameRegex) throws IOException
+    public BluetoothSocket connectToSerialDevice(String macAddress) throws IOException
     {
-        BluetoothDevice dev = findDevice(deviceNameRegex);
+        BluetoothDevice dev = findDevice(macAddress);
         UUID spp = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
         BluetoothSocket socket = dev.createRfcommSocketToServiceRecord(spp);
         return socket;

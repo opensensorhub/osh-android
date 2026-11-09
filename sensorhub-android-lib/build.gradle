@@ -8,30 +8,36 @@ dependencies {
   api project(':sensorhub-driver-trupulse')
   api project(':sensorhub-driver-angelsensor')
   api project(':sensorhub-driver-android')
+  api project(':sensorhub-driver-kestrel')
+//  api project(':sensorhub-android-garmin')
+//  api project(':sensorhub-driver-flirone')
   api project(':sensorhub-android-flirone')
   //api project(':sensorhub-android-dji')
+//  api project(':sensorhub-storage-h2')
 
   implementation 'org.slf4j:slf4j-android:1.6.1-RC1'
+  implementation('javax.xml.stream:stax-api:1.0-2')
 }
 
 configurations {
   api {
     // exclude stuff from APK
-    exclude group: "javax.servlet"
+//    exclude group: "javax.servlet"
     exclude group: "xml-apis"
-    exclude group: "org.eclipse.jetty"
+//    exclude group: "org.eclipse.jetty"
     exclude group: "org.n52.amused"
     exclude group: "ch.qos.logback"
     exclude group: "org.apache.felix"
 
     resolutionStrategy.dependencySubstitution {
       // use Android version of slf4j
-      substitute module('org.slf4j:slf4j-api') with module('org.slf4j:slf4j-android:1.6.1-RC1')
+      substitute(module('org.slf4j:slf4j-api')).using(module('org.slf4j:slf4j-android:1.6.1-RC1'))
     }
   }
 }
 
 android {
+  namespace 'org.sensorhub.android.lib'
   compileSdkVersion rootProject.compileSdkVersion
   buildToolsVersion rootProject.buildToolsVersion
 
@@ -40,21 +46,21 @@ android {
     targetSdkVersion rootProject.targetSdkVersion
   }
 
-  packagingOptions {
-    exclude '**/empty'
-    exclude 'META-INF/rxjava.properties'
+  packaging {
+    resources {
+      excludes += ['**/empty', 'META-INF/rxjava.properties']
+    }
   }
 
   sourceSets {
     main {
-      manifest.srcFile 'AndroidManifest.xml'
       java.srcDirs = ['src']
       res.srcDirs = ['res']
       assets.srcDirs = ['assets']
     }
   }
 
-  lintOptions {
+  lint {
     abortOnError false
   }
 }

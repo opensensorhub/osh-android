@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="faq_categories">
+        <item>Per iniziare</item>
+        <item>Per iniziare</item>
+        <item>Per iniziare</item>
+
+        <item>Configurazione del server</item>
+        <item>Configurazione del server</item>
+        <item>Configurazione del server</item>
+        <item>Configurazione del server</item>
+
+        <item>Sensori</item>
+        <item>Sensori</item>
+
+        <item>Servizi</item>
+
+        <item>Risoluzione dei problemi</item>
+        <item>Risoluzione dei problemi</item>
+
+        <item>Generale</item>
+        <item>Generale</item>
+        <item>Generale</item>
+    </string-array>
+
+    <string-array name="faq_questions">
+        <!-- Per iniziare -->
+        <item>Cos\'è OpenSensorHub EdgeX?</item>
+        <item>Come mi collego a un server?</item>
+        <item>Come inizio a trasmettere i dati dei sensori?</item>
+        <!-- Configurazione del server -->
+        <item>Qual è la differenza tra ConSysAPI e SOS-T?</item>
+        <item>Come configuro l\'autenticazione OAuth?</item>
+        <item>Cosa fa \"Ignora verifica SSL\"?</item>
+        <item>Posso collegarmi a più server?</item>
+        <!-- Sensori -->
+        <item>Come collego un sensore Bluetooth?</item>
+        <item>Cos\'è l\'estensione UID?</item>
+        <!-- Servizi -->
+        <item>Cos\'è il servizio di scoperta?</item>
+        <!-- Risoluzione dei problemi -->
+        <item>Cosa significano i colori di stato?</item>
+        <item>I miei sensori non trasmettono. Cosa devo verificare?</item>
+        <!-- Generale -->
+        <item>Come cambio il tema dell\'app?</item>
+        <item>Dove posso trovare l\'indirizzo IP del mio dispositivo?</item>
+        <item>Quale versione di Android è richiesta?</item>
+    </string-array>
+
+    <string-array name="faq_answers">
+        <!-- Per iniziare -->
+        <item>OpenSensorHub EdgeX è un\'applicazione di aggregazione e trasmissione dati dai sensori. Raccoglie i dati dai sensori integrati del dispositivo e dalle periferiche Bluetooth collegate, quindi trasmette quei dati a un server OpenSensorHub in tempo reale. Trasforma il tuo dispositivo Android in un nodo di edge computing per le reti di sensori IoT.</item>
+        <item>Vai alla scheda Impostazioni, tocca \"Gestisci server\", quindi tocca il pulsante aggiungi. Inserisci un nome per il profilo, l\'indirizzo del server, la porta e il percorso dell\'endpoint. Puoi anche configurare l\'autenticazione (nome utente/password o OAuth) e abilitare TLS/SSL se il tuo server lo richiede.</item>
+        <item>Prima, abilita i sensori desiderati nella scheda Sensori. Poi, assicurati di avere almeno un profilo server configurato e abilitato nella scheda Impostazioni. Infine, tocca il pulsante di riproduzione nella Dashboard per avviare la trasmissione. Puoi monitorare lo stato di ogni servizio dalla schermata Stato dell\'app.</item>
+        <!-- Configurazione del server -->
+        <item>Connected Systems API (ConSysAPI) è la moderna API REST standard OGC per pubblicare dati dei sensori. È l\'opzione consigliata per le nuove installazioni. SOS-T (Servizio di Osservazione dei Sensori – Transazionale) è un protocollo XML legacy. Usa SOS-T solo se il tuo server non supporta ConSysAPI.</item>
+        <item>Durante la modifica di un profilo server, abilita l\'opzione OAuth, quindi compila l\'URL dell\'endpoint token, l\'ID client e il segreto client forniti dall\'amministratore del tuo server. OAuth viene usato quando il tuo server richiede l\'autenticazione basata su token anziché le credenziali base nome utente/password.</item>
+        <item>\"Ignora verifica SSL\" disabilita la validazione dei certificati durante la connessione tramite TLS/SSL. È utile per ambienti di sviluppo o test che utilizzano certificati autofirmati. Non abilitarlo in produzione, poiché rende la connessione vulnerabile ad attacchi man-in-the-middle.</item>
+        <item>Sì. Puoi creare più profili server in Impostazioni > Gestisci server. Ogni profilo può essere abilitato o disabilitato individualmente. Durante la trasmissione, i dati vengono inviati simultaneamente a tutti i profili server abilitati.</item>
+        <!-- Sensori -->
+        <item>Prima, associa il dispositivo Bluetooth al tuo dispositivo Android tramite le impostazioni Bluetooth del sistema. Poi, nella scheda Sensori, abilita l\'interruttore del sensore corrispondente e seleziona il tuo dispositivo dal selettore se richiesto. Assicurati che il Bluetooth sia attivato e che la periferica sia accesa e nel raggio d\'azione.</item>
+        <item>L\'estensione UID è un identificatore opzionale aggiunto all\'ID univoco di ogni flusso del sensore. Aiuta a distinguere i dati di questo specifico dispositivo quando più dispositivi trasmettono allo stesso server. Puoi impostarla nella scheda Sensori sotto \"Estensione UID sensori\".</item>
+        <!-- Servizi -->
+        <item>Il servizio di scoperta consente all\'app di scoprire automaticamente altri sensori e dispositivi sulla rete utilizzando set di regole configurabili. Puoi fornire un URL a un file di regole di scoperta nella scheda Impostazioni. È utile nelle installazioni più grandi dove i dispositivi devono trovarsi automaticamente.</item>
+        <!-- Risoluzione dei problemi -->
+        <item>Nella schermata Stato dell\'app:\n\n\u2022 Verde – Il servizio è avviato e funziona normalmente.\n\u2022 Arancione – Il servizio si sta inizializzando o avviando.\n\u2022 Rosso – Il servizio è fermo o ha riscontrato un errore.\n\u2022 Grigio – Lo stato è sconosciuto o il servizio non è stato avviato.</item>
+        <item>Verifica quanto segue:\n\n1. Assicurati che i sensori desiderati siano abilitati nella scheda Sensori.\n2. Verifica che almeno un profilo server sia configurato e abilitato nelle Impostazioni.\n3. Conferma che i servizi richiesti (ConSysAPI o SOS) siano abilitati nelle Impostazioni.\n4. Controlla la schermata Stato dell\'app per eventuali servizi che mostrano rosso o grigio.\n5. Assicurati che tutte le autorizzazioni necessarie (Posizione, Fotocamera, Bluetooth, ecc.) siano state concesse nelle Impostazioni Android.\n6. Verifica che il tuo dispositivo abbia connettività di rete e possa raggiungere il server.</item>
+        <!-- Generale -->
+        <item>Vai alle Preferenze dell\'app (tocca l\'icona dell\'ingranaggio nella barra degli strumenti della Dashboard), quindi tocca \"Aspetto\". Puoi scegliere tra Predefinito di sistema (segue il tema del dispositivo), Chiaro o Scuro.</item>
+        <item>L\'indirizzo IP del tuo dispositivo è visualizzato nelle Preferenze dell\'app, sotto il campo \"Indirizzo IP del dispositivo\". Questo è l\'indirizzo che altri dispositivi o servizi possono usare per raggiungere il tuo dispositivo sulla rete locale.</item>
+        <item>OpenSensorHub EdgeX richiede Android 14 (livello API 34) o superiore.</item>
+    </string-array>
+
+</resources>

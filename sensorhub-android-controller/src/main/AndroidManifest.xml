@@ -1,0 +1,32 @@
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature android:name="android.hardware.gamepad"/>
+<!--    <uses-feature android:name="android.hardware.touchscreen"/>-->
+<!--    <uses-feature android:name="android.hardware.usb.host"/>-->
+
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.LIGHTS" />
+    <uses-permission android:name="android.permission.INPUT_DEVICE_SETTINGS" />
+
+<!--    <application-->
+<!--        android:icon="@drawable/ic_launcher"-->
+<!--        android:label="@string/app_name"-->
+<!--        android:supportsRtl="true">-->
+<!--&lt;!&ndash;        android:theme="@android:style/Theme.DeviceDefault">&ndash;&gt;-->
+<!--        <meta-data-->
+<!--            android:name="com.google.android.hardware.input.InputManager"-->
+<!--            android:value="true"/>-->
+<!--        <activity-->
+<!--            android:name="org.sensorhub.impl.sensor.controller.MainActivity"-->
+<!--            android:exported="true"-->
+<!--            android:taskAffinity="">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+<!--        </activity>-->
+
+<!--    </application>-->
+</manifest>

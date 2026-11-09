@@ -1,0 +1,47 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ master, dev ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ master, dev ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          repository: Botts-Innovative-Research/osh-android
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: ''
+
+      - name: Build APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build -x test
+
+#      - name: Upload APK artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: osh-android-APK
+#          path: sensorhub-android-app/build/outputs/apk/debug/sensorhub-android-app-debug.apk
+
+#      - name: Create GitHub Release
+#        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+#        uses: softprops/action-gh-release@v2
+#        with:
+#          files: sensorhub-android-app/build/outputs/apk/debug/*.apk
+#          generate_release_notes: true

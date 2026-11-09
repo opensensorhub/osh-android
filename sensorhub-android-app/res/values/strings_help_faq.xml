@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="faq_categories">
+        <item>Getting Started</item>
+        <item>Getting Started</item>
+        <item>Getting Started</item>
+
+        <item>Server Configuration</item>
+        <item>Server Configuration</item>
+        <item>Server Configuration</item>
+        <item>Server Configuration</item>
+
+        <item>Sensors</item>
+        <item>Sensors</item>
+
+        <item>Services</item>
+
+        <item>Troubleshooting</item>
+        <item>Troubleshooting</item>
+
+        <item>General</item>
+        <item>General</item>
+        <item>General</item>
+    </string-array>
+
+    <string-array name="faq_questions">
+        <!-- Getting Started -->
+        <item>What is OpenSensorHub?</item>
+        <item>How do I connect to a server?</item>
+        <item>How do I start streaming sensor data?</item>
+        <!-- Server Configuration -->
+        <item>What is the difference between ConSysAPI and SOS-T?</item>
+        <item>How do I set up OAuth authentication?</item>
+        <item>What does \"Skip SSL Verification\" do?</item>
+        <item>Can I connect to multiple servers?</item>
+        <!-- Sensors -->
+        <item>How do I connect a Bluetooth sensor?</item>
+        <item>What is the UID Extension?</item>
+        <!-- Services -->
+        <item>What is the Discovery Service?</item>
+        <!-- Troubleshooting -->
+        <item>What do the status colors mean?</item>
+        <item>My sensors are not streaming. What should I check?</item>
+        <!-- General -->
+        <item>Where can I find my device IP address?</item>
+        <item>What Android version is required?</item>
+    </string-array>
+
+    <string-array name="faq_answers">
+        <!-- Getting Started -->
+        <item>OpenSensorHub is a sensor aggregation and streaming app. It collects data from your device\'s built-in sensors and connected Bluetooth peripherals, then streams that data to an OpenSensorHub server in real time. It turns your Android device into an edge computing node for IoT sensor networks.</item>
+        <item>Go to the Settings tab, tap \"Manage Nodes\", then tap the add button. Enter a name for the node, the server host address, port, and endpoint path. You can also configure authentication (username/password or OAuth) and enable TLS/SSL if your server requires it.</item>
+        <item>First, enable the sensors you want in the Sensors tab. Then, make sure you have at least one node configured and enabled in the Settings tab. Finally, tap the play button on the Dashboard to start streaming. You can monitor the status of each service from the App Status screen.</item>
+        <!-- Server Configuration -->
+        <item>Connected Systems API (ConSysAPI) is the modern OGC standard REST API for publishing sensor data. It is the recommended option for new deployments. SOS-T (Sensor Observation Service \u2013 Transactional) is a legacy XML-based protocol. Use SOS-T only if your server does not support ConSysAPI.</item>
+        <item>When editing a node, enable the OAuth toggle, then fill in the Token Endpoint URL, Client ID, and Client Secret provided by your server administrator. OAuth is used when your server requires token-based authentication instead of basic username/password credentials.</item>
+        <item>\"Skip SSL Verification\" disables certificate validation when connecting over TLS/SSL. This is useful for development or testing environments that use self-signed certificates. Do not enable this in production, as it makes the connection vulnerable to man-in-the-middle attacks.</item>
+        <item>Yes. You can create multiple nodes under Settings > Manage Nodes. Each node can be individually enabled or disabled. When streaming, data is sent to all enabled nodes simultaneously.</item>
+        <!-- Sensors -->
+        <item>First, pair the Bluetooth device with your Android device through the system Bluetooth settings. Then, in the Sensors tab, enable the corresponding sensor toggle and select your device from the device picker if prompted. Make sure Bluetooth is turned on and the peripheral is powered and in range.</item>
+        <item>The UID Extension is an optional identifier appended to each sensor stream\'s unique ID. It helps distinguish data from this specific device when multiple devices are streaming to the same server. You can set it in the Sensors tab under \"Sensors UID Extension\".</item>
+        <!-- Services -->
+        <item>The Discovery Service allows the app to automatically discover other sensors and devices on the network using configurable rule sets. You can provide a URL to a discovery rule file in the Settings tab. This is useful in larger deployments where devices need to find each other automatically.</item>
+        <!-- Troubleshooting -->
+        <item>On the App Status screen:\n\n\u2022 Green \u2013 The service is started and running normally.\n\u2022 Orange \u2013 The service is initializing or starting up.\n\u2022 Red \u2013 The service is stopped or encountered an error.\n\u2022 Gray \u2013 The status is unknown or the service has not been started.</item>
+        <item>Check the following:\n\n1. Make sure the sensors you want are enabled in the Sensors tab.\n2. Verify that at least one node is configured and enabled in Settings.\n3. Confirm that the required services (ConSysAPI or SOS) are enabled in Settings.\n4. Check the App Status screen for any services showing red or gray.\n5. Ensure all required permissions (Location, Camera, Bluetooth, etc.) have been granted in Android Settings.\n6. Verify that your device has network connectivity and can reach the server.</item>
+        <!-- General -->
+        <item>Your device IP address is displayed in App Preferences, under the \"Device IP Address\" field. This is the address other devices or services can use to reach your device on the local network.</item>
+        <item>OpenSensorHub requires Android 14 (API level 34) or higher.</item>
+    </string-array>
+
+</resources>

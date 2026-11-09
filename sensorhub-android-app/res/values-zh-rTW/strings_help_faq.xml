@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="faq_categories">
+        <item>入門指南</item>
+        <item>入門指南</item>
+        <item>入門指南</item>
+
+        <item>伺服器配置</item>
+        <item>伺服器配置</item>
+        <item>伺服器配置</item>
+        <item>伺服器配置</item>
+
+        <item>感測器</item>
+        <item>感測器</item>
+
+        <item>服務</item>
+
+        <item>疑難排解</item>
+        <item>疑難排解</item>
+
+        <item>一般</item>
+        <item>一般</item>
+        <item>一般</item>
+    </string-array>
+
+    <string-array name="faq_questions">
+        <item>什麼是 OpenSensorHub EdgeX？</item>
+        <item>如何連接到伺服器？</item>
+        <item>如何開始串流感測器資料？</item>
+
+        <item>ConSysAPI 和 SOS-T 有什麼區別？</item>
+        <item>如何設定 OAuth 認證？</item>
+        <item>「跳過 SSL 驗證」是什麼意思？</item>
+        <item>我可以連接多個伺服器嗎？</item>
+
+        <item>如何連接藍牙感測器？</item>
+        <item>什麼是 UID 擴充？</item>
+
+        <item>什麼是探索服務？</item>
+
+        <item>狀態顏色代表什麼意思？</item>
+        <item>我的感測器沒有在串流。該檢查什麼？</item>
+
+        <item>如何更改應用程式主題？</item>
+        <item>在哪裡可以找到我的裝置 IP 位址？</item>
+        <item>需要什麼 Android 版本？</item>
+    </string-array>
+
+    <string-array name="faq_answers">
+        <item>OpenSensorHub EdgeX 是一款感測器匯集和串流應用程式。它從您裝置的內建感測器和連接的藍牙周邊裝置收集資料，然後即時將資料串流到 OpenSensorHub 伺服器。它將您的 Android 裝置轉變為物聯網感測器網路的邊緣運算節點。</item>
+        <item>前往「設定」標籤頁，點擊「管理伺服器」，然後點擊新增按鈕。輸入配置名稱、伺服器主機位址、連接埠和端點路徑。您還可以配置認證（使用者名稱/密碼或 OAuth），如果您的伺服器需要，也可以啟用 TLS/SSL。</item>
+        <item>首先，在「感測器」標籤頁中啟用您想要的感測器。然後，確保在「設定」標籤頁中至少配置並啟用了一個伺服器配置。最後，在儀表板上點擊播放按鈕開始串流。您可以從應用程式狀態畫面監控每個服務的狀態。</item>
+
+        <item>Connected Systems API (ConSysAPI) 是用於發布感測器資料的現代 OGC 標準 REST API，是新部署的建議選項。SOS-T（感測器觀測服務 – 交易式）是舊版的 XML 協定。僅在您的伺服器不支援 ConSysAPI 時使用 SOS-T。</item>
+        <item>編輯伺服器配置時，啟用 OAuth 開關，然後填入伺服器管理員提供的權杖端點 URL、用戶端 ID 和用戶端密鑰。當您的伺服器需要基於權杖的認證而非基本使用者名稱/密碼時，使用 OAuth。</item>
+        <item>「跳過 SSL 驗證」會在透過 TLS/SSL 連接時停用憑證驗證。這對於使用自簽憑證的開發或測試環境很有用。請勿在生產環境中啟用此選項，因為它會使連接容易受到中間人攻擊。</item>
+        <item>可以。您可以在「設定」>「管理伺服器」下建立多個伺服器配置。每個配置可以個別啟用或停用。串流時，資料會同時傳送到所有已啟用的伺服器配置。</item>
+
+        <item>首先，透過系統藍牙設定將藍牙裝置與您的 Android 裝置配對。然後，在「感測器」標籤頁中啟用對應的感測器開關，如果出現提示，請選擇您的裝置。確保藍牙已開啟且周邊裝置已開機並在範圍內。</item>
+        <item>UID 擴充是附加到每個感測器串流唯一 ID 的可選識別碼。當多個裝置串流到同一伺服器時，它有助於區分來自此特定裝置的資料。您可以在「感測器」標籤頁的「感測器 UID 擴充」下設定。</item>
+
+        <item>探索服務允許應用程式使用可配置的規則集自動探索網路上的其他感測器和裝置。您可以在「設定」標籤頁中提供探索規則檔案的 URL。這在較大的部署中很有用，裝置需要自動相互發現時。</item>
+
+        <item>在應用程式狀態畫面上：\n\n\u2022 綠色 – 服務已啟動並正常運行。\n\u2022 橙色 – 服務正在初始化或啟動中。\n\u2022 紅色 – 服務已停止或遇到錯誤。\n\u2022 灰色 – 狀態未知或服務尚未啟動。</item>
+        <item>請檢查以下事項：\n\n1. 確保您想要的感測器已在「感測器」標籤頁中啟用。\n2. 驗證至少有一個伺服器配置已在「設定」中配置並啟用。\n3. 確認所需的服務（ConSysAPI 或 SOS）已在「設定」中啟用。\n4. 檢查應用程式狀態畫面，查看是否有服務顯示紅色或灰色。\n5. 確保已在 Android 設定中授予所有必要的權限（定位、相機、藍牙等）。\n6. 驗證您的裝置具有網路連線能力並可以連接到伺服器。</item>
+
+        <item>前往「應用程式偏好設定」（點擊儀表板工具列上的齒輪圖示），然後點擊「外觀」。您可以選擇系統預設（跟隨您的裝置主題）、淺色或深色。</item>
+        <item>您的裝置 IP 位址顯示在「應用程式偏好設定」的「裝置 IP 位址」欄位中。這是其他裝置或服務在區域網路上連接您裝置時使用的位址。</item>
+        <item>OpenSensorHub EdgeX 需要 Android 14（API 等級 34）或更高版本。</item>
+    </string-array>
+
+</resources>

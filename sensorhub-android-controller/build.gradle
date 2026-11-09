@@ -1,0 +1,43 @@
+apply plugin: 'com.android.library'
+
+description = 'Android Controller'
+ext.details = 'Driver for Android Controller Sensors'
+version = '1.0.0'
+
+dependencies {
+  //api 'org.sensorhub:sensorhub-core:' + oshCoreVersion
+  api project(':sensorhub-core')
+  api project(':sensorhub-android-service')
+
+  implementation project(path: ':sensorhub-driver-android')
+}
+
+configurations.configureEach {
+  exclude group: "ch.qos.logback"
+}
+
+
+android {
+  namespace 'org.sensorhub.impl.sensor.controller'
+  compileSdkVersion rootProject.compileSdkVersion
+  buildToolsVersion rootProject.buildToolsVersion
+
+  defaultConfig {
+    minSdkVersion rootProject.minSdkVersion
+    targetSdkVersion rootProject.targetSdkVersion
+  }
+
+  lint {
+    abortOnError false
+  }
+
+  sourceSets {
+    main {
+      java.srcDirs = ['src/main/java']
+      resources.srcDirs = ['src/main/resources']
+      res.srcDirs = ['res']
+      assets.srcDirs = ['assets']
+      jniLibs.srcDirs = ['libs']
+    }
+  }
+}

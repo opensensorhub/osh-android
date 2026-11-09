@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_status_main_fragment">Estado de la app</string>
+
+    <string-array name="status_options">
+        <item>Inicializando</item>
+        <item>Inicializado</item>
+        <item>Iniciando</item>
+        <item>Iniciado</item>
+        <item>Deteniendo</item>
+        <item>Detenido</item>
+        <item>Desconocido</item>
+    </string-array>
+
+    <string name="sosServiceStatusLabel">Estado del servicio SOS</string>
+    <string name="conSysServiceStatusLabel">Estado del servicio ConSys</string>
+    <string name="discoveryServiceStatusLabel">Estado del servicio de descubrimiento</string>
+    <string name="httpServerStatusLabel">Estado del servidor HTTP</string>
+    <string name="sensorServiceStatusLabel">Estado del sensor Android</string>
+    <string name="storageServiceStatusLabel">Estado del almacenamiento de sensores</string>
+</resources>

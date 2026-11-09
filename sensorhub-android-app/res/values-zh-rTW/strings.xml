@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OSH Android</string>
+    <string name="hello_world">配置設定並點擊播放按鈕以啟動 SmartHub</string>
+    <string name="action_settings">設定</string>
+    <string name="action_start">啟動 SmartHub</string>
+    <string name="action_stop">停止 SmartHub</string>
+    <string name="action_status">應用程式狀態</string>
+    <string name="action_about">關於</string>
+    <string name="action_proxy">啟動代理</string>
+    <string name="action_stop_proxy">停止代理</string>
+    <string name="action_meshtastic">Meshtastic 訊息</string>
+    <string name="sensor_android">Android 感測器</string>
+    <string name="sensor_angel">Angel 健康監測器</string>
+    <string name="sensor_meshtastic">Meshtastic 無線電</string>
+    <string name="sensor_wardriving">無線網路掃描</string>
+    <string name="sensor_polar">Polar 心率監測器</string>
+    <string name="sensor_kestrel">Kestrel 氣象儀</string>
+    <string name="sensor_controller">USB 控制器</string>
+    <string name="sensor_trupulse">TruPulse 測距儀</string>
+    <string name="sensor_flirone">Flirone</string>
+    <string name="sensor_ste">STE 輻射偵測器</string>
+    <string name="sensor_template">範本</string>
+    <string name="sensor_accelerometer">加速度計</string>
+    <string name="sensor_gyroscope">陀螺儀</string>
+    <string name="sensor_magnetometer">磁力計</string>
+    <string name="sensor_orientation_quat">方向（四元數）</string>
+    <string name="sensor_orientation_euler">方向（歐拉角）</string>
+    <string name="sensor_gps">GPS 定位</string>
+    <string name="sensor_network_location">網路定位</string>
+    <string name="sensor_video">影像資料</string>
+    <string name="sensor_video_roll">影像翻轉</string>
+    <string name="sensor_audio">音訊</string>
+
+    <string name="device_name">裝置名稱</string>
+    <string name="device_ip_address">裝置 IP 位址</string>
+    <string name="server_profiles">伺服器配置</string>
+    <string name="manage_servers">管理伺服器</string>
+    <string name="services">此裝置上的服務</string>
+    <string name="enable_sos_service">啟用 SOS 服務</string>
+    <string name="enable_csapi_service">啟用連線系統服務</string>
+    <string name="enable_discovery_service">啟用探索服務</string>
+
+    <string name="summary_csapi"></string>
+    <string name="summary_sos"></string>
+    <string name="summary_discovery"></string>
+
+    <string name="summary_push_options">資料推送選項</string>
+    <string name="summary_select_device">點擊以選擇或輸入裝置位址</string>
+    <string name="pref_uid_extension">感測器 UID 延伸</string>
+    <string name="server_profile_summary">選用 — 新增伺服器以遠端推送資料。未設定伺服器時，資料僅於本機提供。</string>
+
+    <string-array name="orientation_angle_list">
+        <item>四元數</item>
+        <item>歐拉角</item>
+    </string-array>
+
+    <string-array name="location_type_list">
+        <item>GPS</item>
+        <item>網路</item>
+    </string-array>
+
+    <string-array name="sos_option_list">
+        <item>可擷取</item>
+        <item>本機儲存</item>
+        <item>遠端推送</item>
+    </string-array>
+
+    <string name="trupulse_device_name">Trupulse 裝置名稱</string>
+    <string-array name="trupulse_datasource_list">
+        <item>串流實體裝置</item>
+        <item>模擬虛擬裝置</item>
+    </string-array>
+    <string name="trupulse_datasource_default">STREAM</string>
+
+
+    <string-array name="spot_report_feature_type_list">
+        <item>選擇報告項目</item>
+        <item>道路封閉</item>
+        <item>淹水</item>
+        <item>醫療</item>
+        <item>救助</item>
+    </string-array>
+
+    <string-array name="ble_location_method_list">
+        <item>最近信標</item>
+        <item>三邊測量</item>
+    </string-array>
+
+    <string-array name="spot_report_location_source_list">
+        <item>GPS</item>
+        <item>雷射測距儀</item>
+        <item>網路</item>
+    </string-array>
+
+    <string name="spot_report">現場報告</string>
+    <string name="spot_name_field">名稱：</string>
+    <string name="spot_description_field">描述：</string>
+    <string name="spot_take_image_button">拍攝</string>
+    <string name="spot_reset_image_button">重設</string>
+    <string name="spot_submit_report_button">提交報告</string>
+    <string name="spot_name_description">報告名稱</string>
+
+    <string name="spot_report_radius">半徑：</string>
+    <string name="spot_report_latitude">緯度：</string>
+    <string name="spot_report_longitude">經度：</string>
+    <string name="spot_report_ft">英尺</string>
+
+    <string-array name="spot_report_closure_type">
+        <item>選擇...</item>
+        <item>公共</item>
+        <item>全部</item>
+    </string-array>
+
+
+    <string name="tab_sensors">感測器</string>
+    <string name="tab_dashboard">首頁</string>
+    <string name="tab_settings">設定</string>
+    <string name="app_preferences">應用程式偏好設定</string>
+
+    <string name="meshtastic_msg">輸入訊息！</string>
+    <string name="message_hint">輸入訊息！</string>
+    <string name="meshtastic_nodeId">輸入目標節點 ID（整數）</string>
+    <string name="destination_node_hint">輸入目標節點 ID（整數）</string>
+
+    <!-- App Preferences -->
+    <string name="title_notifications">通知</string>
+    <string name="title_language">語言</string>
+    <string name="title_version">版本</string>
+    <string name="title_about">關於應用程式</string>
+    <string name="title_help_faq">幫助 / 常見問題</string>
+    <string name="title_language_dialog">語言</string>
+    <string name="about_description">用於建構智慧感測器網路和物聯網的軟體平台</string>
+
+    <!-- Sensor Preferences -->
+    <string name="category_on_device">內建裝置</string>
+    <string name="category_bluetooth">藍牙周邊裝置</string>
+    <string name="category_others">其他</string>
+    <string name="title_codec">編解碼器</string>
+    <string name="title_frame_rate">幀率</string>
+    <string name="title_resolution">解析度</string>
+    <string name="title_camera">相機</string>
+    <string name="title_sample_rate">取樣率</string>
+    <string name="title_bitrate">位元率 (kbps)</string>
+    <string name="title_select_meshtastic">選擇 Meshtastic 裝置</string>
+    <string name="title_select_polar">選擇 Polar HR 裝置</string>
+    <string name="title_select_kestrel">選擇 Kestrel 裝置</string>
+    <string name="title_trupulse_datasource">TruPulse 資料來源</string>
+    <string name="title_select_trupulse">選擇 TruPulse 裝置</string>
+    <string name="title_use_simulated_trupulse">使用模擬 TruPulse 資料</string>
+    <string name="title_select_template">選擇範本裝置</string>
+    <string name="summary_uid_extension">附加到每個系統 UID 末端的識別碼</string>
+    <string name="title_discovery_rules">探索規則檔案的 URL</string>
+
+    <!-- Dashboard -->
+    <string name="video_stream">影像串流</string>
+    <string name="switch_camera">切換相機</string>
+    <string name="btn_show">顯示</string>
+    <string name="btn_hide">隱藏</string>
+    <string name="meshtastic_label">Meshtastic</string>
+    <string name="meshtastic_connected">已連接</string>
+    <string name="btn_message">訊息</string>
+    <string name="title_sensors">感測器</string>
+    <string name="no_sensors_push">沒有設定為遠端推送的感測器</string>
+    <string name="title_run_name">執行名稱</string>
+    <string name="msg_enter_run_name">請輸入此次執行的名稱</string>
+    <string name="title_send_meshtastic">傳送 Meshtastic 訊息</string>
+
+    <!-- Nodes -->
+    <string name="empty_server_profiles">尚未配置伺服器。\n點擊 + 建立一個。</string>
+    <string name="content_desc_add_server">新增伺服器配置</string>
+    <string name="title_delete_server">刪除伺服器</string>
+    <string name="msg_delete_server">移除「%s」？</string>
+
+    <!-- Edit Node -->
+    <string name="section_client">用戶端</string>
+    <string name="btn_csapi_client">CS API 用戶端</string>
+    <string name="btn_sost_client">SOS-T 用戶端</string>
+    <string name="section_connection">連線</string>
+    <string name="hint_server_name">伺服器名稱</string>
+    <string name="hint_host_ip">主機 / IP</string>
+    <string name="hint_port">連接埠</string>
+    <string name="hint_endpoint_path">端點路徑</string>
+    <string name="switch_enable_tls">啟用 TLS</string>
+    <string name="switch_disable_ssl">停用 SSL 驗證</string>
+    <string name="section_authentication">認證</string>
+    <string name="auth_none">無</string>
+    <string name="auth_basic">基本</string>
+    <string name="auth_oauth">OAuth</string>
+    <string name="hint_username">使用者名稱</string>
+    <string name="hint_password">密碼</string>
+    <string name="hint_token_endpoint">權杖端點</string>
+    <string name="hint_client_id">用戶端 ID</string>
+    <string name="hint_client_secret">用戶端密鑰</string>
+    <string name="btn_add_server">新增伺服器</string>
+
+    <!-- Dialogs -->
+    <string name="btn_ok">確定</string>
+    <string name="btn_cancel">取消</string>
+    <string name="btn_delete">刪除</string>
+    <string name="btn_send">傳送</string>
+    <string name="title_select_device">選擇裝置</string>
+    <string name="title_enter_device">輸入裝置名稱或位址</string>
+    <string name="msg_enter_device">輸入裝置名稱（例如「Ballistic」）或 MAC 位址。名稱從開頭比對，不分大小寫。</string>
+    <string name="title_edit_server">編輯伺服器</string>
+    <string name="sensor_garmin">Garmin 穿戴裝置</string>
+    <string name="title_select_garmin">選擇 Garmin 裝置</string>
+    <string name="hint_manual_device">例如 Ballistic 或 AA:BB:CC:DD:EE:FF</string>
+    <string name="manual_entry_option">手動輸入名稱或位址…</string>
+    <string name="scan_new_devices">掃描新裝置…</string>
+    <string name="content_desc_switch_camera">切換相機</string>
+    <string name="summary_garmin">從 Garmin 穿戴裝置串流健康生物特徵資料</string>
+
+    <!-- 狀態訊息 -->
+    <string name="stopping_sensorhub">正在停止 SensorHub</string>
+    <string name="sensorhub_stopped">SensorHub 已停止</string>
+    <string name="starting_sensorhub">正在啟動 SensorHub…</string>
+    <string name="sensorhub_start_failed">SensorHub 啟動失敗</string>
+    <string name="video_config_error">影像配置錯誤：請檢查設定</string>
+    <string name="video_config_error_msg">請檢查影像設定，確認所選預設的解析度已設定。</string>
+    <string name="msg_sensorhub_not_running">SensorHub 未在執行</string>
+    <string name="msg_message_sent">訊息已傳送</string>
+    <string name="msg_message_failed">訊息傳送失敗</string>
+    <string name="msg_profile_not_found">找不到配置</string>
+    <string name="msg_name_host_port_required">名稱、主機和連接埠為必填</string>
+    <string name="msg_no_protocol">主機不應包含協定（例如 http://）</string>
+    <string name="msg_port_number">連接埠應為數字</string>
+    <string name="msg_port_range">連接埠應介於 1 到 65535 之間</string>
+
+    <!-- Garmin -->
+    <string name="title_license_required">需要授權金鑰</string>
+    <string name="msg_garmin_license">Garmin Health SDK 授權金鑰尚未配置。請將其新增至 gradle.properties。</string>
+    <string name="title_garmin_sdk_error">Garmin SDK 錯誤</string>
+    <string name="msg_garmin_sdk_init_failed">無法初始化 Garmin Health SDK：%s</string>
+    <string name="title_scan_failed">掃描失敗</string>
+    <string name="msg_garmin_scan_failed">Garmin 裝置掃描失敗（錯誤碼 %d）</string>
+    <string name="title_scanning_garmin">正在掃描 Garmin 裝置…</string>
+    <string name="msg_scanning_garmin">請確認 Garmin 裝置在附近且處於配對模式。</string>
+    <string name="title_found_garmin_devices">找到 %d 個 Garmin 裝置</string>
+    <string name="title_pairing_timeout">配對逾時</string>
+    <string name="msg_pairing_timeout">認證逾時，請重試。</string>
+    <string name="title_pairing">配對中…</string>
+    <string name="msg_pairing_with">正在與 %s 配對。\n如有提示，請在 Garmin 裝置上確認。</string>
+    <string name="title_paired_successfully">配對成功</string>
+    <string name="msg_paired_with">已與 %s 配對</string>
+    <string name="title_pairing_failed">配對失敗</string>
+    <string name="msg_pairing_failed">配對失敗：%s</string>
+    <string name="btn_stop">停止</string>
+    <string name="btn_keep_scanning">繼續掃描…</string>
+    <string name="unable_to_get_ip">無法取得 IP 位址</string>
+
+    <string name="action_test_connection">測試連線</string>
+    <string name="spot_report_action">動作：</string>
+    <string name="spot_report_id">參考 ID：</string>
+    <string name="spot_report_flood_feature">地物類型：</string>
+    <string name="spot_report_depth">深度：</string>
+    <string name="spot_report_observation_mode">觀測模式：</string>
+    <string name="spot_report_med_sign">描述醫療狀況…</string>
+    <string name="spot_report_med_value">輸入量測值（血壓、體溫等）…</string>
+    <string name="spot_report_med_emergency">緊急狀況（是／否）</string>
+    <string name="spot_report_aid_type">援助類型：</string>
+    <string name="spot_report_aid_num">人數：</string>
+    <string name="spot_report_aid_urgency">緊急程度：</string>
+    <string name="spot_report_aid_description">描述所需援助…</string>
+    <string name="spot_report_aid_reporter">輸入您的姓名或 ID</string>
+    <string name="spot_report_track_resource_label">追蹤資源：</string>
+    <string name="spot_report_track_method_label">追蹤方法：</string>
+    <string name="spot_report_track_id">輸入資源 ID</string>
+    <string name="spot_report_track_label">輸入資源標籤</string>
+    <string name="tab_map">地圖</string>
+    <string name="tab_system">系統</string>
+    <string name="add_server">新增節點</string>
+    <string name="summary_app_preferences">應用程式偏好設定</string>
+    <string name="github_repo">GitHub 儲存庫</string>
+    <string name="hint_tap_to_configure">輕觸以設定</string>
+    <string name="send_feedback_desc">傳送意見回饋</string>
+    <string name="category_usb">USB</string>
+    <string name="category_attn">需要注意</string>
+    <string name="category_all">全部</string>
+    <string name="content_desc_zoom_in">放大</string>
+    <string name="content_desc_zoom_out">縮小</string>
+    <string name="ui_connecting">連線中…</string>
+    <string name="ui_starting">啟動中…</string>
+    <string name="ui_stopping">停止中…</string>
+    <string name="ui_stop_streaming">停止串流</string>
+    <string name="ui_start_streaming">開始串流</string>
+    <string name="ui_start_streaming_title">開始串流</string>
+    <string name="ui_run_name">作業名稱</string>
+    <string name="ui_smarthub">SmartHub</string>
+    <string name="ui_enable_sensors_on_the_sensors_screen_to_see_their_readings">請在感測器畫面啟用感測器，以查看讀數。</string>
+    <string name="ui_grant_required_sensor_permissions">請授予已啟用感測器所需的權限，以開始收集資料。</string>
+    <string name="ui_https_required_for_authenticated_connections">啟用驗證時，請使用 HTTPS 網址。</string>
+    <string name="ui_connection">連線</string>
+    <string name="ui_connection_url">連線網址</string>
+    <string name="ui_https_ip_port_sensorhub_api">https://ip:port/sensorhub/api</string>
+    <string name="ui_authentication">驗證</string>
+    <string name="ui_username_optional">使用者名稱</string>
+    <string name="ui_password_optional">密碼</string>
+    <string name="ui_toggle_password_visibility">顯示或隱藏密碼</string>
+    <string name="ui_enable_oauth">啟用 OAuth</string>
+    <string name="ui_token_endpoint">權杖端點</string>
+    <string name="ui_toggle_secret_visibility">顯示或隱藏用戶端密鑰</string>
+    <string name="ui_save_changes">儲存變更</string>
+    <string name="ui_testing">測試中…</string>
+    <string name="ui_connection_to_smart_hub_was_lost">與 Smart Hub 的連線已中斷。</string>
+    <string name="ui_unable_to_read_current_sensor_status">無法讀取目前的感測器狀態。</string>
+    <string name="ui_unable_to_bind_to_smart_hub">無法繫結至 Smart Hub。</string>
+    <string name="ui_unable_to_connect_to_smart_hub">無法連線至 Smart Hub。</string>
+    <string name="ui_unable_to_start_smart_hub">無法啟動 Smart Hub。</string>
+    <string name="ui_unable_to_stop_smart_hub">無法停止 Smart Hub。</string>
+    <string name="ui_unable_to_start_sensor_settings">無法啟動 Smart Hub。請檢查感測器設定後再試一次。</string>
+    <string name="ui_run_1_s">作業-%1$s</string>
+    <string name="ui_x_acceleration">X 加速度</string>
+    <string name="ui_y_acceleration">Y 加速度</string>
+    <string name="ui_z_acceleration">Z 加速度</string>
+    <string name="ui_x_angular_velocity">X 角速度</string>
+    <string name="ui_y_angular_velocity">Y 角速度</string>
+    <string name="ui_z_angular_velocity">Z 角速度</string>
+    <string name="ui_x_magnetic_field">X 磁場</string>
+    <string name="ui_y_magnetic_field">Y 磁場</string>
+    <string name="ui_z_magnetic_field">Z 磁場</string>
+    <string name="ui_heading_angle">航向角</string>
+    <string name="ui_pitch_angle">俯仰角</string>
+    <string name="ui_roll_angle">橫滾角</string>
+    <string name="ui_quaternion_x">四元數 X</string>
+    <string name="ui_quaternion_y">四元數 Y</string>
+    <string name="ui_quaternion_z">四元數 Z</string>
+    <string name="ui_quaternion_w">四元數 W</string>
+    <string name="ui_latitude">緯度</string>
+    <string name="ui_longitude">經度</string>
+    <string name="ui_altitude">海拔</string>
+    <string name="ui_num_samples">樣本數</string>
+    <string name="ui_samples">樣本</string>
+    <string name="ui_camera_with_roll_output_is_required">需要可輸出橫滾角的相機</string>
+    <string name="ui_sensor_or_driver_not_available">感測器或驅動程式無法使用</string>
+    <string name="ui_waiting_for_data">等待資料</string>
+    <string name="ui_no_recent_data_showing_last_reading">無近期資料 · 顯示最後讀數</string>
+    <string name="ui_receiving_data">正在接收資料</string>
+    <string name="ui_unable_to_read_sensor_output">無法讀取感測器輸出</string>
+    <string name="ui_available">可用</string>
+    <string name="ui_enter_a_server_name">請輸入伺服器名稱</string>
+    <string name="ui_enter_a_client_id">請輸入用戶端 ID</string>
+    <string name="ui_enter_a_client_secret">請輸入用戶端密鑰</string>
+    <string name="ui_enter_a_username_without_a_colon">請輸入不含冒號的使用者名稱</string>
+    <string name="ui_check_the_highlighted_fields_before_testing">測試前請檢查標示的欄位</string>
+    <string name="ui_enter_a_valid_http_or_https_url">請輸入有效的 HTTPS 網址</string>
+    <string name="ui_enter_a_valid_url">請輸入有效的網址</string>
+    <string name="ui_port_must_be_between_1_and_65535">連接埠必須介於 1 到 65535 之間</string>
+    <string name="ui_enter_a_valid_port">請輸入有效的連接埠</string>
+    <string name="ui_server">伺服器</string>
+    <string name="ui_oauth_token_endpoint">OAuth 權杖端點</string>
+    <string name="ui_connected">可連線至端點</string>
+    <string name="ui_authentication_401">401 未授權：要求缺少有效的認證資訊</string>
+    <string name="ui_access_denied_403">403 禁止存取：無權存取此資源</string>
+    <string name="ui_unable_to_obtain_oauth_token">無法取得 OAuth 權杖</string>
+    <string name="ui_oauth_invalid_bearer">OAuth 端點傳回無效的 Bearer 權杖回應</string>
+    <string name="ui_server_redirected">伺服器已重新導向要求（HTTP %1$d）。請使用最終端點網址。</string>
+    <string name="ui_server_returned">伺服器傳回 HTTP %1$d</string>
+    <string name="ui_connection_timed_out">連線至 %1$s 逾時</string>
+    <string name="ui_unable_to_connect">無法連線至 %1$s。請檢查網址、網路及憑證。</string>
+    <string name="ui_oauth_token_request_failed">OAuth 權杖要求失敗（HTTP %1$d）。請檢查權杖端點及用戶端認證資訊。</string>
+    <string name="ui_collapse">收合</string>
+    <string name="ui_expand">展開</string>
+    <string name="dashboard_no_matching_sensors">沒有符合此篩選條件的感測器。選取「全部」以查看所有已啟用的感測器。</string>
+    <string name="dashboard_sensor_count">感測器：%1$d</string>
+    <string name="dashboard_receiving_count">%1$d 個接收中</string>
+    <string name="dashboard_waiting_count">%1$d 個等待中</string>
+    <string name="dashboard_stale_count">%1$d 個無近期資料</string>
+    <string name="dashboard_unavailable_count">%1$d 個無法使用</string>
+    <string name="dashboard_server_status">伺服器狀態</string>
+    <string name="dashboard_no_obs">無觀測資料</string>
+    <string name="dashboard_ok_ms">正常（%1$d 毫秒）</string>
+    <string name="dashboard_nok_ms">異常（%1$d 毫秒）</string>
+    <string name="dashboard_errors">（%1$d 個錯誤）</string>
+    <string name="dashboard_no_remote_clients">尚未設定遠端伺服器連線</string>
+    <string name="dashboard_sost">SOS-T</string>
+    <string name="dashboard_consys">Connected Systems</string>
+    <string name="dashboard_last_reading">最後讀數：%1$s</string>
+    <string name="dashboard_no_reading_yet">尚未收到讀數</string>
+    <string name="health_active">運作中</string>
+    <string name="health_attention">需要注意</string>
+    <string name="health_error">錯誤</string>
+    <string name="health_starting">啟動中</string>
+    <string name="health_stopping">停止中</string>
+    <string name="health_stopped">已停止</string>
+    <string name="health_unknown">狀態不明</string>
+    <string name="destination_error">用戶端錯誤。</string>
+    <string name="destination_not_started">用戶端未執行。</string>
+    <string name="destination_waiting">正在等待觀測資料串流。</string>
+    <string name="destination_active">正在串流資料。</string>
+    <string name="destination_attention">部分資料串流閒置中，或可能需要檢查。</string>
+    <string name="destination_stream_error">用戶端回報串流錯誤</string>
+    <string name="destination_stream_waiting">無觀測資料</string>
+    <string name="destination_stream_active">正常</string>
+    <string name="destination_stream_stale">異常</string>
+    <string name="sensors_configure">設定</string>
+    <string name="sensors_live">即時</string>
+    <string name="sensors_live_start_run">開始作業以查看即時感測器讀數。</string>
+    <string name="sensors_live_no_enabled">尚未啟用感測器。請在「設定」中啟用感測器。</string>
+    <string name="configuration">設定</string>
+    <string name="review">檢查</string>
+    <string name="scanner">掃描</string>
+    <string name="disable_ssl_description">接受 Android 無法驗證的憑證和主機名稱。</string>
+    <string name="disable_ssl_warning">此伺服器已停用憑證驗證。</string>
+    <string name="btn_edit">編輯</string>
+    <string name="ui_enter_a_valid_https_url">請輸入有效的 HTTPS 網址</string>
+    <string name="ui_connection_failed">連線失敗</string>
+    <string name="ui_success">成功</string>
+    <string name="ui_attention_required">需要注意</string>
+    <string name="sensors_empty">沒有可顯示的感測器</string>
+    <string name="sensors_sample_rate_hz">%1$s Hz</string>
+    <string name="sensors_bit_rate_kbps">%1$s kbps</string>
+    <string name="sensors_camera_number">攝影機 %1$s</string>
+    <string name="sensors_frame_rate_fps">%1$s fps</string>
+    <string name="content_desc_toggle_map_layer">切換地圖圖層</string>
+    <string name="content_desc_map_options">地圖選項</string>
+    <string name="client_title">用戶端</string>
+    <string name="content_desc_refresh_profiles">重新整理設定檔</string>
+    <string name="client_empty">請在「設定」中新增並啟用節點，以使用 OSH 用戶端。</string>
+    <string name="client_servers">選取節點</string>
+    <string name="client_selected_count">已選取 %1$d 個</string>
+    <string name="client_no_configured_nodes">沒有已設定的節點</string>
+    <string name="client_select_node">選取節點以查看其系統。</string>
+    <string name="content_desc_server">伺服器</string>
+    <string name="content_desc_system">系統</string>
+    <string name="client_discovering_systems">正在探索系統</string>
+    <string name="client_tap_to_discover">點選以探索系統</string>
+    <string name="client_systems_discovered">已探索 %1$d 個系統</string>
+    <string name="client_datastream_count">%1$d 個資料串流</string>
+    <string name="content_desc_edit_server">編輯 %1$s</string>
+    <string name="title_theme">主題</string>
+    <string name="theme_system_default">系統預設</string>
+    <string name="theme_light">淺色</string>
+    <string name="theme_dark">深色</string>
+</resources>

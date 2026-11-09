@@ -1,0 +1,12 @@
+The BLE Beacon Sensor is a work in progress module designed to use the URL String gathered from
+BLE Beacons using the Eddystone URL protocol with known locations to give an approximate location of
+the phone when indoors.
+
+MODULE MUST:
+1. Have a constellation of registered Beacons with UIDs that have known locations
+2. Be able to triangulate based on the three strongest signals
+3. Have the ability to add a new registered beacon through the App
+4. Have the ability to remove a registered beacon through the app
+
+OPTIONAL:
+1. Notify that a beacon has low battery life

@@ -14,15 +14,24 @@ Copyright (C) 2012-2016 Sensia Software LLC. All Rights Reserved.
 
 package org.sensorhub.impl.driver.flir;
 
-import java.io.ByteArrayOutputStream;
-import java.util.EnumSet;
-
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.SurfaceTexture;
+
+import com.flir.flironesdk.Device;
+import com.flir.flironesdk.Device.StreamDelegate;
+import com.flir.flironesdk.Frame;
+import com.flir.flironesdk.FrameProcessor;
+import com.flir.flironesdk.RenderedImage;
+import com.flir.flironesdk.RenderedImage.ImageType;
+
 import net.opengis.swe.v20.DataBlock;
 import net.opengis.swe.v20.DataComponent;
 import net.opengis.swe.v20.DataEncoding;
 import net.opengis.swe.v20.DataStream;
-import org.sensorhub.api.sensor.SensorDataEvent;
+
+import org.sensorhub.api.data.DataEvent;
 import org.sensorhub.api.sensor.SensorException;
 import org.sensorhub.impl.sensor.AbstractSensorOutput;
 import org.sensorhub.impl.sensor.videocam.VideoCamHelper;
@@ -31,16 +40,9 @@ import org.slf4j.LoggerFactory;
 import org.vast.data.AbstractDataBlock;
 import org.vast.data.DataBlockMixed;
 import org.vast.swe.SWEHelper;
-import com.flir.flironesdk.Device;
-import com.flir.flironesdk.Device.StreamDelegate;
-import com.flir.flironesdk.Frame;
-import com.flir.flironesdk.FrameProcessor;
-import com.flir.flironesdk.RenderedImage;
-import com.flir.flironesdk.RenderedImage.ImageType;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
-import android.view.SurfaceHolder;
+
+import java.io.ByteArrayOutputStream;
+import java.util.EnumSet;
 
 
 /**
@@ -72,7 +74,7 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
     
     protected FlirOneCameraOutput(FlirOneCameraDriver parentModule, SurfaceTexture previewTexture)
     {
-        super(parentModule);
+        super("flirone_camera_data", parentModule);
         this.name = "flirone_camera_data";
         this.previewTexture = previewTexture;
         
@@ -148,11 +150,11 @@ public class FlirOneCameraOutput extends AbstractSensorOutput<FlirOneCameraDrive
         // send event
         latestRecord = newRecord;
         latestRecordTime = System.currentTimeMillis();
-        eventHandler.publishEvent(new SensorDataEvent(latestRecordTime, FlirOneCameraOutput.this, latestRecord));          
+        eventHandler.publish(new DataEvent(latestRecordTime, FlirOneCameraOutput.this, latestRecord));
     }
     
     
-    @Override
+//    @Override
     public void stop()
     {
         if (device != null)

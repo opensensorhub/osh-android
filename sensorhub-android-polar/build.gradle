@@ -1,0 +1,51 @@
+apply plugin: 'com.android.library'
+
+description = 'Polar HeartRate Monitors'
+ext.details = 'Driver for Polar H0/H10 HeartRate Monitors'
+version = '3.0.0'
+
+dependencies {
+  //api 'org.sensorhub:sensorhub-core:' + oshCoreVersion
+  api project(':sensorhub-core')
+  api project(':sensorhub-android-service')
+
+  //Polar SDK requirements
+//  implementation 'com.github.polarofficial:polar-ble-sdk:5.1.0'
+  implementation ('com.github.polarofficial:polar-ble-sdk:5.1.0') {
+    exclude group: 'com.google.protobuf', module: 'protobuf-javalite'
+  }
+  implementation 'io.reactivex.rxjava3:rxjava:3.1.6'
+  implementation 'io.reactivex.rxjava3:rxandroid:3.0.2'
+  implementation 'androidx.appcompat:appcompat:1.6.1'
+  implementation project(path: ':sensorhub-driver-android')
+  implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+  implementation 'androidx.core:core:1.5.0'
+}
+configurations.configureEach {
+  exclude group: "ch.qos.logback"
+}
+
+android {
+  namespace 'org.sensorhub.impl.sensor.polar'
+  compileSdkVersion rootProject.compileSdkVersion
+  buildToolsVersion rootProject.buildToolsVersion
+
+  defaultConfig {
+    minSdkVersion rootProject.minSdkVersion
+    targetSdkVersion rootProject.targetSdkVersion
+  }
+
+  lint {
+    abortOnError false
+  }
+
+  sourceSets {
+    main {
+      java.srcDirs = ['src/main/java']
+      resources.srcDirs = ['src/main/resources']
+      res.srcDirs = ['res']
+      assets.srcDirs = ['assets']
+      jniLibs.srcDirs = ['libs']
+    }
+  }
+}
